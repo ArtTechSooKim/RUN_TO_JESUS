@@ -25,6 +25,10 @@ export default function NfcTestScreen() {
   const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
+    if (Platform.OS === 'web') {
+      setSupported(false);
+      return;
+    }
     NfcManager.start();
     NfcManager.isSupported().then(setSupported);
     return () => {
@@ -33,6 +37,7 @@ export default function NfcTestScreen() {
   }, []);
 
   async function startScan() {
+    if (Platform.OS === 'web') return;
     setState('scanning');
     setErrorMessage('');
     try {
@@ -50,11 +55,11 @@ export default function NfcTestScreen() {
 
   return (
     <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
-      <ThemedText type="subtitle">NFC 태그 테스트</ThemedText>
-
       {supported === false && (
         <ThemedText type="small">
-          이 기기는 NFC를 지원하지 않아요. ({Platform.OS})
+          {Platform.OS === 'web'
+            ? '웹에서는 NFC를 사용할 수 없어요. iOS/Android 개발 빌드에서 확인해주세요.'
+            : '이 기기는 NFC를 지원하지 않아요.'}
         </ThemedText>
       )}
       {supported === null && <ThemedText type="small">NFC 지원 여부 확인 중...</ThemedText>}

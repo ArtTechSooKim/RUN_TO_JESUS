@@ -47,3 +47,6 @@ example
 # generated native folders
 /ios
 /android
+
+# Claude Code session lock
+.claude/scheduled_tasks.lock

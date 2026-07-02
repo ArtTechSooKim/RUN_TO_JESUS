@@ -59,6 +59,11 @@ export default function HomeScreen() {
               <HintRow title="NFC 테스트" hint={<ThemedText type="code">/nfc-test</ThemedText>} />
             </Pressable>
           </Link>
+          <Link href="/map" asChild>
+            <Pressable style={({ pressed }) => pressed && styles.pressed}>
+              <HintRow title="탐험 지도" hint={<ThemedText type="code">/map</ThemedText>} />
+            </Pressable>
+          </Link>
         </ThemedView>
 
         {Platform.OS === 'web' && <WebBadge />}
