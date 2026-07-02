@@ -2,6 +2,7 @@
   "expo": {
     "name": "RUN TO JESUS",
     "slug": "run-to-jesus",
+    "owner": "sookimarttechs-team",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -32,11 +33,23 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
+      ],
+      [
+        "react-native-nfc-manager",
+        {
+          "nfcPermission": "스테이션의 NFC 태그를 인식하기 위해 사용합니다."
+        }
       ]
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "b911c76a-d121-4946-8287-03081d6146ce"
+      }
     }
   }
 }
