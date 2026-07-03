@@ -31,14 +31,6 @@ export default function HomeScreen() {
             </ThemedView>
           </Pressable>
         </Link>
-
-        <Link href="/nfc-test" asChild>
-          <Pressable style={({ pressed }) => pressed && styles.pressed}>
-            <ThemedText type="link" themeColor="textSecondary">
-              NFC 태그 테스트
-            </ThemedText>
-          </Pressable>
-        </Link>
       </SafeAreaView>
     </ThemedView>
   );
