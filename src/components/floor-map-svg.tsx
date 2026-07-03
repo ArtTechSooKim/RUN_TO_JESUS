@@ -235,7 +235,7 @@ export function Floor10Young({ stations, clearedIds, selectedId, onSelect }: Flo
         selected={selectedId === abel.id}
         onPress={() => onSelect(abel.id)}
         label="사무엘홀"
-        sublabel="(극장)"
+        sublabel="(방탈출)"
       />
       <GameRoom
         x={10}
@@ -247,7 +247,7 @@ export function Floor10Young({ stations, clearedIds, selectedId, onSelect }: Flo
         selected={selectedId === noah.id}
         onPress={() => onSelect(noah.id)}
         label="다니엘홀"
-        sublabel="(노아방)"
+        sublabel="(방탈출)"
       />
 
       <SvgText x={10} y={16} fill="#2D4066" fontSize={10} fontFamily={FONT} fontWeight="600">

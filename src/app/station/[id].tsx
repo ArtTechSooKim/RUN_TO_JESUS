@@ -19,9 +19,20 @@ import { HeroParticles } from '@/components/hero-particles';
 import { LetterPiece } from '@/components/letter-piece';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { QR_PREFIX, RUN_TO_JESUS, stations } from '@/constants/stations';
+import { floorLabels, QR_PREFIX, RUN_TO_JESUS, stations } from '@/constants/stations';
 import { Spacing } from '@/constants/theme';
 import { useStationProgress } from '@/hooks/use-station-progress';
+
+function InfoBadge({ icon, label, color }: { icon: string; label: string; color: string }) {
+  return (
+    <View style={[styles.infoBadge, { backgroundColor: `${color}18`, borderColor: `${color}45` }]}>
+      <ThemedText style={styles.infoBadgeIcon}>{icon}</ThemedText>
+      <ThemedText type="small" style={{ color }}>
+        {label}
+      </ThemedText>
+    </View>
+  );
+}
 
 function EmojiGlow({ emoji, color }: { emoji: string; color: string }) {
   const glow = useSharedValue(0);
@@ -151,26 +162,20 @@ export default function StationDetailScreen() {
 
         <View style={[styles.divider, { backgroundColor: `${station.color}40` }]} />
 
-        <Animated.View entering={FadeInDown.delay(200).duration(400)} style={styles.block}>
-          <ThemedText type="small" themeColor="textSecondary" style={styles.eyebrow}>
-            핵심 질문
-          </ThemedText>
-          <ThemedText type="default" style={styles.coreQuestion}>
-            "{station.coreQuestion}"
-          </ThemedText>
-        </Animated.View>
-
-        <Animated.View entering={FadeInDown.delay(280).duration(400)}>
-          <ThemedText type="small" themeColor="textSecondary" style={styles.description}>
-            {station.description}
-          </ThemedText>
+        <Animated.View entering={FadeInDown.delay(180).duration(400)} style={styles.badgeRow}>
+          <InfoBadge icon="👤" label={`담당 ${station.lead}`} color={station.color} />
+          <InfoBadge icon="📍" label={station.hall} color={station.color} />
+          <InfoBadge icon="🏢" label={floorLabels[station.floor]} color={station.color} />
         </Animated.View>
 
         <Animated.View
-          entering={FadeInDown.delay(360).duration(400)}
-          style={[styles.verseCard, { borderColor: `${station.color}30` }]}>
-          <ThemedText type="small" themeColor="textSecondary" style={styles.verseText}>
-            {station.verse}
+          entering={FadeInDown.delay(260).duration(400)}
+          style={[styles.descriptionCard, { borderColor: `${station.color}30`, backgroundColor: `${station.color}0D` }]}>
+          <ThemedText type="small" themeColor="textSecondary" style={styles.eyebrow}>
+            게임 소개
+          </ThemedText>
+          <ThemedText type="default" style={styles.description}>
+            {station.description}
           </ThemedText>
         </Animated.View>
 
@@ -274,29 +279,35 @@ const styles = StyleSheet.create({
   divider: {
     height: 1,
   },
-  block: {
-    gap: Spacing.two,
-  },
   eyebrow: {
     textTransform: 'uppercase',
     letterSpacing: 2,
   },
-  coreQuestion: {
-    fontSize: 19,
-    fontWeight: '600',
-    lineHeight: 28,
+  badgeRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.two,
   },
-  description: {
-    lineHeight: 22,
+  infoBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.one,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.one + 2,
+    borderRadius: Spacing.five,
+    borderWidth: 1,
   },
-  verseCard: {
+  infoBadgeIcon: {
+    fontSize: 13,
+  },
+  descriptionCard: {
+    gap: Spacing.two,
     padding: Spacing.three,
     borderRadius: Spacing.three,
     borderWidth: 1,
   },
-  verseText: {
-    fontStyle: 'italic',
-    lineHeight: 20,
+  description: {
+    lineHeight: 22,
   },
   letterRow: {
     gap: Spacing.two,
