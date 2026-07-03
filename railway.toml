@@ -1,5 +1,5 @@
 [build]
-buildCommand = "npm ci && npx expo export -p web"
+buildCommand = "npm ci && npx expo export -p web && node scripts/inject-pwa-meta.js"
 
 [deploy]
 startCommand = "npx serve dist -s -l $PORT"
