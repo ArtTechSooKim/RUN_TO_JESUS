@@ -1,0 +1,22 @@
+diff --git a/node_modules/expo-camera/build/ExpoCameraManager.web.js b/node_modules/expo-camera/build/ExpoCameraManager.web.js
+index 6682f96..1d01867 100644
+--- a/node_modules/expo-camera/build/ExpoCameraManager.web.js
++++ b/node_modules/expo-camera/build/ExpoCameraManager.web.js
+@@ -53,11 +53,12 @@ async function handlePermissionsQueryAsync(query) {
+         }
+     }
+     catch (e) {
+-        // Firefox doesn't support querying for the camera permission, so return undetermined status
+-        if (e instanceof TypeError) {
+-            return permissionResponse(PermissionStatus.UNDETERMINED);
+-        }
+-        throw e;
++        // Firefox doesn't support querying for the camera permission, and
++        // Safari/WebKit throws a NotSupportedError (not a TypeError) for the
++        // same reason — in both cases fall back to undetermined so the UI can
++        // still show the "allow camera" button, which uses getUserMedia
++        // directly and works fine on both browsers.
++        return permissionResponse(PermissionStatus.UNDETERMINED);
+     }
+ }
+ export default {
