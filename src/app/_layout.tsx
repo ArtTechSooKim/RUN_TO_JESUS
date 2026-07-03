@@ -25,7 +25,7 @@ export default function RootLayout() {
       <StationProgressProvider>
         <AnimatedSplashOverlay />
         <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="index" />
           <Stack.Screen name="map" options={{ headerShown: true, title: '탐험 지도' }} />
           <Stack.Screen name="station/[id]" options={{ headerShown: true, title: '' }} />
           <Stack.Screen name="collection" options={{ headerShown: true, title: '수집 현황' }} />
