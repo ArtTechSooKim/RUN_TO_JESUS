@@ -1,5 +1,5 @@
-import { Link } from 'expo-router';
-import { useEffect } from 'react';
+import { router } from 'expo-router';
+import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 import Animated, {
   Easing,
@@ -13,6 +13,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { HyperspaceBurst } from '@/components/hyperspace-burst';
 import { StarField } from '@/components/star-field';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -43,7 +44,7 @@ function GlowTitle() {
   );
 }
 
-function PulsingCta() {
+function PulsingCta({ onPress }: { onPress: () => void }) {
   const glow = useSharedValue(0);
 
   useEffect(() => {
@@ -62,24 +63,24 @@ function PulsingCta() {
   }));
 
   return (
-    <Link href="/map" asChild>
-      <Pressable style={({ pressed }) => pressed && styles.pressed}>
-        <Animated.View
-          style={[
-            styles.ctaButton,
-            style,
-            { shadowColor: Colors.dark.gold, shadowOffset: { width: 0, height: 0 } },
-          ]}>
-          <ThemedText type="smallBold" style={{ color: Colors.dark.background }}>
-            탐험 시작하기
-          </ThemedText>
-        </Animated.View>
-      </Pressable>
-    </Link>
+    <Pressable onPress={onPress} style={({ pressed }) => pressed && styles.pressed}>
+      <Animated.View
+        style={[
+          styles.ctaButton,
+          style,
+          { shadowColor: Colors.dark.gold, shadowOffset: { width: 0, height: 0 } },
+        ]}>
+        <ThemedText type="smallBold" style={{ color: Colors.dark.background }}>
+          바통 이어받기
+        </ThemedText>
+      </Animated.View>
+    </Pressable>
   );
 }
 
 export default function HomeScreen() {
+  const [launching, setLaunching] = useState(false);
+
   return (
     <ThemedView style={styles.container}>
       <StarField count={50} />
@@ -103,9 +104,11 @@ export default function HomeScreen() {
         </ThemedView>
 
         <Animated.View entering={FadeIn.delay(1000).duration(600)}>
-          <PulsingCta />
+          <PulsingCta onPress={() => setLaunching(true)} />
         </Animated.View>
       </SafeAreaView>
+
+      {launching && <HyperspaceBurst onDone={() => router.replace('/map')} />}
     </ThemedView>
   );
 }

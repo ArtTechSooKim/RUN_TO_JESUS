@@ -20,7 +20,7 @@ import { LetterPiece } from '@/components/letter-piece';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { floorLabels, QR_PREFIX, RUN_TO_JESUS, stations } from '@/constants/stations';
-import { Spacing } from '@/constants/theme';
+import { Colors, Spacing } from '@/constants/theme';
 import { useStationProgress } from '@/hooks/use-station-progress';
 
 function InfoBadge({ icon, label, color }: { icon: string; label: string; color: string }) {
@@ -108,11 +108,42 @@ function ScanCta({ color, onPress }: { color: string; onPress?: () => void }) {
   );
 }
 
+function NfcCta({ color, onPress }: { color: string; onPress?: () => void }) {
+  const glow = useSharedValue(0);
+
+  useEffect(() => {
+    glow.value = withRepeat(
+      withSequence(
+        withTiming(1, { duration: 1250, easing: Easing.inOut(Easing.sin) }),
+        withTiming(0, { duration: 1250, easing: Easing.inOut(Easing.sin) }),
+      ),
+      -1,
+    );
+  }, [glow]);
+
+  const glowStyle = useAnimatedStyle(() => ({
+    shadowOpacity: 0.3 + glow.value * 0.35,
+    shadowRadius: 12 + glow.value * 14,
+  }));
+
+  return (
+    <Pressable onPress={onPress} style={({ pressed }) => pressed && styles.pressed}>
+      <Animated.View
+        style={[styles.nfcButton, glowStyle, { backgroundColor: color, shadowColor: color }]}>
+        <ThemedText type="smallBold" style={{ color: Colors.dark.background }}>
+          NFC 태그 스캔하기
+        </ThemedText>
+      </Animated.View>
+    </Pressable>
+  );
+}
+
 export default function StationDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const station = stations.find((s) => s.id === id);
   const { clearedIds, toggleCleared } = useStationProgress();
   const [showQr, setShowQr] = useState(false);
+  const [nfcHint, setNfcHint] = useState(false);
 
   if (!station) {
     return (
@@ -166,7 +197,6 @@ export default function StationDetailScreen() {
         <View style={[styles.divider, { backgroundColor: `${station.color}40` }]} />
 
         <Animated.View entering={FadeInDown.delay(180).duration(400)} style={styles.badgeRow}>
-          <InfoBadge icon="👤" label={`담당 ${station.lead}`} color={station.color} />
           <InfoBadge icon="📍" label={station.hall} color={station.color} />
           <InfoBadge icon="🏢" label={floorLabels[station.floor]} color={station.color} />
         </Animated.View>
@@ -219,6 +249,14 @@ export default function StationDetailScreen() {
           </View>
         ) : (
           <View style={styles.ctaBlock}>
+            <NfcCta color={station.color} onPress={() => setNfcHint(true)} />
+            {nfcHint && (
+              <Animated.Text
+                entering={FadeIn.duration(150)}
+                style={[styles.nfcHint, { color: station.color }]}>
+                NFC 기능은 준비 중이에요 — 아래 QR로 스캔해주세요
+              </Animated.Text>
+            )}
             <ScanCta color={station.color} />
             <Pressable
               onPress={() => toggleCleared(station.id)}
@@ -344,6 +382,16 @@ const styles = StyleSheet.create({
     width: 80,
     left: -100,
     transform: [{ skewX: '-20deg' }],
+  },
+  nfcButton: {
+    width: '100%',
+    paddingVertical: Spacing.four,
+    borderRadius: Spacing.four,
+    alignItems: 'center',
+  },
+  nfcHint: {
+    fontSize: 12,
+    textAlign: 'center',
   },
   ghostButton: {
     alignSelf: 'center',
