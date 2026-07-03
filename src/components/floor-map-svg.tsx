@@ -157,11 +157,11 @@ function byId(stations: Station[], id: string) {
 }
 
 export function Floor10Young({ stations, clearedIds, selectedId, onSelect }: FloorProps) {
-  const daniel = byId(stations, 'daniel');
-  const samuel = byId(stations, 'samuel');
-  const isaac = byId(stations, 'isaac');
-  const agape = byId(stations, 'agape');
-  const timothy = byId(stations, 'timothy');
+  const noah = byId(stations, 'NOAH');
+  const abel = byId(stations, 'ABEL');
+  const jacob = byId(stations, 'JACOB');
+  const abraham = byId(stations, 'ABRAHAM');
+  const samson = byId(stations, 'SAMSON');
 
   return (
     <Svg viewBox="0 0 580 460" width="100%" height={undefined} style={{ aspectRatio: 580 / 460 }}>
@@ -194,10 +194,10 @@ export function Floor10Young({ stations, clearedIds, selectedId, onSelect }: Flo
         y={283}
         w={118}
         h={78}
-        station={isaac}
-        cleared={clearedIds.has(isaac.id)}
-        selected={selectedId === isaac.id}
-        onPress={() => onSelect(isaac.id)}
+        station={jacob}
+        cleared={clearedIds.has(jacob.id)}
+        selected={selectedId === jacob.id}
+        onPress={() => onSelect(jacob.id)}
         label="이삭홀"
         sublabel="(블러핑)"
       />
@@ -206,10 +206,10 @@ export function Floor10Young({ stations, clearedIds, selectedId, onSelect }: Flo
         y={283}
         w={118}
         h={78}
-        station={agape}
-        cleared={clearedIds.has(agape.id)}
-        selected={selectedId === agape.id}
-        onPress={() => onSelect(agape.id)}
+        station={abraham}
+        cleared={clearedIds.has(abraham.id)}
+        selected={selectedId === abraham.id}
+        onPress={() => onSelect(abraham.id)}
         label="아가페홀"
         sublabel="(믿음의 가정)"
       />
@@ -218,10 +218,10 @@ export function Floor10Young({ stations, clearedIds, selectedId, onSelect }: Flo
         y={283}
         w={134}
         h={78}
-        station={timothy}
-        cleared={clearedIds.has(timothy.id)}
-        selected={selectedId === timothy.id}
-        onPress={() => onSelect(timothy.id)}
+        station={samson}
+        cleared={clearedIds.has(samson.id)}
+        selected={selectedId === samson.id}
+        onPress={() => onSelect(samson.id)}
         label="디모데홀"
         sublabel="(미는 챌린지)"
       />
@@ -230,24 +230,24 @@ export function Floor10Young({ stations, clearedIds, selectedId, onSelect }: Flo
         y={280}
         w={118}
         h={82}
-        station={samuel}
-        cleared={clearedIds.has(samuel.id)}
-        selected={selectedId === samuel.id}
-        onPress={() => onSelect(samuel.id)}
+        station={abel}
+        cleared={clearedIds.has(abel.id)}
+        selected={selectedId === abel.id}
+        onPress={() => onSelect(abel.id)}
         label="사무엘홀"
-        sublabel="(방탈출)"
+        sublabel="(극장)"
       />
       <GameRoom
         x={10}
         y={368}
         w={118}
         h={82}
-        station={daniel}
-        cleared={clearedIds.has(daniel.id)}
-        selected={selectedId === daniel.id}
-        onPress={() => onSelect(daniel.id)}
+        station={noah}
+        cleared={clearedIds.has(noah.id)}
+        selected={selectedId === noah.id}
+        onPress={() => onSelect(noah.id)}
         label="다니엘홀"
-        sublabel="(방탈출)"
+        sublabel="(노아방)"
       />
 
       <SvgText x={10} y={16} fill="#2D4066" fontSize={10} fontFamily={FONT} fontWeight="600">
@@ -258,7 +258,7 @@ export function Floor10Young({ stations, clearedIds, selectedId, onSelect }: Flo
 }
 
 export function Floor11Young({ stations, clearedIds, selectedId, onSelect }: FloorProps) {
-  const joseph = byId(stations, 'joseph');
+  const joseph = byId(stations, 'JOSEPH');
 
   return (
     <Svg viewBox="0 0 580 430" width="100%" height={undefined} style={{ aspectRatio: 580 / 430 }}>
@@ -307,7 +307,7 @@ export function Floor11Young({ stations, clearedIds, selectedId, onSelect }: Flo
 }
 
 export function Floor10Fashion({ stations, clearedIds, selectedId, onSelect }: FloorProps) {
-  const newgen = byId(stations, 'newgen');
+  const david = byId(stations, 'DAVID');
 
   return (
     <Svg viewBox="0 0 580 430" width="100%" height={undefined} style={{ aspectRatio: 580 / 430 }}>
@@ -353,10 +353,10 @@ export function Floor10Fashion({ stations, clearedIds, selectedId, onSelect }: F
         y={178}
         w={192}
         h={105}
-        station={newgen}
-        cleared={clearedIds.has(newgen.id)}
-        selected={selectedId === newgen.id}
-        onPress={() => onSelect(newgen.id)}
+        station={david}
+        cleared={clearedIds.has(david.id)}
+        selected={selectedId === david.id}
+        onPress={() => onSelect(david.id)}
         label="새로운홀"
         sublabel="(도미노)"
       />

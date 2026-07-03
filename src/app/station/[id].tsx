@@ -18,7 +18,7 @@ import { HeroParticles } from '@/components/hero-particles';
 import { LetterPiece } from '@/components/letter-piece';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { RUN_TO_JESUS, stations } from '@/constants/stations';
+import { QR_PREFIX, RUN_TO_JESUS, stations } from '@/constants/stations';
 import { Spacing } from '@/constants/theme';
 import { useStationProgress } from '@/hooks/use-station-progress';
 
@@ -225,7 +225,7 @@ export default function StationDetailScreen() {
         {showQr && (
           <View style={styles.qrOuter}>
             <View style={styles.qrBox}>
-              <QRCode value={station.id} size={160} backgroundColor="#fff" />
+              <QRCode value={`${QR_PREFIX}${station.id}`} size={160} backgroundColor="#fff" />
             </View>
             <ThemedText type="small" themeColor="textSecondary">
               다른 기기의 스캔 화면으로 이 코드를 찍어보세요

@@ -6,7 +6,7 @@ import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import { CollectBurst } from '@/components/collect-burst';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { RUN_TO_JESUS, stations, type Station } from '@/constants/stations';
+import { INTRO_QR_ID, QR_PREFIX, RUN_TO_JESUS, stations, type Station } from '@/constants/stations';
 import { Colors, Spacing } from '@/constants/theme';
 import { useStationProgress } from '@/hooks/use-station-progress';
 
@@ -22,7 +22,16 @@ export default function ScanScreen() {
   function handleScan(data: string) {
     if (scannedRef.current) return;
 
-    const station = stations.find((s) => s.id === data.trim());
+    const raw = data.trim();
+    const id = raw.startsWith(QR_PREFIX) ? raw.slice(QR_PREFIX.length) : raw;
+
+    if (id === INTRO_QR_ID) {
+      scannedRef.current = true;
+      router.replace('/map');
+      return;
+    }
+
+    const station = stations.find((s) => s.id === id);
     if (!station) {
       setErrorText(`알 수 없는 QR이에요: "${data}"`);
       return;

@@ -3,8 +3,13 @@ export type Floor = 'young-10f' | 'young-11f' | 'fashion-10f';
 /** "RUN TO JESUS" — each station's `letters` are indices into this string. */
 export const RUN_TO_JESUS = 'RUNTOJESUS';
 
+/** QR payloads are `RTJ:{id}` (e.g. "RTJ:NOAH") — see files/PROJECT_CONTEXT.md. */
+export const QR_PREFIX = 'RTJ:';
+export const INTRO_QR_ID = 'INTRO';
+
 export type Station = {
   id: string;
+  name: string;
   hall: string;
   keyword: string;
   characterTitle: string;
@@ -27,89 +32,63 @@ export const floorLabels: Record<Floor, string> = {
 
 export const floors: Floor[] = ['young-10f', 'young-11f', 'fashion-10f'];
 
-// Mirrors the Figma Make SPACES array (App.tsx) — 7 spaces across 6 game
-// activities (방탈출 spans two halls: 다니엘홀 + 사무엘홀, each collected
-// separately).
+// Confirmed 2026-07-03 Saturday planning meeting (files/PROJECT_CONTEXT.md §4).
+// 라합(RAHAB) shares 다니엘홀/사무엘홀 with 노아/아벨 and has no dedicated
+// room on the floor map — it's still a fully independent QR/station.
 export const stations: Station[] = [
   {
-    id: 'daniel',
+    id: 'NOAH',
+    name: '방탈출 · 노아방',
     hall: '다니엘홀',
-    keyword: '방탈출',
-    characterTitle: '다니엘 : 믿음을 지킨 사람',
-    coreQuestion: '모두가 타협할 때\n당신은 믿음을 지킬 수 있는가?',
+    keyword: '순종',
+    characterTitle: '노아 : 보이지 않는 것에 순종한 사람',
+    coreQuestion: '보이지 않는 것을 위해\n지금 순종할 수 있는가?',
     description:
-      '사자 굴에서도 흔들리지 않았던 다니엘. 왕의 명령보다 하나님을 선택한 그의 믿음이 역사를 바꾸었습니다.',
-    verse: '내 하나님이 그의 천사를 보내어 사자들의 입을 봉하셨으므로 — 다니엘 6:22',
+      '홍수가 오기 전, 노아는 보이지 않는 경고를 믿고 방주를 지었습니다. 세상의 조롱 속에서도 그는 순종으로 준비했습니다.',
+    verse: '믿음으로 노아는 아직 보이지 않는 일에 경고하심을 받아 경외함으로 방주를 준비하여 — 히브리서 11:7',
     lead: '보민',
     floor: 'young-10f',
     color: '#6EA8FF',
-    emoji: '🦁',
+    emoji: '🚢',
     letters: [0, 1],
   },
   {
-    id: 'samuel',
+    id: 'ABEL',
+    name: '방탈출 · 극장',
     hall: '사무엘홀',
-    keyword: '방탈출',
-    characterTitle: '사무엘 : 음성을 들은 사람',
-    coreQuestion: '당신은 지금\n하나님의 음성을 듣고 있는가?',
+    keyword: '믿음의 예배',
+    characterTitle: '아벨 : 믿음으로 예배한 사람',
+    coreQuestion: '당신은 무엇으로\n예배하고 있는가?',
     description:
-      '어린 사무엘은 하나님의 음성을 들었습니다. \'말씀하소서, 종이 듣겠나이다.\' 순종이 한 세대의 역사를 새롭게 썼습니다.',
-    verse: '말씀하소서 종이 듣겠나이다 — 사무엘상 3:10',
-    lead: '보민',
-    floor: 'young-10f',
-    color: '#34D399',
-    emoji: '📜',
-    letters: [2, 3],
-  },
-  {
-    id: 'isaac',
-    hall: '이삭홀',
-    keyword: '블러핑',
-    characterTitle: '이삭 : 순종으로 나아간 사람',
-    coreQuestion: '이해되지 않을 때도\n순종할 수 있는가?',
-    description:
-      '모리아 산 위에서 이삭은 자신이 번제물임을 알았습니다. 그럼에도 아버지를 따라 나아간 그의 순종은 믿음의 극치였습니다.',
-    verse: '이삭이 번제나무를 자기 등에 지고 아버지를 따라가며 — 창세기 22:6',
-    lead: '은규',
-    floor: 'young-10f',
-    color: '#F472B6',
-    emoji: '⛰️',
-    letters: [4],
-  },
-  {
-    id: 'agape',
-    hall: '아가페홀',
-    keyword: '믿음의 가정',
-    characterTitle: '아가페홀 : 사랑으로 세운 공동체',
-    coreQuestion: '당신의 믿음이\n주변을 세우고 있는가?',
-    description:
-      '아가페(ἀγάπη)는 조건 없는 하나님의 사랑입니다. 이 사랑이 가정과 공동체를 세우고, 다음 세대에게 믿음을 전수합니다.',
-    verse: '사랑은 오래 참고 사랑은 온유하며 — 고린도전서 13:4',
+      '아벨은 하나님께 최고의 것을 드렸습니다. 형식이 아니라 믿음으로 드린 예배가 하나님을 기쁘시게 했습니다.',
+    verse: '믿음으로 아벨은 가인보다 더 나은 제사를 하나님께 드림으로 의로운 자라 하는 증거를 얻었으니 — 히브리서 11:4',
     lead: '혜선',
     floor: 'young-10f',
-    color: '#A78BFA',
-    emoji: '🏠',
-    letters: [5],
+    color: '#F472B6',
+    emoji: '🔥',
+    letters: [2],
   },
   {
-    id: 'timothy',
-    hall: '디모데홀',
-    keyword: '미는 챌린지',
-    characterTitle: '디모데 : 두려움 없이 달린 사람',
-    coreQuestion: '두려움이 당신의\n발걸음을 멈추게 하는가?',
+    id: 'RAHAB',
+    name: '방탈출 · 추가게임',
+    hall: '다니엘홀 · 사무엘홀',
+    keyword: '용기',
+    characterTitle: '라합 : 용기로 결단한 사람',
+    coreQuestion: '믿음의 결단을 위해\n무엇을 걸 수 있는가?',
     description:
-      '젊은 디모데는 두려움으로 흔들렸습니다. 바울은 그에게 썼습니다. \'하나님이 주신 것은 두려움의 영이 아니라.\' 그는 달렸습니다.',
-    verse: '하나님이 우리에게 두려움의 영이 아니요 오직 능력과 사랑과 절제의 영을 주셨나니 — 디모데후서 1:7',
-    lead: '수',
+      '라합은 정탐꾼을 숨기며 위험한 선택을 했습니다. 이방 여인이었지만 그녀의 용기 있는 믿음이 구원의 길이 되었습니다.',
+    verse: '믿음으로 기생 라합은 정탐꾼을 평안히 영접하였으므로 순종하지 아니한 자와 함께 멸망하지 아니하였도다 — 히브리서 11:31',
+    lead: '보람',
     floor: 'young-10f',
-    color: '#FBBF24',
-    emoji: '🏃',
-    letters: [6],
+    color: '#FB923C',
+    emoji: '🏰',
+    letters: [3],
   },
   {
-    id: 'joseph',
+    id: 'JOSEPH',
+    name: '릴레이',
     hall: '요셉홀',
-    keyword: '릴레이',
+    keyword: '인내',
     characterTitle: '요셉 : 인내로 완주한 사람',
     coreQuestion: '하나님이 침묵하시는 시간에도\n달릴 수 있는가?',
     description:
@@ -119,21 +98,70 @@ export const stations: Station[] = [
     floor: 'young-11f',
     color: '#F59E0B',
     emoji: '🌾',
-    letters: [7, 8],
+    letters: [4, 5],
   },
   {
-    id: 'newgen',
-    hall: '새로운홀',
-    keyword: '도미노',
-    characterTitle: '새로운홀 : 함께 달리는 공동체',
-    coreQuestion: '당신의 한 걸음이\n다음 사람에게 이어지고 있는가?',
+    id: 'JACOB',
+    name: '블러핑',
+    hall: '이삭홀',
+    keyword: '씨름(돌이킴)',
+    characterTitle: '야곱 : 씨름 끝에 변화된 사람',
+    coreQuestion: '하나님과 씨름한 끝에\n당신은 무엇으로 바뀌는가?',
     description:
-      '도미노처럼, 한 사람의 믿음이 쓰러지면 다음 사람을 일으킵니다. 우리는 혼자 달리지 않습니다. 서로가 서로의 바통입니다.',
-    verse: '우리가 선을 행하되 낙심하지 말지니 포기하지 아니하면 때가 이르매 거두리로다 — 갈라디아서 6:9',
+      '얍복강에서 밤새 씨름한 야곱은 다리를 절게 되었지만 이스라엘이라는 새 이름을 받았습니다. 속임수로 살아온 인생이 그날 밤 바뀌었습니다.',
+    verse: '네 이름을 다시는 야곱이라 부를 것이 아니요 이스라엘이라 부를 것이니 — 창세기 32:28',
+    lead: '은규',
+    floor: 'young-10f',
+    color: '#C084FC',
+    emoji: '🤼',
+    letters: [6],
+  },
+  {
+    id: 'ABRAHAM',
+    name: '믿음의 가정',
+    hall: '아가페홀',
+    keyword: '약속을 붙듦',
+    characterTitle: '아브라함과 사라 : 약속을 붙든 사람',
+    coreQuestion: '보이지 않는 약속을\n당신은 끝까지 붙들 수 있는가?',
+    description:
+      '갈 곳을 알지 못한 채 떠난 아브라함과, 웃음으로 약속을 의심했던 사라. 그럼에도 하나님은 이 가정을 믿음의 조상으로 세우셨습니다.',
+    verse: '믿음으로 아브라함은 부르심을 받았을 때에 순종하여 나갈 바를 알지 못하고 나아갔으며 — 히브리서 11:8',
+    lead: '혜선',
+    floor: 'young-10f',
+    color: '#A78BFA',
+    emoji: '⭐',
+    letters: [7],
+  },
+  {
+    id: 'SAMSON',
+    name: '미는 챌린지',
+    hall: '디모데홀',
+    keyword: '헌신',
+    characterTitle: '삼손 : 마지막까지 헌신한 사람',
+    coreQuestion: '당신의 힘은\n무엇을 위해 쓰이고 있는가?',
+    description:
+      '삼손은 큰 힘을 가졌지만 마지막 순간까지 하나님께 헌신했습니다. 넘어짐 속에서도 그는 다시 하나님을 붙들었습니다.',
+    verse: '삼손이 여호와께 부르짖어 이르되 주 여호와여 나를 생각하옵소서 — 사사기 16:28',
+    lead: '수',
+    floor: 'young-10f',
+    color: '#EF4444',
+    emoji: '💪',
+    letters: [8],
+  },
+  {
+    id: 'DAVID',
+    name: '도미노',
+    hall: '새로운홀',
+    keyword: '작은 믿음의 시작',
+    characterTitle: '다윗 : 작은 믿음으로 시작한 사람',
+    coreQuestion: '작은 순종이\n어디까지 이어질 수 있는가?',
+    description:
+      '다윗은 물맷돌 하나로 골리앗 앞에 섰습니다. 작아 보였던 믿음의 시작이 이스라엘 전체를 구원하는 역사로 이어졌습니다.',
+    verse: '너는 칼과 창과 단창으로 내게 오나 나는 만군의 여호와의 이름으로 네게 가노라 — 사무엘상 17:45',
     lead: '보람',
     floor: 'fashion-10f',
     color: '#22D3EE',
-    emoji: '🎯',
+    emoji: '🪨',
     letters: [9],
   },
 ];
