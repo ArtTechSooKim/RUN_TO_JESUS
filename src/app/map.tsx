@@ -1,66 +1,34 @@
 import { Link } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet } from 'react-native';
+import { useMemo, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { CollectionBar } from '@/components/collection-bar';
-import { FloorPlanMap, type StationStatus } from '@/components/floor-plan-map';
+import { Floor10Fashion, Floor10Young, Floor11Young } from '@/components/floor-map-svg';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { floors, stations, type Floor } from '@/constants/stations';
+import { floorLabels, floors, stations, type Floor } from '@/constants/stations';
 import { Colors, Spacing } from '@/constants/theme';
 import { useStationProgress } from '@/hooks/use-station-progress';
 import { useTheme } from '@/hooks/use-theme';
 
-function randomCrowd() {
-  return Math.floor(Math.random() * 12);
-}
+const FLOOR_MAPS: Record<Floor, typeof Floor10Young> = {
+  'young-10f': Floor10Young,
+  'young-11f': Floor11Young,
+  'fashion-10f': Floor10Fashion,
+};
 
 export default function MapScreen() {
   const theme = useTheme();
   const { clearedIds, collectedLetters, toggleCleared } = useStationProgress();
   const [activeFloor, setActiveFloor] = useState<Floor>('young-10f');
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  // Starts at 0 for every station (deterministic, matches static export's
-  // server-rendered HTML) and only randomizes after mount to avoid a
-  // hydration mismatch between server and client output.
-  const [crowdById, setCrowdById] = useState<Record<string, number>>(() =>
-    Object.fromEntries(stations.map((s) => [s.id, 0])),
-  );
-
-  useEffect(() => {
-    function randomizeCrowds() {
-      setCrowdById((prev) => {
-        const next = { ...prev };
-        for (const station of stations) {
-          if (clearedIds.has(station.id)) continue;
-          next[station.id] = randomCrowd();
-        }
-        return next;
-      });
-    }
-    randomizeCrowds();
-    const interval = setInterval(randomizeCrowds, 4000);
-    return () => clearInterval(interval);
-  }, [clearedIds]);
-
-  const statusById: Record<string, StationStatus> = useMemo(
-    () =>
-      Object.fromEntries(
-        stations.map((s) => [
-          s.id,
-          { cleared: clearedIds.has(s.id), crowdCount: crowdById[s.id] ?? 0 },
-        ]),
-      ),
-    [clearedIds, crowdById],
-  );
 
   const floorStations = useMemo(
     () => stations.filter((s) => s.floor === activeFloor),
     [activeFloor],
   );
-  const currentFloor = floors.find((f) => f.id === activeFloor)!;
   const selectedStation = stations.find((s) => s.id === selectedId) ?? null;
-  const selectedStatus = selectedId ? statusById[selectedId] : null;
+  const FloorMap = FLOOR_MAPS[activeFloor];
 
   return (
     <ThemedView style={styles.container}>
@@ -73,12 +41,12 @@ export default function MapScreen() {
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.floorTabs}>
           {floors.map((floor) => {
-            const isActive = floor.id === activeFloor;
+            const isActive = floor === activeFloor;
             return (
               <Pressable
-                key={floor.id}
+                key={floor}
                 onPress={() => {
-                  setActiveFloor(floor.id);
+                  setActiveFloor(floor);
                   setSelectedId(null);
                 }}
                 style={[
@@ -89,40 +57,43 @@ export default function MapScreen() {
                 <ThemedText
                   type="smallBold"
                   style={isActive ? { color: theme.background } : undefined}>
-                  {floor.label}
+                  {floorLabels[floor]}
                 </ThemedText>
               </Pressable>
             );
           })}
         </ScrollView>
 
-        <FloorPlanMap
-          image={currentFloor.image}
-          aspectRatio={currentFloor.aspectRatio}
-          stations={floorStations}
-          statusById={statusById}
-          selectedId={selectedId}
-          onSelectStation={setSelectedId}
-        />
+        <View style={styles.mapBox}>
+          <FloorMap
+            stations={floorStations}
+            clearedIds={clearedIds}
+            selectedId={selectedId}
+            onSelect={setSelectedId}
+          />
+        </View>
 
-        <ThemedView type="backgroundElement" style={styles.legend}>
-          <LegendItem color="#9aa0a8" label="미탐험" />
-          <LegendItem color="#f2b94b" label="보통" />
-          <LegendItem color="#e5484d" label="혼잡" />
-          <LegendItem color="#3ba55c" label="클리어" />
-        </ThemedView>
+        <View style={styles.legend}>
+          {floorStations.map((s) => (
+            <View key={s.id} style={styles.legendItem}>
+              <View style={[styles.legendDot, { backgroundColor: s.color }]} />
+              <ThemedText type="small" themeColor="textSecondary">
+                {s.hall} — {s.keyword}
+              </ThemedText>
+            </View>
+          ))}
+        </View>
 
-        {selectedStation && selectedStatus && (
+        {selectedStation && (
           <ThemedView type="backgroundElement" style={styles.detailCard}>
-            <ThemedText type="smallBold">
-              {selectedStation.name} · {selectedStation.hall}
+            <ThemedText type="smallBold" style={{ color: selectedStation.color }}>
+              {selectedStation.hall} · {selectedStation.keyword}
             </ThemedText>
             <ThemedText type="small" themeColor="textSecondary">
-              {selectedStation.characters} · 담당 {selectedStation.lead}
+              {selectedStation.characterTitle} · 담당 {selectedStation.lead}
             </ThemedText>
             <ThemedText type="small">
-              현재 인원 {selectedStatus.crowdCount}명 ·{' '}
-              {selectedStatus.cleared ? '클리어 완료' : '아직 탐험 전'}
+              {clearedIds.has(selectedStation.id) ? '클리어 완료' : '아직 탐험 전'}
             </ThemedText>
             <ThemedView style={styles.detailActions}>
               <Link href={{ pathname: '/station/[id]', params: { id: selectedStation.id } }} asChild>
@@ -134,7 +105,9 @@ export default function MapScreen() {
                 onPress={() => toggleCleared(selectedStation.id)}
                 style={({ pressed }) => [styles.clearButton, pressed && styles.pressed]}>
                 <ThemedText type="link">
-                  {selectedStatus.cleared ? '클리어 취소 (테스트용)' : '클리어 처리 (테스트용)'}
+                  {clearedIds.has(selectedStation.id)
+                    ? '클리어 취소 (테스트용)'
+                    : '클리어 처리 (테스트용)'}
                 </ThemedText>
               </Pressable>
             </ThemedView>
@@ -149,15 +122,6 @@ export default function MapScreen() {
           </ThemedText>
         </Pressable>
       </Link>
-    </ThemedView>
-  );
-}
-
-function LegendItem({ color, label }: { color: string; label: string }) {
-  return (
-    <ThemedView style={styles.legendItem}>
-      <ThemedView style={[styles.legendDot, { backgroundColor: color }]} />
-      <ThemedText type="small">{label}</ThemedText>
     </ThemedView>
   );
 }
@@ -180,23 +144,29 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     marginRight: Spacing.two,
   },
+  mapBox: {
+    borderRadius: Spacing.three,
+    overflow: 'hidden',
+    backgroundColor: '#070D1C',
+    borderWidth: 1,
+    borderColor: 'rgba(255,215,0,0.1)',
+    padding: Spacing.two,
+  },
   legend: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: Spacing.three,
-    padding: Spacing.three,
-    borderRadius: Spacing.three,
+    paddingHorizontal: Spacing.one,
   },
   legendItem: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.one,
-    backgroundColor: 'transparent',
   },
   legendDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
   detailCard: {
     gap: Spacing.one,

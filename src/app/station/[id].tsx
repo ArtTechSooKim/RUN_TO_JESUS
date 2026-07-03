@@ -28,7 +28,7 @@ export default function StationDetailScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <Stack.Screen options={{ title: station.name }} />
+      <Stack.Screen options={{ title: station.hall }} />
       <ScrollView contentContainerStyle={styles.content}>
         <View style={[styles.hero, { backgroundColor: `${station.color}22`, borderColor: `${station.color}55` }]}>
           <ThemedText style={styles.heroEmoji}>{station.emoji}</ThemedText>
