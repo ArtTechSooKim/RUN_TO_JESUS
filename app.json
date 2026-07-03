@@ -54,6 +54,11 @@
       "typedRoutes": true,
       "reactCompiler": true
     },
+    "autolinking": {
+      "ios": {
+        "buildFromSource": ["react-native-reanimated", "react-native-worklets"]
+      }
+    },
     "extra": {
       "router": {},
       "eas": {
