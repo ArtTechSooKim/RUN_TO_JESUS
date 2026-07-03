@@ -26,10 +26,22 @@ export default function RootLayout() {
         <AnimatedSplashOverlay />
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="index" />
-          <Stack.Screen name="map" options={{ headerShown: true, title: '탐험 지도' }} />
-          <Stack.Screen name="station/[id]" options={{ headerShown: true, title: '' }} />
-          <Stack.Screen name="collection" options={{ headerShown: true, title: '수집 현황' }} />
-          <Stack.Screen name="scan" options={{ headerShown: true, title: 'QR 스캔' }} />
+          <Stack.Screen
+            name="map"
+            options={{ headerShown: true, title: '탐험 지도', animation: 'fade' }}
+          />
+          <Stack.Screen
+            name="station/[id]"
+            options={{ headerShown: true, title: '', animation: 'slide_from_right' }}
+          />
+          <Stack.Screen
+            name="collection"
+            options={{ headerShown: true, title: '수집 현황', animation: 'slide_from_bottom' }}
+          />
+          <Stack.Screen
+            name="scan"
+            options={{ headerShown: true, title: 'QR 스캔', animation: 'slide_from_bottom' }}
+          />
         </Stack>
       </StationProgressProvider>
     </ThemeProvider>

@@ -7,6 +7,7 @@ import Animated, {
   Easing,
   FadeIn,
   FadeInDown,
+  FadeOut,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
@@ -223,14 +224,14 @@ export default function StationDetailScreen() {
           </ThemedText>
         </Pressable>
         {showQr && (
-          <View style={styles.qrOuter}>
+          <Animated.View entering={FadeIn.duration(200)} exiting={FadeOut.duration(150)} style={styles.qrOuter}>
             <View style={styles.qrBox}>
               <QRCode value={`${QR_PREFIX}${station.id}`} size={160} backgroundColor="#fff" />
             </View>
             <ThemedText type="small" themeColor="textSecondary">
               다른 기기의 스캔 화면으로 이 코드를 찍어보세요
             </ThemedText>
-          </View>
+          </Animated.View>
         )}
       </ScrollView>
     </ThemedView>

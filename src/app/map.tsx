@@ -1,6 +1,7 @@
 import { Link } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import Animated, { FadeIn, FadeInDown, FadeOut } from 'react-native-reanimated';
 
 import { CollectionBar } from '@/components/collection-bar';
 import { Floor10Fashion, Floor10Young, Floor11Young } from '@/components/floor-map-svg';
@@ -64,16 +65,16 @@ export default function MapScreen() {
           })}
         </ScrollView>
 
-        <View style={styles.mapBox}>
+        <Animated.View key={activeFloor} entering={FadeIn.duration(280)} style={styles.mapBox}>
           <FloorMap
             stations={floorStations}
             clearedIds={clearedIds}
             selectedId={selectedId}
             onSelect={setSelectedId}
           />
-        </View>
+        </Animated.View>
 
-        <View style={styles.legend}>
+        <Animated.View key={`legend-${activeFloor}`} entering={FadeIn.duration(280)} style={styles.legend}>
           {floorStations.map((s) => (
             <View key={s.id} style={styles.legendItem}>
               <View style={[styles.legendDot, { backgroundColor: s.color }]} />
@@ -82,36 +83,38 @@ export default function MapScreen() {
               </ThemedText>
             </View>
           ))}
-        </View>
+        </Animated.View>
 
         {selectedStation && (
-          <ThemedView type="backgroundElement" style={styles.detailCard}>
-            <ThemedText type="smallBold" style={{ color: selectedStation.color }}>
-              {selectedStation.hall} · {selectedStation.keyword}
-            </ThemedText>
-            <ThemedText type="small" themeColor="textSecondary">
-              {selectedStation.characterTitle} · 담당 {selectedStation.lead}
-            </ThemedText>
-            <ThemedText type="small">
-              {clearedIds.has(selectedStation.id) ? '클리어 완료' : '아직 탐험 전'}
-            </ThemedText>
-            <ThemedView style={styles.detailActions}>
-              <Link href={{ pathname: '/station/[id]', params: { id: selectedStation.id } }} asChild>
-                <Pressable style={({ pressed }) => [styles.linkButton, pressed && styles.pressed]}>
-                  <ThemedText type="link">스테이션 자세히 보기</ThemedText>
+          <Animated.View entering={FadeInDown.duration(250)} exiting={FadeOut.duration(150)}>
+            <ThemedView type="backgroundElement" style={styles.detailCard}>
+              <ThemedText type="smallBold" style={{ color: selectedStation.color }}>
+                {selectedStation.hall} · {selectedStation.keyword}
+              </ThemedText>
+              <ThemedText type="small" themeColor="textSecondary">
+                {selectedStation.characterTitle} · 담당 {selectedStation.lead}
+              </ThemedText>
+              <ThemedText type="small">
+                {clearedIds.has(selectedStation.id) ? '클리어 완료' : '아직 탐험 전'}
+              </ThemedText>
+              <ThemedView style={styles.detailActions}>
+                <Link href={{ pathname: '/station/[id]', params: { id: selectedStation.id } }} asChild>
+                  <Pressable style={({ pressed }) => [styles.linkButton, pressed && styles.pressed]}>
+                    <ThemedText type="link">스테이션 자세히 보기</ThemedText>
+                  </Pressable>
+                </Link>
+                <Pressable
+                  onPress={() => toggleCleared(selectedStation.id)}
+                  style={({ pressed }) => [styles.clearButton, pressed && styles.pressed]}>
+                  <ThemedText type="link">
+                    {clearedIds.has(selectedStation.id)
+                      ? '클리어 취소 (테스트용)'
+                      : '클리어 처리 (테스트용)'}
+                  </ThemedText>
                 </Pressable>
-              </Link>
-              <Pressable
-                onPress={() => toggleCleared(selectedStation.id)}
-                style={({ pressed }) => [styles.clearButton, pressed && styles.pressed]}>
-                <ThemedText type="link">
-                  {clearedIds.has(selectedStation.id)
-                    ? '클리어 취소 (테스트용)'
-                    : '클리어 처리 (테스트용)'}
-                </ThemedText>
-              </Pressable>
+              </ThemedView>
             </ThemedView>
-          </ThemedView>
+          </Animated.View>
         )}
       </ScrollView>
 
