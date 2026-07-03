@@ -77,11 +77,10 @@ type GameRoomProps = {
   selected: boolean;
   onPress: () => void;
   label: string;
-  sublabel: string;
   rx?: number;
 };
 
-function GameRoom({ x, y, w, h, station, cleared, selected, onPress, label, sublabel, rx = 4 }: GameRoomProps) {
+function GameRoom({ x, y, w, h, station, cleared, selected, onPress, label, rx = 4 }: GameRoomProps) {
   return (
     <G onPress={onPress}>
       <Rect
@@ -117,23 +116,13 @@ function GameRoom({ x, y, w, h, station, cleared, selected, onPress, label, subl
       )}
       <SvgText
         x={x + w / 2}
-        y={y + h / 2 - 4}
+        y={y + h / 2 + 4}
         textAnchor="middle"
         fill={station.color}
         fontSize={11}
         fontFamily={FONT}
         fontWeight="700">
         {label}
-      </SvgText>
-      <SvgText
-        x={x + w / 2}
-        y={y + h / 2 + 10}
-        textAnchor="middle"
-        fill={station.color}
-        fontSize={8.5}
-        opacity={0.7}
-        fontFamily={FONT}>
-        {sublabel}
       </SvgText>
     </G>
   );
@@ -199,7 +188,6 @@ export function Floor10Young({ stations, clearedIds, selectedId, onSelect }: Flo
         selected={selectedId === jacob.id}
         onPress={() => onSelect(jacob.id)}
         label="이삭홀"
-        sublabel="(블러핑)"
       />
       <GameRoom
         x={256}
@@ -211,7 +199,6 @@ export function Floor10Young({ stations, clearedIds, selectedId, onSelect }: Flo
         selected={selectedId === abraham.id}
         onPress={() => onSelect(abraham.id)}
         label="아가페홀"
-        sublabel="(믿음의 가정)"
       />
       <GameRoom
         x={380}
@@ -223,7 +210,6 @@ export function Floor10Young({ stations, clearedIds, selectedId, onSelect }: Flo
         selected={selectedId === samson.id}
         onPress={() => onSelect(samson.id)}
         label="디모데홀"
-        sublabel="(미는 챌린지)"
       />
       <GameRoom
         x={10}
@@ -235,7 +221,6 @@ export function Floor10Young({ stations, clearedIds, selectedId, onSelect }: Flo
         selected={selectedId === abel.id}
         onPress={() => onSelect(abel.id)}
         label="사무엘홀"
-        sublabel="(방탈출)"
       />
       <GameRoom
         x={10}
@@ -247,7 +232,6 @@ export function Floor10Young({ stations, clearedIds, selectedId, onSelect }: Flo
         selected={selectedId === noah.id}
         onPress={() => onSelect(noah.id)}
         label="다니엘홀"
-        sublabel="(방탈출)"
       />
 
       <SvgText x={10} y={16} fill="#2D4066" fontSize={10} fontFamily={FONT} fontWeight="600">
@@ -296,7 +280,6 @@ export function Floor11Young({ stations, clearedIds, selectedId, onSelect }: Flo
         selected={selectedId === joseph.id}
         onPress={() => onSelect(joseph.id)}
         label="요셉홀"
-        sublabel="(릴레이)"
       />
 
       <SvgText x={10} y={16} fill="#2D4066" fontSize={10} fontFamily={FONT} fontWeight="600">
@@ -358,7 +341,6 @@ export function Floor10Fashion({ stations, clearedIds, selectedId, onSelect }: F
         selected={selectedId === david.id}
         onPress={() => onSelect(david.id)}
         label="새로운홀"
-        sublabel="(도미노)"
       />
 
       <SvgText x={10} y={108} fill="#2D4066" fontSize={10} fontFamily={FONT} fontWeight="600">

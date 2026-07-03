@@ -79,7 +79,7 @@ export default function MapScreen() {
             <View key={s.id} style={styles.legendItem}>
               <View style={[styles.legendDot, { backgroundColor: s.color }]} />
               <ThemedText type="small" themeColor="textSecondary">
-                {s.hall} — {s.keyword}
+                {s.hall}
               </ThemedText>
             </View>
           ))}
