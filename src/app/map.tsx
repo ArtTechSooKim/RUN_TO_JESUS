@@ -1,11 +1,14 @@
+import { Link } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet } from 'react-native';
 
+import { CollectionBar } from '@/components/collection-bar';
 import { FloorPlanMap, type StationStatus } from '@/components/floor-plan-map';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { floors, stations, type Floor } from '@/constants/stations';
 import { Spacing } from '@/constants/theme';
+import { useStationProgress } from '@/hooks/use-station-progress';
 import { useTheme } from '@/hooks/use-theme';
 
 function randomCrowd() {
@@ -14,25 +17,37 @@ function randomCrowd() {
 
 export default function MapScreen() {
   const theme = useTheme();
+  const { clearedIds, collectedLetters, toggleCleared } = useStationProgress();
   const [activeFloor, setActiveFloor] = useState<Floor>('young-10f');
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [statusById, setStatusById] = useState<Record<string, StationStatus>>(() =>
-    Object.fromEntries(stations.map((s) => [s.id, { cleared: false, crowdCount: randomCrowd() }])),
+  const [crowdById, setCrowdById] = useState<Record<string, number>>(() =>
+    Object.fromEntries(stations.map((s) => [s.id, randomCrowd()])),
   );
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setStatusById((prev) => {
+      setCrowdById((prev) => {
         const next = { ...prev };
         for (const station of stations) {
-          if (next[station.id].cleared) continue;
-          next[station.id] = { ...next[station.id], crowdCount: randomCrowd() };
+          if (clearedIds.has(station.id)) continue;
+          next[station.id] = randomCrowd();
         }
         return next;
       });
     }, 4000);
     return () => clearInterval(interval);
-  }, []);
+  }, [clearedIds]);
+
+  const statusById: Record<string, StationStatus> = useMemo(
+    () =>
+      Object.fromEntries(
+        stations.map((s) => [
+          s.id,
+          { cleared: clearedIds.has(s.id), crowdCount: crowdById[s.id] ?? 0 },
+        ]),
+      ),
+    [clearedIds, crowdById],
+  );
 
   const floorStations = useMemo(
     () => stations.filter((s) => s.floor === activeFloor),
@@ -42,16 +57,15 @@ export default function MapScreen() {
   const selectedStation = stations.find((s) => s.id === selectedId) ?? null;
   const selectedStatus = selectedId ? statusById[selectedId] : null;
 
-  function toggleCleared(id: string) {
-    setStatusById((prev) => ({
-      ...prev,
-      [id]: { ...prev[id], cleared: !prev[id].cleared },
-    }));
-  }
-
   return (
     <ThemedView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
+        <Link href="/collection" asChild>
+          <Pressable style={({ pressed }) => pressed && styles.pressed}>
+            <CollectionBar collectedIndices={collectedLetters} />
+          </Pressable>
+        </Link>
+
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.floorTabs}>
           {floors.map((floor) => {
             const isActive = floor.id === activeFloor;
@@ -104,13 +118,20 @@ export default function MapScreen() {
               현재 인원 {selectedStatus.crowdCount}명 ·{' '}
               {selectedStatus.cleared ? '클리어 완료' : '아직 탐험 전'}
             </ThemedText>
-            <Pressable
-              onPress={() => toggleCleared(selectedStation.id)}
-              style={({ pressed }) => [styles.clearButton, pressed && styles.pressed]}>
-              <ThemedText type="link">
-                {selectedStatus.cleared ? '클리어 취소 (테스트용)' : '클리어 처리 (테스트용)'}
-              </ThemedText>
-            </Pressable>
+            <ThemedView style={styles.detailActions}>
+              <Link href={{ pathname: '/station/[id]', params: { id: selectedStation.id } }} asChild>
+                <Pressable style={({ pressed }) => [styles.linkButton, pressed && styles.pressed]}>
+                  <ThemedText type="link">스테이션 자세히 보기</ThemedText>
+                </Pressable>
+              </Link>
+              <Pressable
+                onPress={() => toggleCleared(selectedStation.id)}
+                style={({ pressed }) => [styles.clearButton, pressed && styles.pressed]}>
+                <ThemedText type="link">
+                  {selectedStatus.cleared ? '클리어 취소 (테스트용)' : '클리어 처리 (테스트용)'}
+                </ThemedText>
+              </Pressable>
+            </ThemedView>
           </ThemedView>
         )}
       </ScrollView>
@@ -167,6 +188,14 @@ const styles = StyleSheet.create({
     gap: Spacing.one,
     padding: Spacing.four,
     borderRadius: Spacing.four,
+  },
+  detailActions: {
+    flexDirection: 'row',
+    gap: Spacing.four,
+    backgroundColor: 'transparent',
+  },
+  linkButton: {
+    marginTop: Spacing.two,
   },
   clearButton: {
     alignSelf: 'flex-start',

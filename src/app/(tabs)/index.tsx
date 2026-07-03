@@ -1,72 +1,44 @@
-import * as Device from 'expo-device';
 import { Link } from 'expo-router';
-import { Platform, Pressable, StyleSheet } from 'react-native';
+import { Pressable, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
-
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
-  }
-  if (Device.isDevice) {
-    return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
-      </ThemedText>
-    );
-  }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
-  return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
-  );
-}
+import { BottomTabInset, Colors, MaxContentWidth, Spacing } from '@/constants/theme';
 
 export default function HomeScreen() {
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
         <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
+          <ThemedText type="small" themeColor="textSecondary" style={styles.eyebrow}>
+            2026 청년연합수련회
+          </ThemedText>
           <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
+            RUN TO{'\n'}JESUS
+          </ThemedText>
+          <ThemedText type="small" themeColor="textSecondary" style={styles.subtitle}>
+            믿음의 경주에 오신 것을 환영합니다.{'\n'}바통을 이어받아 함께 달려가십시오.
           </ThemedText>
         </ThemedView>
 
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
+        <Link href="/map" asChild>
+          <Pressable style={({ pressed }) => pressed && styles.pressed}>
+            <ThemedView style={styles.ctaButton}>
+              <ThemedText type="smallBold" style={{ color: Colors.dark.background }}>
+                탐험 시작하기
+              </ThemedText>
+            </ThemedView>
+          </Pressable>
+        </Link>
 
-        <ThemedView type="backgroundElement" style={styles.stepContainer}>
-          <HintRow
-            title="Try editing"
-            hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
-          />
-          <HintRow title="Dev tools" hint={getDevMenuHint()} />
-          <HintRow
-            title="Fresh start"
-            hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-          />
-          <Link href="/nfc-test" asChild>
-            <Pressable style={({ pressed }) => pressed && styles.pressed}>
-              <HintRow title="NFC 테스트" hint={<ThemedText type="code">/nfc-test</ThemedText>} />
-            </Pressable>
-          </Link>
-          <Link href="/map" asChild>
-            <Pressable style={({ pressed }) => pressed && styles.pressed}>
-              <HintRow title="탐험 지도" hint={<ThemedText type="code">/map</ThemedText>} />
-            </Pressable>
-          </Link>
-        </ThemedView>
-
-        {Platform.OS === 'web' && <WebBadge />}
+        <Link href="/nfc-test" asChild>
+          <Pressable style={({ pressed }) => pressed && styles.pressed}>
+            <ThemedText type="link" themeColor="textSecondary">
+              NFC 태그 테스트
+            </ThemedText>
+          </Pressable>
+        </Link>
       </SafeAreaView>
     </ThemedView>
   );
@@ -82,31 +54,38 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: Spacing.four,
     alignItems: 'center',
-    gap: Spacing.three,
+    justifyContent: 'center',
+    gap: Spacing.five,
     paddingBottom: BottomTabInset + Spacing.three,
     maxWidth: MaxContentWidth,
   },
   heroSection: {
     alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
+    gap: Spacing.three,
+  },
+  eyebrow: {
+    textTransform: 'uppercase',
+    letterSpacing: 4,
   },
   title: {
     textAlign: 'center',
+    color: Colors.dark.gold,
+    textShadowColor: 'rgba(255,215,0,0.5)',
+    textShadowRadius: 30,
+    textShadowOffset: { width: 0, height: 0 },
+    letterSpacing: 2,
   },
-  code: {
-    textTransform: 'uppercase',
+  subtitle: {
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  ctaButton: {
+    backgroundColor: Colors.dark.gold,
+    paddingHorizontal: Spacing.five,
+    paddingVertical: Spacing.three,
+    borderRadius: Spacing.five,
   },
   pressed: {
     opacity: 0.7,
-  },
-  stepContainer: {
-    gap: Spacing.three,
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
   },
 });
