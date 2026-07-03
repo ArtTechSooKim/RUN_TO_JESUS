@@ -7,7 +7,7 @@ import { FloorPlanMap, type StationStatus } from '@/components/floor-plan-map';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { floors, stations, type Floor } from '@/constants/stations';
-import { Spacing } from '@/constants/theme';
+import { Colors, Spacing } from '@/constants/theme';
 import { useStationProgress } from '@/hooks/use-station-progress';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -135,6 +135,14 @@ export default function MapScreen() {
           </ThemedView>
         )}
       </ScrollView>
+
+      <Link href="/scan" asChild>
+        <Pressable style={({ pressed }) => [styles.scanFab, pressed && styles.pressed]}>
+          <ThemedText type="smallBold" style={{ color: Colors.dark.background }}>
+            QR 스캔
+          </ThemedText>
+        </Pressable>
+      </Link>
     </ThemedView>
   );
 }
@@ -203,5 +211,19 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.7,
+  },
+  scanFab: {
+    position: 'absolute',
+    bottom: Spacing.five,
+    alignSelf: 'center',
+    backgroundColor: Colors.dark.gold,
+    paddingHorizontal: Spacing.five,
+    paddingVertical: Spacing.three,
+    borderRadius: Spacing.five,
+    shadowColor: Colors.dark.gold,
+    shadowOpacity: 0.5,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 6,
   },
 });

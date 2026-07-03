@@ -1,0 +1,22 @@
+// Generates printable QR PNGs for each station, encoding just the station id.
+// Run with: node scripts/generate-station-qr.js
+const fs = require('fs');
+const path = require('path');
+const QRCode = require('qrcode');
+
+const stationsSource = fs.readFileSync(
+  path.join(__dirname, '../src/constants/stations.ts'),
+  'utf8',
+);
+const ids = [...stationsSource.matchAll(/id:\s*'([a-z-]+)'/g)].map((m) => m[1]);
+
+const outDir = path.join(__dirname, '../qr-codes');
+fs.mkdirSync(outDir, { recursive: true });
+
+(async () => {
+  for (const id of ids) {
+    const file = path.join(outDir, `${id}.png`);
+    await QRCode.toFile(file, id, { width: 600, margin: 2 });
+    console.log('wrote', file);
+  }
+})();

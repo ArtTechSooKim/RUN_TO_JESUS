@@ -1,5 +1,7 @@
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { Link, Stack, useLocalSearchParams } from 'expo-router';
+import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import QRCode from 'react-native-qrcode-svg';
 
 import { LetterPiece } from '@/components/letter-piece';
 import { ThemedText } from '@/components/themed-text';
@@ -12,6 +14,7 @@ export default function StationDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const station = stations.find((s) => s.id === id);
   const { clearedIds, toggleCleared } = useStationProgress();
+  const [showQr, setShowQr] = useState(false);
 
   if (!station) {
     return (
@@ -98,17 +101,45 @@ export default function StationDetailScreen() {
             </Pressable>
           </View>
         ) : (
-          <Pressable
-            onPress={() => toggleCleared(station.id)}
-            style={({ pressed }) => [
-              styles.ctaButton,
-              { borderColor: `${station.color}90` },
-              pressed && styles.pressed,
-            ]}>
-            <ThemedText type="smallBold" style={{ color: station.color }}>
-              믿음의 조각 획득하기 (QR/NFC 스캔 자리)
+          <View style={styles.ctaBlock}>
+            <Link href="/scan" asChild>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.ctaButton,
+                  { borderColor: `${station.color}90` },
+                  pressed && styles.pressed,
+                ]}>
+                <ThemedText type="smallBold" style={{ color: station.color }}>
+                  QR 코드 스캔하기
+                </ThemedText>
+              </Pressable>
+            </Link>
+            <Pressable
+              onPress={() => toggleCleared(station.id)}
+              style={({ pressed }) => pressed && styles.pressed}>
+              <ThemedText type="small" themeColor="textSecondary">
+                스캔이 안 될 때: 직접 완료 처리 (수동 백업)
+              </ThemedText>
+            </Pressable>
+          </View>
+        )}
+
+        <Pressable
+          onPress={() => setShowQr((v) => !v)}
+          style={({ pressed }) => [styles.qrToggle, pressed && styles.pressed]}>
+          <ThemedText type="small" themeColor="textSecondary">
+            {showQr ? '테스트용 QR 코드 닫기' : '테스트용 QR 코드 보기'}
+          </ThemedText>
+        </Pressable>
+        {showQr && (
+          <View style={styles.qrOuter}>
+            <View style={styles.qrBox}>
+              <QRCode value={station.id} size={160} backgroundColor="#fff" />
+            </View>
+            <ThemedText type="small" themeColor="textSecondary">
+              다른 기기의 스캔 화면으로 이 코드를 찍어보세요
             </ThemedText>
-          </Pressable>
+          </View>
         )}
       </ScrollView>
     </ThemedView>
@@ -181,11 +212,29 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: Spacing.two,
   },
+  ctaBlock: {
+    gap: Spacing.two,
+    alignItems: 'center',
+  },
   ctaButton: {
+    width: '100%',
     paddingVertical: Spacing.four,
     borderRadius: Spacing.four,
     borderWidth: 2,
     alignItems: 'center',
+  },
+  qrToggle: {
+    alignItems: 'center',
+    paddingVertical: Spacing.two,
+  },
+  qrOuter: {
+    alignItems: 'center',
+    gap: Spacing.two,
+  },
+  qrBox: {
+    padding: Spacing.four,
+    borderRadius: Spacing.four,
+    backgroundColor: '#fff',
   },
   doneBlock: {
     alignItems: 'center',
