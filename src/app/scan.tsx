@@ -81,19 +81,23 @@ export default function ScanScreen() {
 
   return (
     <View style={styles.container}>
-      <CameraView
-        style={StyleSheet.absoluteFill}
-        facing="back"
-        barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
-        onBarcodeScanned={(result) => handleScan(result.data)}
-      />
+      {!collectedStation && (
+        <CameraView
+          style={StyleSheet.absoluteFill}
+          facing="back"
+          barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
+          onBarcodeScanned={(result) => handleScan(result.data)}
+        />
+      )}
 
-      <View style={styles.overlay} pointerEvents="none">
-        <View style={styles.frame} />
-        <ThemedText type="small" style={styles.hint}>
-          스테이션의 QR 코드를 프레임 안에 맞춰주세요
-        </ThemedText>
-      </View>
+      {!collectedStation && (
+        <View style={styles.overlay} pointerEvents="none">
+          <View style={styles.frame} />
+          <ThemedText type="small" style={styles.hint}>
+            스테이션의 QR 코드를 프레임 안에 맞춰주세요
+          </ThemedText>
+        </View>
+      )}
 
       {errorText !== '' && (
         <ThemedView type="backgroundElement" style={styles.errorBox}>
