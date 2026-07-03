@@ -20,12 +20,15 @@ export default function MapScreen() {
   const { clearedIds, collectedLetters, toggleCleared } = useStationProgress();
   const [activeFloor, setActiveFloor] = useState<Floor>('young-10f');
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  // Starts at 0 for every station (deterministic, matches static export's
+  // server-rendered HTML) and only randomizes after mount to avoid a
+  // hydration mismatch between server and client output.
   const [crowdById, setCrowdById] = useState<Record<string, number>>(() =>
-    Object.fromEntries(stations.map((s) => [s.id, randomCrowd()])),
+    Object.fromEntries(stations.map((s) => [s.id, 0])),
   );
 
   useEffect(() => {
-    const interval = setInterval(() => {
+    function randomizeCrowds() {
       setCrowdById((prev) => {
         const next = { ...prev };
         for (const station of stations) {
@@ -34,7 +37,9 @@ export default function MapScreen() {
         }
         return next;
       });
-    }, 4000);
+    }
+    randomizeCrowds();
+    const interval = setInterval(randomizeCrowds, 4000);
     return () => clearInterval(interval);
   }, [clearedIds]);
 

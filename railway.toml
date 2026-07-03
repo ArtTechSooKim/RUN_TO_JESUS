@@ -1,0 +1,7 @@
+[build]
+buildCommand = "npm ci && npx expo export -p web"
+
+[deploy]
+startCommand = "npx serve dist -s -l $PORT"
+healthcheckPath = "/"
+healthcheckTimeout = 100
