@@ -97,22 +97,30 @@ export default function MapScreen() {
               <ThemedText type="small">
                 {clearedIds.has(selectedStation.id) ? '클리어 완료' : '아직 탐험 전'}
               </ThemedText>
-              <ThemedView style={styles.detailActions}>
+              <View style={styles.detailActions}>
                 <Link href={{ pathname: '/station/[id]', params: { id: selectedStation.id } }} asChild>
-                  <Pressable style={({ pressed }) => [styles.linkButton, pressed && styles.pressed]}>
-                    <ThemedText type="link">스테이션 자세히 보기</ThemedText>
+                  <Pressable style={({ pressed }) => pressed && styles.pressed}>
+                    <View style={[styles.primaryButton, { backgroundColor: selectedStation.color }]}>
+                      <ThemedText type="smallBold" style={{ color: Colors.dark.background }}>
+                        스테이션 자세히 보기 →
+                      </ThemedText>
+                    </View>
                   </Pressable>
                 </Link>
                 <Pressable
                   onPress={() => toggleCleared(selectedStation.id)}
-                  style={({ pressed }) => [styles.clearButton, pressed && styles.pressed]}>
-                  <ThemedText type="link">
+                  style={({ pressed }) => [
+                    styles.secondaryButton,
+                    { borderColor: `${selectedStation.color}60` },
+                    pressed && styles.pressed,
+                  ]}>
+                  <ThemedText type="small" style={{ color: selectedStation.color }}>
                     {clearedIds.has(selectedStation.id)
                       ? '클리어 취소 (테스트용)'
                       : '클리어 처리 (테스트용)'}
                   </ThemedText>
                 </Pressable>
-              </ThemedView>
+              </View>
             </ThemedView>
           </Animated.View>
         )}
@@ -177,16 +185,19 @@ const styles = StyleSheet.create({
     borderRadius: Spacing.four,
   },
   detailActions: {
-    flexDirection: 'row',
-    gap: Spacing.four,
-    backgroundColor: 'transparent',
-  },
-  linkButton: {
+    gap: Spacing.two,
     marginTop: Spacing.two,
   },
-  clearButton: {
-    alignSelf: 'flex-start',
-    marginTop: Spacing.two,
+  primaryButton: {
+    paddingVertical: Spacing.three,
+    borderRadius: Spacing.three,
+    alignItems: 'center',
+  },
+  secondaryButton: {
+    paddingVertical: Spacing.two + 2,
+    borderRadius: Spacing.three,
+    borderWidth: 1,
+    alignItems: 'center',
   },
   pressed: {
     opacity: 0.7,

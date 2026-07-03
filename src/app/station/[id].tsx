@@ -1,8 +1,8 @@
-import { LinearGradient } from 'expo-linear-gradient';
 import { Link, Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
+import Svg, { Defs, LinearGradient as SvgLinearGradient, Rect, Stop } from 'react-native-svg';
 import Animated, {
   Easing,
   FadeIn,
@@ -133,12 +133,15 @@ export default function StationDetailScreen() {
             styles.hero,
             { backgroundColor: `${station.color}22`, borderColor: `${station.color}55` },
           ]}>
-          <LinearGradient
-            colors={[`${station.color}40`, `${station.color}00`]}
-            start={{ x: 0.5, y: 0 }}
-            end={{ x: 0.5, y: 1 }}
-            style={StyleSheet.absoluteFill}
-          />
+          <Svg style={StyleSheet.absoluteFill} width="100%" height="100%">
+            <Defs>
+              <SvgLinearGradient id="heroGradient" x1="0" y1="0" x2="0" y2="1">
+                <Stop offset="0" stopColor={station.color} stopOpacity={0.25} />
+                <Stop offset="1" stopColor={station.color} stopOpacity={0} />
+              </SvgLinearGradient>
+            </Defs>
+            <Rect x={0} y={0} width="100%" height="100%" fill="url(#heroGradient)" />
+          </Svg>
           <HeroParticles color={station.color} />
           <EmojiGlow emoji={station.emoji} color={station.color} />
           <Animated.View
@@ -204,8 +207,14 @@ export default function StationDetailScreen() {
             </ThemedText>
             <Pressable
               onPress={() => toggleCleared(station.id)}
-              style={({ pressed }) => pressed && styles.pressed}>
-              <ThemedText type="link">완료 취소 (테스트용)</ThemedText>
+              style={({ pressed }) => [
+                styles.ghostButton,
+                { borderColor: `${station.color}50` },
+                pressed && styles.pressed,
+              ]}>
+              <ThemedText type="small" style={{ color: station.color }}>
+                완료 취소 (테스트용)
+              </ThemedText>
             </Pressable>
           </View>
         ) : (
@@ -213,7 +222,7 @@ export default function StationDetailScreen() {
             <ScanCta color={station.color} />
             <Pressable
               onPress={() => toggleCleared(station.id)}
-              style={({ pressed }) => pressed && styles.pressed}>
+              style={({ pressed }) => [styles.ghostButton, pressed && styles.pressed]}>
               <ThemedText type="small" themeColor="textSecondary">
                 스캔이 안 될 때: 직접 완료 처리 (수동 백업)
               </ThemedText>
@@ -223,7 +232,7 @@ export default function StationDetailScreen() {
 
         <Pressable
           onPress={() => setShowQr((v) => !v)}
-          style={({ pressed }) => [styles.qrToggle, pressed && styles.pressed]}>
+          style={({ pressed }) => [styles.ghostButton, styles.qrToggle, pressed && styles.pressed]}>
           <ThemedText type="small" themeColor="textSecondary">
             {showQr ? '테스트용 QR 코드 닫기' : '테스트용 QR 코드 보기'}
           </ThemedText>
@@ -336,9 +345,16 @@ const styles = StyleSheet.create({
     left: -100,
     transform: [{ skewX: '-20deg' }],
   },
-  qrToggle: {
-    alignItems: 'center',
+  ghostButton: {
+    alignSelf: 'center',
+    paddingHorizontal: Spacing.four,
     paddingVertical: Spacing.two,
+    borderRadius: Spacing.five,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.16)',
+  },
+  qrToggle: {
+    marginTop: Spacing.one,
   },
   qrOuter: {
     alignItems: 'center',
