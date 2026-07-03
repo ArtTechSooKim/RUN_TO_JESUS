@@ -1,4 +1,6 @@
+import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 import { LetterPiece } from '@/components/letter-piece';
 import { ThemedText } from '@/components/themed-text';
@@ -10,11 +12,21 @@ const SEPARATOR_AFTER = new Set([2, 4]); // RUN | TO | JESUS
 
 type CollectionBarProps = {
   collectedIndices: Set<number>;
+  newlyCollected?: number | null;
 };
 
-export function CollectionBar({ collectedIndices }: CollectionBarProps) {
+export function CollectionBar({ collectedIndices, newlyCollected = null }: CollectionBarProps) {
   const total = RUN_TO_JESUS.length;
   const collected = collectedIndices.size;
+  const progress = useSharedValue(collected / total);
+
+  useEffect(() => {
+    progress.value = withTiming(collected / total, { duration: 800 });
+  }, [collected, progress, total]);
+
+  const progressStyle = useAnimatedStyle(() => ({
+    width: `${progress.value * 100}%`,
+  }));
 
   return (
     <ThemedView type="backgroundElement" style={styles.container}>
@@ -32,7 +44,12 @@ export function CollectionBar({ collectedIndices }: CollectionBarProps) {
       <View style={styles.lettersRow}>
         {RUN_TO_JESUS.split('').map((letter, index) => (
           <View key={index} style={styles.letterSlot}>
-            <LetterPiece letter={letter} collected={collectedIndices.has(index)} size="sm" />
+            <LetterPiece
+              letter={letter}
+              collected={collectedIndices.has(index)}
+              size="sm"
+              animateIn={index === newlyCollected}
+            />
             {SEPARATOR_AFTER.has(index) && (
               <ThemedText themeColor="textSecondary" style={styles.separator}>
                 ·
@@ -43,12 +60,7 @@ export function CollectionBar({ collectedIndices }: CollectionBarProps) {
       </View>
 
       <View style={styles.progressTrack}>
-        <View
-          style={[
-            styles.progressFill,
-            { width: `${(collected / total) * 100}%` },
-          ]}
-        />
+        <Animated.View style={[styles.progressFill, progressStyle]} />
       </View>
     </ThemedView>
   );

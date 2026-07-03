@@ -19,7 +19,7 @@ const FLOOR_MAPS: Record<Floor, typeof Floor10Young> = {
 
 export default function MapScreen() {
   const theme = useTheme();
-  const { clearedIds, collectedLetters, toggleCleared } = useStationProgress();
+  const { clearedIds, collectedLetters, newlyCollected, toggleCleared } = useStationProgress();
   const [activeFloor, setActiveFloor] = useState<Floor>('young-10f');
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
@@ -35,7 +35,7 @@ export default function MapScreen() {
       <ScrollView contentContainerStyle={styles.content}>
         <Link href="/collection" asChild>
           <Pressable style={({ pressed }) => pressed && styles.pressed}>
-            <CollectionBar collectedIndices={collectedLetters} />
+            <CollectionBar collectedIndices={collectedLetters} newlyCollected={newlyCollected} />
           </Pressable>
         </Link>
 

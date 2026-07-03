@@ -3,16 +3,20 @@ import { router } from 'expo-router';
 import { useRef, useState } from 'react';
 import { Platform, Pressable, StyleSheet, View } from 'react-native';
 
+import { CollectBurst } from '@/components/collect-burst';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { stations } from '@/constants/stations';
+import { RUN_TO_JESUS, stations, type Station } from '@/constants/stations';
 import { Colors, Spacing } from '@/constants/theme';
 import { useStationProgress } from '@/hooks/use-station-progress';
+
+const BURST_DURATION_MS = 1500;
 
 export default function ScanScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const { toggleCleared, clearedIds } = useStationProgress();
   const [errorText, setErrorText] = useState('');
+  const [collectedStation, setCollectedStation] = useState<Station | null>(null);
   const scannedRef = useRef(false);
 
   function handleScan(data: string) {
@@ -29,7 +33,10 @@ export default function ScanScreen() {
     if (!clearedIds.has(station.id)) {
       toggleCleared(station.id);
     }
-    router.replace({ pathname: '/station/[id]', params: { id: station.id } });
+    setCollectedStation(station);
+    setTimeout(() => {
+      router.replace({ pathname: '/station/[id]', params: { id: station.id } });
+    }, BURST_DURATION_MS);
   }
 
   if (Platform.OS === 'web' && typeof navigator !== 'undefined' && !navigator.mediaDevices) {
@@ -83,6 +90,14 @@ export default function ScanScreen() {
         <ThemedView type="backgroundElement" style={styles.errorBox}>
           <ThemedText type="small">{errorText}</ThemedText>
         </ThemedView>
+      )}
+
+      {collectedStation && (
+        <CollectBurst
+          letter={RUN_TO_JESUS[collectedStation.letters[0]]}
+          color={collectedStation.color}
+          label={`${collectedStation.hall} · ${collectedStation.keyword}`}
+        />
       )}
     </View>
   );

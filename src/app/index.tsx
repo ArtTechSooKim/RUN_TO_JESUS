@@ -1,36 +1,110 @@
 import { Link } from 'expo-router';
+import { useEffect } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
+import Animated, {
+  Easing,
+  FadeIn,
+  FadeInDown,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withSequence,
+  withTiming,
+} from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { StarField } from '@/components/star-field';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, Colors, MaxContentWidth, Spacing } from '@/constants/theme';
 
+function GlowTitle() {
+  const glow = useSharedValue(0);
+
+  useEffect(() => {
+    glow.value = withRepeat(
+      withSequence(
+        withTiming(1, { duration: 1800, easing: Easing.inOut(Easing.sin) }),
+        withTiming(0, { duration: 1800, easing: Easing.inOut(Easing.sin) }),
+      ),
+      -1,
+    );
+  }, [glow]);
+
+  const style = useAnimatedStyle(() => ({
+    textShadowRadius: 20 + glow.value * 24,
+    opacity: 0.92 + glow.value * 0.08,
+  }));
+
+  return (
+    <Animated.Text style={[styles.title, style]}>
+      RUN TO{'\n'}JESUS
+    </Animated.Text>
+  );
+}
+
+function PulsingCta() {
+  const glow = useSharedValue(0);
+
+  useEffect(() => {
+    glow.value = withRepeat(
+      withSequence(
+        withTiming(1, { duration: 1600, easing: Easing.inOut(Easing.sin) }),
+        withTiming(0, { duration: 1600, easing: Easing.inOut(Easing.sin) }),
+      ),
+      -1,
+    );
+  }, [glow]);
+
+  const style = useAnimatedStyle(() => ({
+    shadowOpacity: 0.35 + glow.value * 0.35,
+    shadowRadius: 16 + glow.value * 16,
+  }));
+
+  return (
+    <Link href="/map" asChild>
+      <Pressable style={({ pressed }) => pressed && styles.pressed}>
+        <Animated.View
+          style={[
+            styles.ctaButton,
+            style,
+            { shadowColor: Colors.dark.gold, shadowOffset: { width: 0, height: 0 } },
+          ]}>
+          <ThemedText type="smallBold" style={{ color: Colors.dark.background }}>
+            탐험 시작하기
+          </ThemedText>
+        </Animated.View>
+      </Pressable>
+    </Link>
+  );
+}
+
 export default function HomeScreen() {
   return (
     <ThemedView style={styles.container}>
+      <StarField count={50} />
       <SafeAreaView style={styles.safeArea}>
         <ThemedView style={styles.heroSection}>
-          <ThemedText type="small" themeColor="textSecondary" style={styles.eyebrow}>
+          <Animated.Text
+            entering={FadeIn.duration(700)}
+            style={styles.eyebrow}>
             2026 청년연합수련회
-          </ThemedText>
-          <ThemedText type="title" style={styles.title}>
-            RUN TO{'\n'}JESUS
-          </ThemedText>
-          <ThemedText type="small" themeColor="textSecondary" style={styles.subtitle}>
+          </Animated.Text>
+
+          <Animated.View entering={FadeInDown.delay(200).duration(700)}>
+            <GlowTitle />
+          </Animated.View>
+
+          <Animated.Text
+            entering={FadeIn.delay(600).duration(700)}
+            style={styles.subtitle}>
             믿음의 경주에 오신 것을 환영합니다.{'\n'}바통을 이어받아 함께 달려가십시오.
-          </ThemedText>
+          </Animated.Text>
         </ThemedView>
 
-        <Link href="/map" asChild>
-          <Pressable style={({ pressed }) => pressed && styles.pressed}>
-            <ThemedView style={styles.ctaButton}>
-              <ThemedText type="smallBold" style={{ color: Colors.dark.background }}>
-                탐험 시작하기
-              </ThemedText>
-            </ThemedView>
-          </Pressable>
-        </Link>
+        <Animated.View entering={FadeIn.delay(1000).duration(600)}>
+          <PulsingCta />
+        </Animated.View>
       </SafeAreaView>
     </ThemedView>
   );
@@ -58,6 +132,10 @@ const styles = StyleSheet.create({
   eyebrow: {
     textTransform: 'uppercase',
     letterSpacing: 4,
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: '500',
+    color: Colors.dark.textSecondary,
   },
   title: {
     textAlign: 'center',
@@ -66,10 +144,16 @@ const styles = StyleSheet.create({
     textShadowRadius: 30,
     textShadowOffset: { width: 0, height: 0 },
     letterSpacing: 2,
+    fontSize: 48,
+    fontWeight: '600',
+    lineHeight: 52,
   },
   subtitle: {
     textAlign: 'center',
     lineHeight: 22,
+    fontSize: 14,
+    fontWeight: '500',
+    color: Colors.dark.textSecondary,
   },
   ctaButton: {
     backgroundColor: Colors.dark.gold,

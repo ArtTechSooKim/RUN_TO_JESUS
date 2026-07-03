@@ -1,10 +1,12 @@
-import { createContext, useContext, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useContext, useMemo, useRef, useState, type ReactNode } from 'react';
 
 import { stations } from '@/constants/stations';
 
 type StationProgressValue = {
   clearedIds: Set<string>;
   collectedLetters: Set<number>;
+  /** Letter index most recently collected, for one-shot "ping" animations. */
+  newlyCollected: number | null;
   toggleCleared: (id: string) => void;
 };
 
@@ -12,6 +14,8 @@ const StationProgressContext = createContext<StationProgressValue | null>(null);
 
 export function StationProgressProvider({ children }: { children: ReactNode }) {
   const [clearedIds, setClearedIds] = useState<Set<string>>(new Set());
+  const [newlyCollected, setNewlyCollected] = useState<number | null>(null);
+  const clearTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const toggleCleared = (id: string) => {
     setClearedIds((prev) => {
@@ -20,6 +24,13 @@ export function StationProgressProvider({ children }: { children: ReactNode }) {
         next.delete(id);
       } else {
         next.add(id);
+
+        const station = stations.find((s) => s.id === id);
+        if (station) {
+          if (clearTimer.current) clearTimeout(clearTimer.current);
+          setNewlyCollected(station.letters[0]);
+          clearTimer.current = setTimeout(() => setNewlyCollected(null), 3000);
+        }
       }
       return next;
     });
@@ -35,7 +46,8 @@ export function StationProgressProvider({ children }: { children: ReactNode }) {
   }, [clearedIds]);
 
   return (
-    <StationProgressContext.Provider value={{ clearedIds, collectedLetters, toggleCleared }}>
+    <StationProgressContext.Provider
+      value={{ clearedIds, collectedLetters, newlyCollected, toggleCleared }}>
       {children}
     </StationProgressContext.Provider>
   );
