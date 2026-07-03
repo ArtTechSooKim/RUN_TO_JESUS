@@ -98,6 +98,7 @@ export default function MapScreen() {
 
         <FloorPlanMap
           image={currentFloor.image}
+          aspectRatio={currentFloor.aspectRatio}
           stations={floorStations}
           statusById={statusById}
           selectedId={selectedId}

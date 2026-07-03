@@ -11,6 +11,7 @@ export type StationStatus = {
 
 type FloorPlanMapProps = {
   image: number;
+  aspectRatio: number;
   stations: Station[];
   statusById: Record<string, StationStatus>;
   selectedId: string | null;
@@ -29,13 +30,14 @@ function markerColor(status: StationStatus) {
 
 export function FloorPlanMap({
   image,
+  aspectRatio,
   stations,
   statusById,
   selectedId,
   onSelectStation,
 }: FloorPlanMapProps) {
   return (
-    <View style={styles.mapWrapper}>
+    <View style={[styles.mapWrapper, { aspectRatio }]}>
       <Image source={image} style={styles.image} contentFit="contain" />
       {stations.map((station) => {
         const status = statusById[station.id];
@@ -69,7 +71,6 @@ export function FloorPlanMap({
 
 const styles = StyleSheet.create({
   mapWrapper: {
-    aspectRatio: 1280 / 905,
     width: '100%',
     position: 'relative',
   },
