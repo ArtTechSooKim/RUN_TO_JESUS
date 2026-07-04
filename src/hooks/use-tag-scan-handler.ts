@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
 
-import { INTRO_QR_ID, QR_PREFIX, stations, type Station } from '@/constants/stations';
+import { INTRO_QR_ID, QR_PREFIX, STATION_ALIASES, stations, type Station } from '@/constants/stations';
 import { useStationProgress } from '@/hooks/use-station-progress';
 
 const BURST_DURATION_MS = 1500;
@@ -18,7 +18,8 @@ export function useTagScanHandler() {
       if (scannedRef.current) return;
 
       const raw = data.trim();
-      const id = raw.startsWith(QR_PREFIX) ? raw.slice(QR_PREFIX.length) : raw;
+      const scannedId = raw.startsWith(QR_PREFIX) ? raw.slice(QR_PREFIX.length) : raw;
+      const id = STATION_ALIASES[scannedId] ?? scannedId;
 
       if (id === INTRO_QR_ID) {
         scannedRef.current = true;

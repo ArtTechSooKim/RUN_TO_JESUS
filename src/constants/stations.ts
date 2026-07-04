@@ -7,6 +7,15 @@ export const RUN_TO_JESUS = 'RUNTOJESUS';
 export const QR_PREFIX = 'RTJ:';
 export const INTRO_QR_ID = 'INTRO';
 
+/**
+ * 다니엘홀·사무엘홀 방탈출은 하나의 방으로 취급하기로 함 (2026-07-04) — 이미
+ * 인쇄된 ABEL QR/태그가 있을 수 있어 id 자체는 없애지 않고, 스캔 시 NOAH로
+ * 합쳐지도록 별칭 처리. 지도에는 두 홀 다 보이지만 완료 상태는 하나로 공유됨.
+ */
+export const STATION_ALIASES: Record<string, string> = {
+  ABEL: 'NOAH',
+};
+
 export type Station = {
   id: string;
   /** 게임명 (예: "방탈출") */
@@ -42,28 +51,15 @@ export const stations: Station[] = [
   {
     id: 'NOAH',
     keyword: '방탈출',
-    hall: '다니엘홀',
-    characterTitle: '다니엘홀 탈출 미션',
+    hall: '다니엘홀 · 사무엘홀',
+    characterTitle: '다니엘홀·사무엘홀 탈출 미션',
     description:
-      '제한 시간 안에 흩어진 단서를 모아 탈출구를 찾아보세요. 협동과 관찰력이 핵심입니다.',
+      '다니엘홀과 사무엘홀 두 곳에서 동시에 진행되는 하나의 방탈출이에요. 제한 시간 안에 흩어진 단서를 모아 탈출구를 찾아보세요.',
     lead: '보민',
     floor: 'young-10f',
     color: '#6EA8FF',
     emoji: '🗝️',
-    letters: [0],
-  },
-  {
-    id: 'ABEL',
-    keyword: '방탈출',
-    hall: '사무엘홀',
-    characterTitle: '사무엘홀 탈출 미션',
-    description:
-      '다니엘홀과 같은 방탈출이 사무엘홀에서 동시에 진행됩니다. 팀원들과 힘을 모아보세요.',
-    lead: '보민',
-    floor: 'young-10f',
-    color: '#F472B6',
-    emoji: '🗝️',
-    letters: [1],
+    letters: [0, 1],
   },
   {
     id: 'RAHAB',

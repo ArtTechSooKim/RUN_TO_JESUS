@@ -19,7 +19,7 @@ import { HeroParticles } from '@/components/hero-particles';
 import { LetterPiece } from '@/components/letter-piece';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { floorLabels, QR_PREFIX, RUN_TO_JESUS, stations } from '@/constants/stations';
+import { floorLabels, QR_PREFIX, RUN_TO_JESUS, STATION_ALIASES, stations } from '@/constants/stations';
 import { Colors, Spacing } from '@/constants/theme';
 import { useStationProgress } from '@/hooks/use-station-progress';
 
@@ -142,7 +142,8 @@ function NfcCta({ color }: { color: string }) {
 
 export default function StationDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const station = stations.find((s) => s.id === id);
+  const resolvedId = id ? (STATION_ALIASES[id] ?? id) : id;
+  const station = stations.find((s) => s.id === resolvedId);
   const { clearedIds, toggleCleared } = useStationProgress();
   const [showQr, setShowQr] = useState(false);
 

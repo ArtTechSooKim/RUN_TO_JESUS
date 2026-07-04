@@ -146,8 +146,8 @@ function byId(stations: Station[], id: string) {
 }
 
 export function Floor10Young({ stations, clearedIds, selectedId, onSelect }: FloorProps) {
+  // 다니엘홀·사무엘홀은 하나의 방탈출로 취급 — 두 홀 다 같은 station을 가리킴
   const noah = byId(stations, 'NOAH');
-  const abel = byId(stations, 'ABEL');
   const jacob = byId(stations, 'JACOB');
   const abraham = byId(stations, 'ABRAHAM');
   const samson = byId(stations, 'SAMSON');
@@ -216,10 +216,10 @@ export function Floor10Young({ stations, clearedIds, selectedId, onSelect }: Flo
         y={280}
         w={118}
         h={82}
-        station={abel}
-        cleared={clearedIds.has(abel.id)}
-        selected={selectedId === abel.id}
-        onPress={() => onSelect(abel.id)}
+        station={noah}
+        cleared={clearedIds.has(noah.id)}
+        selected={selectedId === noah.id}
+        onPress={() => onSelect(noah.id)}
         label="사무엘홀"
       />
       <GameRoom
