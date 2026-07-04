@@ -108,7 +108,7 @@ function ScanCta({ color, onPress }: { color: string; onPress?: () => void }) {
   );
 }
 
-function NfcCta({ color, onPress }: { color: string; onPress?: () => void }) {
+function NfcCta({ color }: { color: string }) {
   const glow = useSharedValue(0);
 
   useEffect(() => {
@@ -127,14 +127,16 @@ function NfcCta({ color, onPress }: { color: string; onPress?: () => void }) {
   }));
 
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => pressed && styles.pressed}>
-      <Animated.View
-        style={[styles.nfcButton, glowStyle, { backgroundColor: color, shadowColor: color }]}>
-        <ThemedText type="smallBold" style={{ color: Colors.dark.background }}>
-          NFC 태그 스캔하기
-        </ThemedText>
-      </Animated.View>
-    </Pressable>
+    <Link href="/nfc-scan" asChild>
+      <Pressable style={({ pressed }) => pressed && styles.pressed}>
+        <Animated.View
+          style={[styles.nfcButton, glowStyle, { backgroundColor: color, shadowColor: color }]}>
+          <ThemedText type="smallBold" style={{ color: Colors.dark.background }}>
+            NFC 태그 스캔하기
+          </ThemedText>
+        </Animated.View>
+      </Pressable>
+    </Link>
   );
 }
 
@@ -143,7 +145,6 @@ export default function StationDetailScreen() {
   const station = stations.find((s) => s.id === id);
   const { clearedIds, toggleCleared } = useStationProgress();
   const [showQr, setShowQr] = useState(false);
-  const [nfcHint, setNfcHint] = useState(false);
 
   if (!station) {
     return (
@@ -249,14 +250,7 @@ export default function StationDetailScreen() {
           </View>
         ) : (
           <View style={styles.ctaBlock}>
-            <NfcCta color={station.color} onPress={() => setNfcHint(true)} />
-            {nfcHint && (
-              <Animated.Text
-                entering={FadeIn.duration(150)}
-                style={[styles.nfcHint, { color: station.color }]}>
-                NFC 기능은 준비 중이에요 — 아래 QR로 스캔해주세요
-              </Animated.Text>
-            )}
+            <NfcCta color={station.color} />
             <ScanCta color={station.color} />
             <Pressable
               onPress={() => toggleCleared(station.id)}
@@ -388,10 +382,6 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.four,
     borderRadius: Spacing.four,
     alignItems: 'center',
-  },
-  nfcHint: {
-    fontSize: 12,
-    textAlign: 'center',
   },
   ghostButton: {
     alignSelf: 'center',

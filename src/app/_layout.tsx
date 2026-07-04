@@ -42,6 +42,10 @@ export default function RootLayout() {
             name="scan"
             options={{ headerShown: true, title: 'QR 스캔', animation: 'slide_from_bottom' }}
           />
+          <Stack.Screen
+            name="nfc-scan"
+            options={{ headerShown: true, title: '', animation: 'slide_from_bottom' }}
+          />
         </Stack>
       </StationProgressProvider>
     </ThemeProvider>
