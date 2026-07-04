@@ -1,52 +1,16 @@
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import { router } from 'expo-router';
-import { useRef, useState } from 'react';
 import { Platform, Pressable, StyleSheet, View } from 'react-native';
 
 import { CollectBurst } from '@/components/collect-burst';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { INTRO_QR_ID, QR_PREFIX, RUN_TO_JESUS, stations, type Station } from '@/constants/stations';
+import { RUN_TO_JESUS } from '@/constants/stations';
 import { Colors, Spacing } from '@/constants/theme';
-import { useStationProgress } from '@/hooks/use-station-progress';
-
-const BURST_DURATION_MS = 1500;
+import { useTagScanHandler } from '@/hooks/use-tag-scan-handler';
 
 export default function ScanScreen() {
   const [permission, requestPermission] = useCameraPermissions();
-  const { toggleCleared, clearedIds } = useStationProgress();
-  const [errorText, setErrorText] = useState('');
-  const [collectedStation, setCollectedStation] = useState<Station | null>(null);
-  const scannedRef = useRef(false);
-
-  function handleScan(data: string) {
-    if (scannedRef.current) return;
-
-    const raw = data.trim();
-    const id = raw.startsWith(QR_PREFIX) ? raw.slice(QR_PREFIX.length) : raw;
-
-    if (id === INTRO_QR_ID) {
-      scannedRef.current = true;
-      router.replace('/map');
-      return;
-    }
-
-    const station = stations.find((s) => s.id === id);
-    if (!station) {
-      setErrorText(`알 수 없는 QR이에요: "${data}"`);
-      return;
-    }
-
-    scannedRef.current = true;
-    setErrorText('');
-    if (!clearedIds.has(station.id)) {
-      toggleCleared(station.id);
-    }
-    setCollectedStation(station);
-    setTimeout(() => {
-      router.replace({ pathname: '/station/[id]', params: { id: station.id } });
-    }, BURST_DURATION_MS);
-  }
+  const { handleScan, errorText, collectedStation } = useTagScanHandler();
 
   if (Platform.OS === 'web' && typeof navigator !== 'undefined' && !navigator.mediaDevices) {
     return (

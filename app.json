@@ -48,6 +48,12 @@
         {
           "cameraPermission": "스테이션의 QR 코드를 인식하기 위해 카메라를 사용합니다."
         }
+      ],
+      [
+        "react-native-nfc-manager",
+        {
+          "nfcPermission": "스테이션의 NFC 태그를 인식하기 위해 사용합니다."
+        }
       ]
     ],
     "experiments": {
