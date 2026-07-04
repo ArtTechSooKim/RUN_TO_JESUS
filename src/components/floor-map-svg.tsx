@@ -77,10 +77,12 @@ type GameRoomProps = {
   selected: boolean;
   onPress: () => void;
   label: string;
+  /** second line, for a room that spans two physical halls */
+  label2?: string;
   rx?: number;
 };
 
-function GameRoom({ x, y, w, h, station, cleared, selected, onPress, label, rx = 4 }: GameRoomProps) {
+function GameRoom({ x, y, w, h, station, cleared, selected, onPress, label, label2, rx = 4 }: GameRoomProps) {
   return (
     <G onPress={onPress}>
       <Rect
@@ -116,7 +118,7 @@ function GameRoom({ x, y, w, h, station, cleared, selected, onPress, label, rx =
       )}
       <SvgText
         x={x + w / 2}
-        y={y + h / 2 + 4}
+        y={y + h / 2 + (label2 ? -6 : 4)}
         textAnchor="middle"
         fill={station.color}
         fontSize={11}
@@ -124,6 +126,18 @@ function GameRoom({ x, y, w, h, station, cleared, selected, onPress, label, rx =
         fontWeight="700">
         {label}
       </SvgText>
+      {label2 && (
+        <SvgText
+          x={x + w / 2}
+          y={y + h / 2 + 14}
+          textAnchor="middle"
+          fill={station.color}
+          fontSize={11}
+          fontFamily={FONT}
+          fontWeight="700">
+          {label2}
+        </SvgText>
+      )}
     </G>
   );
 }
@@ -215,23 +229,13 @@ export function Floor10Young({ stations, clearedIds, selectedId, onSelect }: Flo
         x={10}
         y={280}
         w={118}
-        h={82}
+        h={170}
         station={noah}
         cleared={clearedIds.has(noah.id)}
         selected={selectedId === noah.id}
         onPress={() => onSelect(noah.id)}
         label="사무엘홀"
-      />
-      <GameRoom
-        x={10}
-        y={368}
-        w={118}
-        h={82}
-        station={noah}
-        cleared={clearedIds.has(noah.id)}
-        selected={selectedId === noah.id}
-        onPress={() => onSelect(noah.id)}
-        label="다니엘홀"
+        label2="다니엘홀"
       />
 
       <SvgText x={10} y={16} fill="#2D4066" fontSize={10} fontFamily={FONT} fontWeight="600">
