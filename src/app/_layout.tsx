@@ -46,6 +46,10 @@ export default function RootLayout() {
             name="nfc-scan"
             options={{ headerShown: true, title: '', animation: 'slide_from_bottom' }}
           />
+          <Stack.Screen
+            name="nfc-write"
+            options={{ headerShown: true, title: '태그 쓰기 (테스트용)', animation: 'slide_from_bottom' }}
+          />
         </Stack>
       </StationProgressProvider>
     </ThemeProvider>

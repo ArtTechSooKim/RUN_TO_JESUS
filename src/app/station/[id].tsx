@@ -279,6 +279,14 @@ export default function StationDetailScreen() {
             </ThemedText>
           </Animated.View>
         )}
+
+        <Link href={{ pathname: '/nfc-write', params: { id: station.id } }} asChild>
+          <Pressable style={({ pressed }) => [styles.ghostButton, styles.qrToggle, pressed && styles.pressed]}>
+            <ThemedText type="small" themeColor="textSecondary">
+              테스트용 NFC 태그 쓰기
+            </ThemedText>
+          </Pressable>
+        </Link>
       </ScrollView>
     </ThemedView>
   );
