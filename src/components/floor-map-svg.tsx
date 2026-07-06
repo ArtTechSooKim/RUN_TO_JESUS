@@ -84,6 +84,8 @@ type GameRoomProps = {
   sessionLabel: string;
   /** Number of teams currently mid-session here (game_sessions status='in_progress') — shows a live "진행중" marker. */
   activeCount?: number;
+  /** Average % through the expected duration, across active sessions here. */
+  activePercent?: number;
   rx?: number;
 };
 
@@ -103,6 +105,7 @@ function GameRoom({
   sublabel,
   sessionLabel,
   activeCount = 0,
+  activePercent,
   rx = 4,
 }: GameRoomProps) {
   const inProgress = activeCount > 0;
@@ -159,7 +162,7 @@ function GameRoom({
         fontSize={12}
         fontFamily={FONT}
         fontWeight="800">
-        {inProgress ? '진행중...' : sessionLabel}
+        {inProgress ? `진행중 ${activePercent ?? 0}%` : sessionLabel}
       </SvgText>
       <SvgText x={x + w / 2} y={labelY} textAnchor="middle" fill={station.color} fontSize={8} opacity={0.65} fontFamily={FONT}>
         {label}
@@ -243,6 +246,8 @@ type FloorProps = {
   onSelect: (id: string) => void;
   /** station_id -> number of teams currently mid-session there. */
   activeCounts?: Record<string, number>;
+  /** station_id -> average % through expected duration, across active sessions there. */
+  activePercents?: Record<string, number>;
 };
 
 function byId(stations: Station[], id: string) {
@@ -251,7 +256,7 @@ function byId(stations: Station[], id: string) {
   return s;
 }
 
-export function Floor10Young({ stations, clearedIds, selectedId, onSelect, activeCounts = {} }: FloorProps) {
+export function Floor10Young({ stations, clearedIds, selectedId, onSelect, activeCounts = {}, activePercents = {} }: FloorProps) {
   const rahab = byId(stations, 'RAHAB');
   const jacob = byId(stations, 'JACOB');
   const abraham = byId(stations, 'ABRAHAM');
@@ -300,6 +305,7 @@ export function Floor10Young({ stations, clearedIds, selectedId, onSelect, activ
           label="플레이그라운드"
           sessionLabel={noah.keyword}
           activeCount={activeCounts[noah.id]}
+          activePercent={activePercents[noah.id]}
         />
       )}
 
@@ -316,6 +322,7 @@ export function Floor10Young({ stations, clearedIds, selectedId, onSelect, activ
         sublabel="블러핑"
         sessionLabel="블러핑"
         activeCount={activeCounts[jacob.id]}
+        activePercent={activePercents[jacob.id]}
       />
       <GameRoom
         x={312}
@@ -330,6 +337,7 @@ export function Floor10Young({ stations, clearedIds, selectedId, onSelect, activ
         sublabel="믿음의 가정"
         sessionLabel="아브라함방"
         activeCount={activeCounts[abraham.id]}
+        activePercent={activePercents[abraham.id]}
       />
 
       {/* 하단 별동: 라합방(사무엘홀+다니엘홀 병합) · EV/계단 · 삼손방(디모데홀) */}
@@ -346,6 +354,7 @@ export function Floor10Young({ stations, clearedIds, selectedId, onSelect, activ
         sublabel="방탈출 (초등부·유년부교사실 포함)"
         sessionLabel="라합방"
         activeCount={activeCounts[rahab.id]}
+        activePercent={activePercents[rahab.id]}
       />
       <GrayBlock x={294} y={274} w={92} h={150} />
       <SvgText x={340} y={352} textAnchor="middle" fill="#1A2845" fontSize={9} fontFamily={FONT}>
@@ -364,6 +373,7 @@ export function Floor10Young({ stations, clearedIds, selectedId, onSelect, activ
         sublabel="미는 챌린지 (아동부교사실 포함)"
         sessionLabel="삼손방"
         activeCount={activeCounts[samson.id]}
+        activePercent={activePercents[samson.id]}
       />
 
       <SvgText x={10} y={16} fill="#2D4066" fontSize={10} fontFamily={FONT} fontWeight="600">
@@ -373,7 +383,7 @@ export function Floor10Young({ stations, clearedIds, selectedId, onSelect, activ
   );
 }
 
-export function Floor11Young({ stations, clearedIds, selectedId, onSelect, activeCounts = {} }: FloorProps) {
+export function Floor11Young({ stations, clearedIds, selectedId, onSelect, activeCounts = {}, activePercents = {} }: FloorProps) {
   const joseph = byId(stations, 'JOSEPH');
 
   return (
@@ -417,6 +427,7 @@ export function Floor11Young({ stations, clearedIds, selectedId, onSelect, activ
         sublabel="릴레이"
         sessionLabel="요셉방"
         activeCount={activeCounts[joseph.id]}
+        activePercent={activePercents[joseph.id]}
       />
 
       <SvgText x={10} y={16} fill="#2D4066" fontSize={10} fontFamily={FONT} fontWeight="600">
@@ -426,7 +437,7 @@ export function Floor11Young({ stations, clearedIds, selectedId, onSelect, activ
   );
 }
 
-export function Floor10Fashion({ stations, clearedIds, selectedId, onSelect, activeCounts = {} }: FloorProps) {
+export function Floor10Fashion({ stations, clearedIds, selectedId, onSelect, activeCounts = {}, activePercents = {} }: FloorProps) {
   const david = byId(stations, 'DAVID');
 
   return (
@@ -482,6 +493,7 @@ export function Floor10Fashion({ stations, clearedIds, selectedId, onSelect, act
         sublabel="도미노"
         sessionLabel="도미노"
         activeCount={activeCounts[david.id]}
+        activePercent={activePercents[david.id]}
       />
 
       <SvgText x={10} y={108} fill="#2D4066" fontSize={10} fontFamily={FONT} fontWeight="600">

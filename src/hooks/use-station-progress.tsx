@@ -7,6 +7,7 @@ import { api } from '@/lib/api';
 
 const SEEN_KEY_PREFIX = 'rtj_seen_fragments_team_';
 const REVEAL_DURATION_MS = 3000;
+const POLL_MS = 8000;
 
 type StationProgressValue = {
   /** Station ids the current TEAM has tagged, per the server — shared truth across every device on the team. */
@@ -17,6 +18,8 @@ type StationProgressValue = {
   refresh: () => Promise<void>;
   /** Fallback for when scanning doesn't work — records a real tag event same as a scan would. */
   recordManualComplete: (stationId: string) => Promise<void>;
+  /** Undo a mistaken tag. Team-wide, since progress is team truth — every teammate's device picks it up on the next poll. */
+  cancelStation: (stationId: string) => Promise<void>;
 };
 
 const StationProgressContext = createContext<StationProgressValue | null>(null);
@@ -56,12 +59,15 @@ export function StationProgressProvider({ children }: { children: ReactNode }) {
     const savedRaw = await AsyncStorage.getItem(seenKey);
     let seen = new Set<string>(savedRaw ? JSON.parse(savedRaw) : []);
 
-    // Self-heal after a super-admin progress reset: the server now says this
-    // team has cleared nothing, but this device still remembers old
-    // fragments as "seen" — drop that stale cache so future re-tags reveal again.
-    if (stationIds.length === 0 && seen.size > 0) {
-      seen = new Set();
-      await AsyncStorage.removeItem(seenKey);
+    // Self-heal after a cancelled tag or a super-admin progress reset: drop
+    // "seen" markers for stations the team no longer has, so a future re-tag
+    // of that same station correctly replays the reveal instead of being
+    // suppressed by stale local state.
+    const stillCleared = new Set(stationIds);
+    const reconciledSeen = new Set([...seen].filter((id) => stillCleared.has(id)));
+    if (reconciledSeen.size !== seen.size) {
+      seen = reconciledSeen;
+      await AsyncStorage.setItem(seenKey, JSON.stringify([...seen]));
     }
 
     const newlySeen = stationIds.filter((id) => !seen.has(id));
@@ -82,12 +88,25 @@ export function StationProgressProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     refresh();
+    // Poll so a teammate's tag or cancel (from a different device) shows up
+    // here without needing to leave and re-enter the screen.
+    const timer = setInterval(refresh, POLL_MS);
+    return () => clearInterval(timer);
   }, [refresh]);
 
   const recordManualComplete = useCallback(
     async (stationId: string) => {
       if (!user) return;
       await api.postTagEvent({ person_id: user.person_id, team_id: user.team_id, station_id: stationId });
+      await refresh();
+    },
+    [user, refresh],
+  );
+
+  const cancelStation = useCallback(
+    async (stationId: string) => {
+      if (!user) return;
+      await api.cancelTagEvent(user.team_id, stationId);
       await refresh();
     },
     [user, refresh],
@@ -104,7 +123,7 @@ export function StationProgressProvider({ children }: { children: ReactNode }) {
 
   return (
     <StationProgressContext.Provider
-      value={{ clearedIds, collectedLetters, newlyCollected, refresh, recordManualComplete }}>
+      value={{ clearedIds, collectedLetters, newlyCollected, refresh, recordManualComplete, cancelStation }}>
       {children}
     </StationProgressContext.Provider>
   );

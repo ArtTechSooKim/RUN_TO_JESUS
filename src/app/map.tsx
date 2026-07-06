@@ -7,7 +7,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { stations } from '@/constants/stations';
 import { Colors, Spacing } from '@/constants/theme';
-import { formatRemaining, useActiveSessions } from '@/hooks/use-active-sessions';
+import { formatRemaining, sessionProgressPercent, useActiveSessions } from '@/hooks/use-active-sessions';
 import { useStationProgress } from '@/hooks/use-station-progress';
 import { useTheme } from '@/hooks/use-theme';
 import type { ApiSession } from '@/lib/api';
@@ -67,8 +67,8 @@ function StationCard({
               </View>
               {activeSessions.length > 0 ? (
                 <ThemedText type="small" numberOfLines={1} style={{ color: '#FB923C' }}>
-                  🔴 {activeSessions.map((s) => `${s.team_id}조`).join(', ')} 진행중 ·{' '}
-                  {formatRemaining(activeSessions[0].expected_end_at)}
+                  🔴 {activeSessions.map((s) => `${s.team_id}조 ${sessionProgressPercent(s)}%`).join(', ')} 진행중 ·{' '}
+                  {formatRemaining(activeSessions[0].expected_end_at)} 남음
                 </ThemedText>
               ) : (
                 <ThemedText type="small" themeColor="textSecondary" numberOfLines={1}>

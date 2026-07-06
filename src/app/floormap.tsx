@@ -8,7 +8,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { floorLabels, floors, stations, type Floor } from '@/constants/stations';
 import { Colors, Spacing } from '@/constants/theme';
-import { formatRemaining, useActiveSessions } from '@/hooks/use-active-sessions';
+import { formatRemaining, sessionProgressPercent, useActiveSessions } from '@/hooks/use-active-sessions';
 import { useStationProgress } from '@/hooks/use-station-progress';
 
 const FLOOR_MAPS: Record<Floor, typeof Floor10Young> = {
@@ -18,7 +18,7 @@ const FLOOR_MAPS: Record<Floor, typeof Floor10Young> = {
 };
 
 export default function FloorMapScreen() {
-  const { clearedIds, recordManualComplete } = useStationProgress();
+  const { clearedIds, recordManualComplete, cancelStation } = useStationProgress();
   const activeSessions = useActiveSessions();
   const [activeFloor, setActiveFloor] = useState<Floor>('young-10f');
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -34,6 +34,18 @@ export default function FloorMapScreen() {
     const counts: Record<string, number> = {};
     for (const s of activeSessions) counts[s.station_id] = (counts[s.station_id] ?? 0) + 1;
     return counts;
+  }, [activeSessions]);
+
+  const activePercents = useMemo(() => {
+    const sums: Record<string, number> = {};
+    const counts: Record<string, number> = {};
+    for (const s of activeSessions) {
+      sums[s.station_id] = (sums[s.station_id] ?? 0) + sessionProgressPercent(s);
+      counts[s.station_id] = (counts[s.station_id] ?? 0) + 1;
+    }
+    const percents: Record<string, number> = {};
+    for (const id of Object.keys(sums)) percents[id] = Math.round(sums[id] / counts[id]);
+    return percents;
   }, [activeSessions]);
 
   const selectedSessions = selectedStation
@@ -74,6 +86,7 @@ export default function FloorMapScreen() {
             selectedId={selectedId}
             onSelect={setSelectedId}
             activeCounts={activeCounts}
+            activePercents={activePercents}
           />
         </Animated.View>
 
@@ -105,7 +118,11 @@ export default function FloorMapScreen() {
               </ThemedText>
               {selectedSessions.length > 0 ? (
                 <ThemedText type="small" style={{ color: '#FB923C' }}>
-                  🔴 {selectedSessions.map((s) => `${s.team_id}조 (${formatRemaining(s.expected_end_at)})`).join(', ')} 진행중
+                  🔴{' '}
+                  {selectedSessions
+                    .map((s) => `${s.team_id}조 ${sessionProgressPercent(s)}% (${formatRemaining(s.expected_end_at)} 남음)`)
+                    .join(', ')}{' '}
+                  진행중
                 </ThemedText>
               ) : (
                 <ThemedText type="small">
@@ -132,6 +149,15 @@ export default function FloorMapScreen() {
                     ]}>
                     <ThemedText type="small" style={{ color: selectedStation.color }}>
                       스캔이 안 될 때: 직접 완료 처리 (수동 백업)
+                    </ThemedText>
+                  </Pressable>
+                )}
+                {clearedIds.has(selectedStation.id) && (
+                  <Pressable
+                    onPress={() => cancelStation(selectedStation.id)}
+                    style={({ pressed }) => [styles.secondaryButton, { borderColor: 'rgba(248,113,113,0.4)' }, pressed && styles.pressed]}>
+                    <ThemedText type="small" style={{ color: '#F87171' }}>
+                      잘못 태그했어요 (취소)
                     </ThemedText>
                   </Pressable>
                 )}

@@ -144,7 +144,7 @@ export default function StationDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const resolvedId = id ? (STATION_ALIASES[id] ?? id) : id;
   const station = stations.find((s) => s.id === resolvedId);
-  const { clearedIds, recordManualComplete } = useStationProgress();
+  const { clearedIds, recordManualComplete, cancelStation } = useStationProgress();
   const [showQr, setShowQr] = useState(false);
 
   if (!station) {
@@ -241,6 +241,13 @@ export default function StationDetailScreen() {
             <ThemedText type="smallBold" style={{ color: station.color }}>
               이 스테이션 완료!
             </ThemedText>
+            <Pressable
+              onPress={() => cancelStation(station.id)}
+              style={({ pressed }) => [styles.cancelButton, pressed && styles.pressed]}>
+              <ThemedText type="small" style={{ color: '#F87171' }}>
+                잘못 태그했어요 (취소)
+              </ThemedText>
+            </Pressable>
           </View>
         ) : (
           <View style={styles.ctaBlock}>
@@ -417,6 +424,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  cancelButton: {
+    marginTop: Spacing.one,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.one,
   },
   pressed: {
     opacity: 0.7,

@@ -101,6 +101,17 @@ router.post('/tag-events', async (req, res) => {
   }
 });
 
+// Undo a mistaken tag — removes every tag_events row for this team+station
+// (a station's letters are recorded as several rows, see POST above). Any
+// team member can do this; it's a self-service correction, not an admin tool.
+router.delete('/tag-events/:team_id/:station_id', async (req, res) => {
+  await pool.query('DELETE FROM tag_events WHERE team_id = ? AND station_id = ?', [
+    req.params.team_id,
+    req.params.station_id,
+  ]);
+  res.json({ ok: true });
+});
+
 router.get('/teams/:team_id/fragments', async (req, res) => {
   const [stationIdRows] = await pool.query(
     'SELECT DISTINCT station_id FROM tag_events WHERE team_id = ?',

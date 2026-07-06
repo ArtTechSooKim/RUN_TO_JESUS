@@ -59,6 +59,9 @@ export const api = {
   getTeamFragments: (teamId: number) =>
     request<{ stationIds: string[]; letters: number[] }>(`/teams/${teamId}/fragments`),
 
+  cancelTagEvent: (teamId: number, stationId: string) =>
+    request<{ ok: true }>(`/tag-events/${teamId}/${stationId}`, { method: 'DELETE' }),
+
   postRevealLog: (body: { person_id: string; station_id: string; source: 'own_tag' | 'team_sync' }) =>
     request<{ ok: true }>('/fragment-reveal-log', { method: 'POST', body: JSON.stringify(body) }),
 

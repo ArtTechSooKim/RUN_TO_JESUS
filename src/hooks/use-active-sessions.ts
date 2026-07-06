@@ -32,3 +32,12 @@ export function formatRemaining(expectedEndAt: string) {
   const s = totalSec % 60;
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
+
+/** How far through its expected duration a session is, 0-100. */
+export function sessionProgressPercent(session: ApiSession) {
+  const start = new Date(session.started_at).getTime();
+  const end = new Date(session.expected_end_at).getTime();
+  if (end <= start) return 100;
+  const pct = ((Date.now() - start) / (end - start)) * 100;
+  return Math.max(0, Math.min(100, Math.round(pct)));
+}
