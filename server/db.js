@@ -16,7 +16,7 @@ const STATION_SEED = [
   { station_id: 'ABRAHAM', name: '아브라함방', hall_name: '아가페홀', duration_minutes: 20, concurrent_capacity: 1, letters: [5] },
   { station_id: 'SAMSON', name: '삼손방', hall_name: '디모데홀', duration_minutes: 15, concurrent_capacity: 1, letters: [6] },
   { station_id: 'DAVID', name: '도미노', hall_name: '새로운홀', duration_minutes: 10, concurrent_capacity: 1, letters: [7, 8, 9] },
-  { station_id: 'NOAHROOM', name: '노아방', hall_name: null, duration_minutes: 15, concurrent_capacity: 1, letters: [] },
+  { station_id: 'NOAHROOM', name: '노아방', hall_name: '플레이그라운드', duration_minutes: 15, concurrent_capacity: 1, letters: [] },
   { station_id: 'ABELROOM', name: '아벨방', hall_name: null, duration_minutes: 15, concurrent_capacity: 1, letters: [] },
   { station_id: 'MYSTERYGAME', name: '미정게임', hall_name: '여호수아홀 (극장)', duration_minutes: 15, concurrent_capacity: 1, letters: [] },
 ];

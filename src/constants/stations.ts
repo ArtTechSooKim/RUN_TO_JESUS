@@ -128,9 +128,9 @@ export const stations: Station[] = [
   {
     id: 'NOAHROOM',
     keyword: '노아방',
-    hall: '미정',
+    hall: '플레이그라운드',
     characterTitle: '노아방',
-    description: '장소와 세부 내용은 아직 준비 중입니다.',
+    description: '세부 내용은 아직 준비 중입니다.',
     lead: '보민',
     color: '#38BDF8',
     emoji: '🚢',
