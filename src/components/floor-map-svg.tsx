@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import Svg, { Circle, G, Path, Rect, Text as SvgText } from 'react-native-svg';
 
 import type { Station } from '@/constants/stations';
@@ -67,6 +66,10 @@ function EvBox({ x, y }: { x: number; y: number }) {
   );
 }
 
+function evStrip(xs: number[], y: number) {
+  return xs.map((ex, i) => <EvBox key={i} x={ex} y={y} />);
+}
+
 type GameRoomProps = {
   x: number;
   y: number;
@@ -77,12 +80,30 @@ type GameRoomProps = {
   selected: boolean;
   onPress: () => void;
   label: string;
-  /** second line, for a room that spans two physical halls */
-  label2?: string;
+  sublabel?: string;
+  sessionLabel: string;
   rx?: number;
 };
 
-function GameRoom({ x, y, w, h, station, cleared, selected, onPress, label, label2, rx = 4 }: GameRoomProps) {
+/** A real, tappable station room — session name (game) on top, hall name below. */
+function GameRoom({
+  x,
+  y,
+  w,
+  h,
+  station,
+  cleared,
+  selected,
+  onPress,
+  label,
+  sublabel,
+  sessionLabel,
+  rx = 4,
+}: GameRoomProps) {
+  const sessionY = y + h / 2 - (sublabel ? 15 : 10);
+  const labelY = y + h / 2 + 4;
+  const sublabelY = y + h / 2 + 15;
+
   return (
     <G onPress={onPress}>
       <Rect
@@ -116,34 +137,82 @@ function GameRoom({ x, y, w, h, station, cleared, selected, onPress, label, labe
           </SvgText>
         </G>
       )}
-      <SvgText
-        x={x + w / 2}
-        y={y + h / 2 + (label2 ? -6 : 4)}
-        textAnchor="middle"
-        fill={station.color}
-        fontSize={11}
-        fontFamily={FONT}
-        fontWeight="700">
+      <SvgText x={x + w / 2} y={sessionY} textAnchor="middle" fill={station.color} fontSize={12} fontFamily={FONT} fontWeight="800">
+        {sessionLabel}
+      </SvgText>
+      <SvgText x={x + w / 2} y={labelY} textAnchor="middle" fill={station.color} fontSize={8} opacity={0.65} fontFamily={FONT}>
         {label}
       </SvgText>
-      {label2 && (
-        <SvgText
-          x={x + w / 2}
-          y={y + h / 2 + 14}
-          textAnchor="middle"
-          fill={station.color}
-          fontSize={11}
-          fontFamily={FONT}
-          fontWeight="700">
-          {label2}
+      {sublabel && (
+        <SvgText x={x + w / 2} y={sublabelY} textAnchor="middle" fill={station.color} fontSize={7} opacity={0.5} fontFamily={FONT}>
+          {sublabel}
         </SvgText>
       )}
     </G>
   );
 }
 
-function evStrip(xs: number[], y: number) {
-  return xs.map((ex, i) => <EvBox key={i} x={ex} y={y} />);
+/** Dashed-border room for a station whose game/location is still 미정. */
+function PendingGameRoom({
+  x,
+  y,
+  w,
+  h,
+  label,
+  sublabel,
+  sessionLabel,
+  color = '#9AB0D0',
+  rx = 4,
+}: {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  label: string;
+  sublabel?: string;
+  sessionLabel?: string;
+  color?: string;
+  rx?: number;
+}) {
+  return (
+    <G>
+      <Rect x={x} y={y} width={w} height={h} rx={rx} fill={`${color}12`} stroke={color} strokeWidth={1.4} strokeDasharray="6,3" />
+      {sessionLabel && (
+        <SvgText
+          x={x + w / 2}
+          y={y + h / 2 - (sublabel ? 12 : 7)}
+          textAnchor="middle"
+          fill={color}
+          fontSize={9.5}
+          fontWeight="800"
+          fontFamily={FONT}>
+          {sessionLabel}
+        </SvgText>
+      )}
+      <SvgText
+        x={x + w / 2}
+        y={y + h / 2 + 4}
+        textAnchor="middle"
+        fill={color}
+        fontSize={9.5}
+        fontWeight="700"
+        fontFamily={FONT}>
+        {label}
+      </SvgText>
+      {sublabel && (
+        <SvgText
+          x={x + w / 2}
+          y={y + h / 2 + (sessionLabel ? 15 : 8)}
+          textAnchor="middle"
+          fill={color}
+          fontSize={7.5}
+          opacity={0.6}
+          fontFamily={FONT}>
+          {sublabel}
+        </SvgText>
+      )}
+    </G>
+  );
 }
 
 type FloorProps = {
@@ -160,82 +229,113 @@ function byId(stations: Station[], id: string) {
 }
 
 export function Floor10Young({ stations, clearedIds, selectedId, onSelect }: FloorProps) {
-  // 다니엘홀·사무엘홀은 하나의 라합방(방탈출)으로 취급 — 두 홀 다 같은 station을 가리킴
   const rahab = byId(stations, 'RAHAB');
   const jacob = byId(stations, 'JACOB');
   const abraham = byId(stations, 'ABRAHAM');
   const samson = byId(stations, 'SAMSON');
+  const noah = stations.find((s) => s.id === 'NOAHROOM');
+  const mystery = stations.find((s) => s.id === 'MYSTERYGAME');
 
   return (
-    <Svg viewBox="0 0 580 460" width="100%" height={undefined} style={{ aspectRatio: 580 / 460 }}>
-      <Rect x={128} y={22} width={390} height={258} rx={4} fill="#0C1628" stroke="#1E2A45" strokeWidth={1.5} />
-      <Rect x={8} y={82} width={120} height={198} rx={4} fill="#0C1628" stroke="#1E2A45" strokeWidth={1.5} />
-      <Rect x={518} y={22} width={54} height={215} rx={27} fill="#0A1220" stroke="#151F35" strokeWidth={1} />
-      <Rect x={262} y={4} width={110} height={22} rx={3} fill="#0A1220" stroke="#151F35" strokeWidth={1} />
-      <Rect x={128} y={278} width={390} height={88} rx={4} fill="#0C1628" stroke="#1E2A45" strokeWidth={1.5} />
-      <Rect x={8} y={278} width={120} height={176} rx={4} fill="#0C1628" stroke="#1E2A45" strokeWidth={1.5} />
-      <Rect x={128} y={366} width={390} height={86} rx={4} fill="#0A1220" stroke="#151F35" strokeWidth={1} />
+    <Svg viewBox="0 0 590 460" width="100%" height={undefined} style={{ aspectRatio: 590 / 460 }}>
+      {/* building outline */}
+      <Rect x={128} y={22} width={388} height={230} rx={4} fill="#0C1628" stroke="#1E2A45" strokeWidth={1.5} />
+      <Rect x={8} y={82} width={120} height={196} rx={4} fill="#0C1628" stroke="#1E2A45" strokeWidth={1.5} />
+      <Rect x={516} y={22} width={58} height={200} rx={29} fill="#0A1220" stroke="#151F35" strokeWidth={1} />
+      <Rect x={260} y={4} width={110} height={20} rx={3} fill="#0A1220" stroke="#151F35" strokeWidth={1} />
+      <Rect x={8} y={272} width={510} height={157} rx={4} fill="#0C1628" stroke="#1E2A45" strokeWidth={1.5} />
 
-      <DimRoom x={138} y={35} w={228} h={222} label="본당" />
-      <DimRoom x={374} y={35} w={60} h={100} label="방송실" />
-      <DimRoom x={374} y={140} w={60} h={110} label="겟세마네홀" sublabel="(침묵기도실)" />
-      <DimRoom x={438} y={35} w={75} h={100} label="어노인팅홀" sublabel="(중보기도팀)" />
-      <DimRoom x={8} y={82} w={120} h={58} label="새로운극장" sublabel="(고등부)" />
-      <DimRoom x={8} y={145} w={120} h={60} label="프레이즈홀" />
-      <DimRoom x={8} y={208} w={120} h={68} label="음향조정실" sublabel="/ 다윗홀" />
-      <DimRoom x={132} y={370} w={120} h={78} label="초등부 교사실" />
-      <DimRoom x={258} y={370} w={120} h={78} label="유년부 교사실" />
-      <DimRoom x={384} y={370} w={130} h={78} label="아동부 교사실" />
+      <DimRoom x={138} y={30} w={225} h={200} label="본당" />
+      <DimRoom x={371} y={30} w={58} h={100} label="방송실" />
+      <DimRoom x={371} y={135} w={58} h={115} label="겟세마네홀" sublabel="(침묵기도실)" />
+      <DimRoom x={8} y={145} w={120} h={75} label="프레이즈홀" />
+      {mystery && (
+        <PendingGameRoom
+          x={8}
+          y={82}
+          w={120}
+          h={60}
+          label="여호수아홀"
+          sublabel="(새로운극장·고등부)"
+          sessionLabel={mystery.keyword}
+          color={mystery.color}
+        />
+      )}
+      <DimRoom x={8} y={254} w={120} h={16} label="고등부교사실" />
+      <DimRoom x={432} y={30} w={82} h={100} label="어노인팅홀" sublabel="(중보기도팀)" />
 
-      {evStrip([527, 527, 527, 527], 32)}
-      <GrayBlock x={266} y={5} w={100} h={20} />
-      <GrayBlock x={214} y={5} w={50} h={20} />
-      <GrayBlock x={372} y={5} w={50} h={20} />
+      {noah && (
+        <GameRoom
+          x={138}
+          y={194}
+          w={58}
+          h={58}
+          station={noah}
+          cleared={clearedIds.has(noah.id)}
+          selected={selectedId === noah.id}
+          onPress={() => onSelect(noah.id)}
+          label="플레이그라운드"
+          sessionLabel={noah.keyword}
+        />
+      )}
 
       <GameRoom
-        x={132}
-        y={283}
-        w={118}
-        h={78}
+        x={198}
+        y={195}
+        w={110}
+        h={57}
         station={jacob}
         cleared={clearedIds.has(jacob.id)}
         selected={selectedId === jacob.id}
         onPress={() => onSelect(jacob.id)}
-        label="이삭홀"
+        label="이삭홀 (영아부)"
+        sublabel="블러핑"
+        sessionLabel="블러핑"
       />
       <GameRoom
-        x={256}
-        y={283}
-        w={118}
-        h={78}
+        x={312}
+        y={195}
+        w={110}
+        h={57}
         station={abraham}
         cleared={clearedIds.has(abraham.id)}
         selected={selectedId === abraham.id}
         onPress={() => onSelect(abraham.id)}
-        label="아가페홀"
+        label="아가페홀 (새가족부)"
+        sublabel="믿음의 가정"
+        sessionLabel="아브라함방"
       />
-      <GameRoom
-        x={380}
-        y={283}
-        w={134}
-        h={78}
-        station={samson}
-        cleared={clearedIds.has(samson.id)}
-        selected={selectedId === samson.id}
-        onPress={() => onSelect(samson.id)}
-        label="디모데홀"
-      />
+
+      {/* 하단 별동: 라합방(사무엘홀+다니엘홀 병합) · EV/계단 · 삼손방(디모데홀) */}
       <GameRoom
         x={10}
-        y={280}
-        w={118}
-        h={170}
+        y={274}
+        w={280}
+        h={150}
         station={rahab}
         cleared={clearedIds.has(rahab.id)}
         selected={selectedId === rahab.id}
         onPress={() => onSelect(rahab.id)}
-        label="사무엘홀"
-        label2="다니엘홀"
+        label="사무엘홀 · 다니엘홀"
+        sublabel="방탈출 (초등부·유년부교사실 포함)"
+        sessionLabel="라합방"
+      />
+      <GrayBlock x={294} y={274} w={92} h={150} />
+      <SvgText x={340} y={352} textAnchor="middle" fill="#1A2845" fontSize={9} fontFamily={FONT}>
+        계단
+      </SvgText>
+      <GameRoom
+        x={390}
+        y={274}
+        w={126}
+        h={150}
+        station={samson}
+        cleared={clearedIds.has(samson.id)}
+        selected={selectedId === samson.id}
+        onPress={() => onSelect(samson.id)}
+        label="디모데홀 (아동부)"
+        sublabel="미는 챌린지 (아동부교사실 포함)"
+        sessionLabel="삼손방"
       />
 
       <SvgText x={10} y={16} fill="#2D4066" fontSize={10} fontFamily={FONT} fontWeight="600">
@@ -267,7 +367,9 @@ export function Floor11Young({ stations, clearedIds, selectedId, onSelect }: Flo
       <DimRoom x={250} y={285} w={268} h={74} label="에스더홀" sublabel="(유치부 / 비활성)" />
       <DimRoom x={136} y={285} w={108} h={74} label="유아부" sublabel="교사실" />
       <GrayBlock x={10} y={352} w={118} h={72} />
-      <DimRoom x={10} y={352} w={118} h={72} label="유아부 교사실" />
+      <SvgText x={69} y={390} textAnchor="middle" fill="#1A2845" fontSize={9} fontFamily={FONT}>
+        유아부 교사실
+      </SvgText>
 
       {evStrip([527, 527, 527, 527], 32)}
       <GrayBlock x={266} y={5} w={100} h={20} />
@@ -284,6 +386,8 @@ export function Floor11Young({ stations, clearedIds, selectedId, onSelect }: Flo
         selected={selectedId === joseph.id}
         onPress={() => onSelect(joseph.id)}
         label="요셉홀"
+        sublabel="릴레이"
+        sessionLabel="요셉방"
       />
 
       <SvgText x={10} y={16} fill="#2D4066" fontSize={10} fontFamily={FONT} fontWeight="600">
@@ -318,22 +422,23 @@ export function Floor10Fashion({ stations, clearedIds, selectedId, onSelect }: F
       <DimRoom x={8} y={288} w={175} h={85} label="SAEROUN STAFF" />
 
       <GrayBlock x={200} y={118} w={135} h={155} />
-      <SvgText x={267} y={198} textAnchor="middle" fill="#1A2845" fontSize={9}>
+      <SvgText x={267} y={198} textAnchor="middle" fill="#1A2845" fontSize={9} fontFamily={FONT}>
         계단
       </SvgText>
 
-      <DimRoom x={200} y={285} w={130} h={88} label="그레이스홀" />
       <DimRoom x={336} y={285} w={100} h={88} label="목회리더십" sublabel="연구원" />
       <DimRoom x={440} y={285} w={80} h={88} label="뉴젠가정" sublabel="연구소" />
-
       <DimRoom x={360} y={118} w={192} h={58} label="바울센터" sublabel="(비활성)" />
 
       <GrayBlock x={42} y={377} w={38} h={46} />
       {evStrip([120, 145, 335, 360, 385, 410, 458, 490], 388)}
-      <SvgText x={61} y={403} textAnchor="middle" fill="#1A2845" fontSize={7}>
+      <SvgText x={61} y={403} textAnchor="middle" fill="#1A2845" fontSize={7} fontFamily={FONT}>
         화장실
       </SvgText>
       {evStrip([240, 264, 288, 312], 20)}
+
+      {/* 아벨방(그레이스홀)은 장소 미확정 — 확정되면 GameRoom으로 교체 */}
+      <DimRoom x={200} y={285} w={130} h={88} label="그레이스홀?" sublabel="아벨방 (장소 미정)" />
 
       <GameRoom
         x={360}
@@ -344,7 +449,9 @@ export function Floor10Fashion({ stations, clearedIds, selectedId, onSelect }: F
         cleared={clearedIds.has(david.id)}
         selected={selectedId === david.id}
         onPress={() => onSelect(david.id)}
-        label="새로운홀"
+        label="새로운홀 (중등부)"
+        sublabel="도미노"
+        sessionLabel="도미노"
       />
 
       <SvgText x={10} y={108} fill="#2D4066" fontSize={10} fontFamily={FONT} fontWeight="600">
