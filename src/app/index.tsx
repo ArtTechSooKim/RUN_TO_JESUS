@@ -18,6 +18,7 @@ import { StarField } from '@/components/star-field';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, Colors, MaxContentWidth, Spacing } from '@/constants/theme';
+import { useAuth } from '@/hooks/use-auth';
 
 function GlowTitle() {
   const glow = useSharedValue(0);
@@ -80,6 +81,7 @@ function PulsingCta({ onPress }: { onPress: () => void }) {
 
 export default function HomeScreen() {
   const [launching, setLaunching] = useState(false);
+  const { user } = useAuth();
 
   return (
     <ThemedView style={styles.container}>
@@ -108,7 +110,7 @@ export default function HomeScreen() {
         </Animated.View>
       </SafeAreaView>
 
-      {launching && <HyperspaceBurst onDone={() => router.replace('/map')} />}
+      {launching && <HyperspaceBurst onDone={() => router.replace(user ? '/map' : '/login')} />}
     </ThemedView>
   );
 }

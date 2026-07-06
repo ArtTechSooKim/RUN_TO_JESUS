@@ -1,4 +1,4 @@
-import { Link } from 'expo-router';
+import { Link, Stack, router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown, FadeOut } from 'react-native-reanimated';
@@ -20,7 +20,7 @@ const FLOOR_MAPS: Record<Floor, typeof Floor10Young> = {
 
 export default function MapScreen() {
   const theme = useTheme();
-  const { clearedIds, collectedLetters, newlyCollected, toggleCleared } = useStationProgress();
+  const { clearedIds, collectedLetters, newlyCollected, recordManualComplete } = useStationProgress();
   const [activeFloor, setActiveFloor] = useState<Floor>('young-10f');
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
@@ -33,6 +33,17 @@ export default function MapScreen() {
 
   return (
     <ThemedView style={styles.container}>
+      <Stack.Screen
+        options={{
+          headerRight: () => (
+            <Pressable
+              onPress={() => router.push('/settings')}
+              style={({ pressed }) => [styles.settingsButton, pressed && styles.pressed]}>
+              <ThemedText style={{ color: theme.textSecondary }}>⚙️</ThemedText>
+            </Pressable>
+          ),
+        }}
+      />
       <ScrollView contentContainerStyle={styles.content}>
         <Link href="/collection" asChild>
           <Pressable style={({ pressed }) => pressed && styles.pressed}>
@@ -107,19 +118,19 @@ export default function MapScreen() {
                     </View>
                   </Pressable>
                 </Link>
-                <Pressable
-                  onPress={() => toggleCleared(selectedStation.id)}
-                  style={({ pressed }) => [
-                    styles.secondaryButton,
-                    { borderColor: `${selectedStation.color}60` },
-                    pressed && styles.pressed,
-                  ]}>
-                  <ThemedText type="small" style={{ color: selectedStation.color }}>
-                    {clearedIds.has(selectedStation.id)
-                      ? '클리어 취소 (테스트용)'
-                      : '클리어 처리 (테스트용)'}
-                  </ThemedText>
-                </Pressable>
+                {!clearedIds.has(selectedStation.id) && (
+                  <Pressable
+                    onPress={() => recordManualComplete(selectedStation.id)}
+                    style={({ pressed }) => [
+                      styles.secondaryButton,
+                      { borderColor: `${selectedStation.color}60` },
+                      pressed && styles.pressed,
+                    ]}>
+                    <ThemedText type="small" style={{ color: selectedStation.color }}>
+                      스캔이 안 될 때: 직접 완료 처리 (수동 백업)
+                    </ThemedText>
+                  </Pressable>
+                )}
               </View>
             </ThemedView>
           </Animated.View>
@@ -201,6 +212,10 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.7,
+  },
+  settingsButton: {
+    padding: Spacing.two,
+    marginRight: Spacing.two,
   },
   scanFab: {
     position: 'absolute',

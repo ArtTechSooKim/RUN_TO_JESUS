@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>RUN TO JESUS — 본당 상영</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        background: #050810;
+        overflow: hidden;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      }
+      #stars {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+      }
+      .star {
+        position: absolute;
+        border-radius: 50%;
+        background: #fff;
+        animation: twinkle linear infinite;
+      }
+      @keyframes twinkle {
+        0%,
+        100% {
+          opacity: 0.05;
+        }
+        50% {
+          opacity: 0.5;
+        }
+      }
+
+      #stage {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 48px;
+        padding: 0 48px;
+      }
+
+      .eyebrow {
+        text-align: center;
+        color: #6b7a99;
+        font-size: 15px;
+        letter-spacing: 0.5em;
+        text-transform: uppercase;
+        margin: 0 0 12px;
+      }
+      .brand {
+        text-align: center;
+        color: #ffd700;
+        font-size: 56px;
+        font-weight: 900;
+        letter-spacing: 0.1em;
+        margin: 0;
+        text-shadow: 0 0 30px rgba(255, 215, 0, 0.4);
+        animation: glow 4s ease-in-out infinite;
+      }
+      @keyframes glow {
+        0%,
+        100% {
+          text-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+        }
+        50% {
+          text-shadow: 0 0 50px rgba(255, 215, 0, 0.6);
+        }
+      }
+
+      #bar-wrap {
+        width: 100%;
+        max-width: 900px;
+      }
+      #bar-track {
+        position: relative;
+        height: 80px;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 215, 0, 0.15);
+        overflow: hidden;
+      }
+      #bar-fill {
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 0%;
+        border-radius: 20px;
+        background: linear-gradient(90deg, rgba(255, 215, 0, 0.3), rgba(255, 215, 0, 0.6));
+        transition: width 1.2s ease-out;
+      }
+      #bar-label {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(255, 255, 255, 0.12);
+        font-size: 26px;
+        font-weight: 900;
+        letter-spacing: 0.5em;
+        text-transform: uppercase;
+        user-select: none;
+      }
+      #runners {
+        position: absolute;
+        inset: 0;
+      }
+      .runner {
+        position: absolute;
+        bottom: 4px;
+        animation: bob 0.5s ease-in-out infinite;
+      }
+      @keyframes bob {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-4px);
+        }
+      }
+
+      #stats-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 12px;
+        padding: 0 4px;
+      }
+      #count-label {
+        color: #6b7a99;
+        font-size: 15px;
+      }
+      #pct-label {
+        color: #ffd700;
+        font-size: 32px;
+        font-weight: 900;
+        text-shadow: 0 0 16px rgba(255, 215, 0, 0.5);
+      }
+
+      #verse {
+        text-align: center;
+        color: rgba(255, 255, 255, 0.3);
+        font-size: 15px;
+        line-height: 1.7;
+        max-width: 640px;
+      }
+      #verse span {
+        color: rgba(255, 215, 0, 0.4);
+      }
+
+      #wormhole {
+        position: fixed;
+        inset: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+      }
+      #wormhole.show {
+        display: flex;
+      }
+      .ring {
+        position: absolute;
+        border-radius: 50%;
+        border: 1px solid #ffd700;
+        width: 10px;
+        height: 10px;
+        opacity: 0.9;
+        animation: expand 2.5s ease-out infinite;
+      }
+      .ring:nth-child(even) {
+        border-color: #fff;
+      }
+      @keyframes expand {
+        to {
+          width: 2000px;
+          height: 2000px;
+          opacity: 0;
+        }
+      }
+      #wormhole-text {
+        position: relative;
+        z-index: 1;
+        text-align: center;
+      }
+      #wormhole-text .title {
+        color: #ffd700;
+        font-size: 64px;
+        font-weight: 900;
+        letter-spacing: 0.1em;
+        text-shadow: 0 0 40px rgba(255, 215, 0, 0.8), 0 0 80px rgba(255, 215, 0, 0.4);
+        margin: 0;
+      }
+      #wormhole-text .subtitle {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 22px;
+        margin-top: 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="stars"></div>
+
+    <div id="stage">
+      <div>
+        <p class="eyebrow">2026 청년연합수련회 · 전체 달성률</p>
+        <p class="brand">RUN TO JESUS</p>
+      </div>
+
+      <div id="bar-wrap">
+        <div id="bar-track">
+          <div id="bar-fill"></div>
+          <div id="bar-label">RUN TO JESUS</div>
+          <div id="runners"></div>
+        </div>
+        <div id="stats-row">
+          <span id="count-label">- / - 태그</span>
+          <span id="pct-label">0%</span>
+        </div>
+      </div>
+
+      <p id="verse">
+        "우리에게 구름 같이 둘러싼 허다한 증인들이 있으니... 인내로써 우리 앞에 당한 경주를 하며"<br />
+        <span>— 히브리서 12:1</span>
+      </p>
+    </div>
+
+    <div id="wormhole">
+      <div id="rings"></div>
+      <div id="wormhole-text">
+        <p class="title">RUN TO JESUS</p>
+        <p class="subtitle">경주가 완성되었습니다!</p>
+      </div>
+    </div>
+
+    <script>
+      const API_BASE = 'https://run-to-jesus-production.up.railway.app/api';
+      const POLL_MS = 4000;
+
+      function spawnStars() {
+        const field = document.getElementById('stars');
+        for (let i = 0; i < 80; i++) {
+          const s = document.createElement('div');
+          s.className = 'star';
+          const size = Math.random() * 2 + 0.5;
+          s.style.width = size + 'px';
+          s.style.height = size + 'px';
+          s.style.left = Math.random() * 100 + '%';
+          s.style.top = Math.random() * 100 + '%';
+          s.style.animationDuration = Math.random() * 5 + 3 + 's';
+          s.style.animationDelay = Math.random() * 5 + 's';
+          field.appendChild(s);
+        }
+      }
+
+      function runnerSvg(delay) {
+        return (
+          '<svg width="28" height="40" viewBox="0 0 28 40" fill="none" style="animation-delay:' +
+          delay +
+          's">' +
+          '<circle cx="14" cy="5" r="4" fill="rgba(255,255,255,0.85)"/>' +
+          '<line x1="14" y1="9" x2="14" y2="24" stroke="rgba(255,255,255,0.85)" stroke-width="2.5" stroke-linecap="round"/>' +
+          '<line x1="14" y1="14" x2="5" y2="21" stroke="rgba(255,255,255,0.7)" stroke-width="2" stroke-linecap="round"/>' +
+          '<line x1="14" y1="14" x2="23" y2="21" stroke="rgba(255,255,255,0.7)" stroke-width="2" stroke-linecap="round"/>' +
+          '<line x1="14" y1="24" x2="7" y2="36" stroke="rgba(255,255,255,0.85)" stroke-width="2.5" stroke-linecap="round"/>' +
+          '<line x1="14" y1="24" x2="21" y2="36" stroke="rgba(255,255,255,0.85)" stroke-width="2.5" stroke-linecap="round"/>' +
+          '</svg>'
+        );
+      }
+
+      function renderRunners(ratio) {
+        const wrap = document.getElementById('runners');
+        wrap.innerHTML = '';
+        const bases = [2, 8, 14, 20, 26];
+        bases.forEach((base, i) => {
+          const x = Math.min(base + ratio * 68, 90);
+          const el = document.createElement('div');
+          el.className = 'runner';
+          el.style.left = x + '%';
+          el.innerHTML = runnerSvg(i * 0.12);
+          wrap.appendChild(el);
+        });
+      }
+
+      function spawnRings() {
+        const wrap = document.getElementById('rings');
+        for (let i = 0; i < 20; i++) {
+          const r = document.createElement('div');
+          r.className = 'ring';
+          r.style.animationDelay = i * 0.1 + 's';
+          wrap.appendChild(r);
+        }
+      }
+
+      let wormholeShown = false;
+
+      async function poll() {
+        try {
+          const res = await fetch(`${API_BASE}/stats/overall`);
+          const { count, total, ratio } = await res.json();
+          const pct = Math.round(ratio * 100);
+
+          document.getElementById('bar-fill').style.width = pct + '%';
+          document.getElementById('count-label').textContent = `${count} / ${total} 태그`;
+          document.getElementById('pct-label').textContent = pct + '%';
+          renderRunners(ratio);
+
+          if (ratio >= 1 && !wormholeShown) {
+            wormholeShown = true;
+            spawnRings();
+            document.getElementById('wormhole').classList.add('show');
+          } else if (ratio < 1 && wormholeShown) {
+            wormholeShown = false;
+            document.getElementById('wormhole').classList.remove('show');
+          }
+        } catch {
+          // transient network hiccup — keep showing the last known state
+        }
+      }
+
+      spawnStars();
+      poll();
+      setInterval(poll, POLL_MS);
+    </script>
+  </body>
+</html>

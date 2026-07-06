@@ -144,7 +144,7 @@ export default function StationDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const resolvedId = id ? (STATION_ALIASES[id] ?? id) : id;
   const station = stations.find((s) => s.id === resolvedId);
-  const { clearedIds, toggleCleared } = useStationProgress();
+  const { clearedIds, recordManualComplete } = useStationProgress();
   const [showQr, setShowQr] = useState(false);
 
   if (!station) {
@@ -241,24 +241,13 @@ export default function StationDetailScreen() {
             <ThemedText type="smallBold" style={{ color: station.color }}>
               이 스테이션 완료!
             </ThemedText>
-            <Pressable
-              onPress={() => toggleCleared(station.id)}
-              style={({ pressed }) => [
-                styles.ghostButton,
-                { borderColor: `${station.color}50` },
-                pressed && styles.pressed,
-              ]}>
-              <ThemedText type="small" style={{ color: station.color }}>
-                완료 취소 (테스트용)
-              </ThemedText>
-            </Pressable>
           </View>
         ) : (
           <View style={styles.ctaBlock}>
             <NfcCta color={station.color} />
             <ScanCta color={station.color} />
             <Pressable
-              onPress={() => toggleCleared(station.id)}
+              onPress={() => recordManualComplete(station.id)}
               style={({ pressed }) => [styles.ghostButton, pressed && styles.pressed]}>
               <ThemedText type="small" themeColor="textSecondary">
                 스캔이 안 될 때: 직접 완료 처리 (수동 백업)
