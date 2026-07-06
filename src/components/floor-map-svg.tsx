@@ -82,8 +82,12 @@ type GameRoomProps = {
   label: string;
   sublabel?: string;
   sessionLabel: string;
+  /** Number of teams currently mid-session here (game_sessions status='in_progress') — shows a live "진행중" marker. */
+  activeCount?: number;
   rx?: number;
 };
+
+const IN_PROGRESS_COLOR = '#FB923C';
 
 /** A real, tappable station room — session name (game) on top, hall name below. */
 function GameRoom({
@@ -98,8 +102,10 @@ function GameRoom({
   label,
   sublabel,
   sessionLabel,
+  activeCount = 0,
   rx = 4,
 }: GameRoomProps) {
+  const inProgress = activeCount > 0;
   const sessionY = y + h / 2 - (sublabel ? 15 : 10);
   const labelY = y + h / 2 + 4;
   const sublabelY = y + h / 2 + 15;
@@ -113,9 +119,9 @@ function GameRoom({
         height={h + 6}
         rx={rx + 2}
         fill="none"
-        stroke={station.color}
-        strokeWidth={selected ? 2.5 : 1.5}
-        opacity={selected ? 0.7 : 0.35}
+        stroke={inProgress ? IN_PROGRESS_COLOR : station.color}
+        strokeWidth={selected || inProgress ? 2.5 : 1.5}
+        opacity={selected || inProgress ? 0.8 : 0.35}
       />
       <Rect
         x={x}
@@ -124,7 +130,7 @@ function GameRoom({
         height={h}
         rx={rx}
         fill={`${station.color}${selected ? '30' : '1A'}`}
-        stroke={station.color}
+        stroke={inProgress ? IN_PROGRESS_COLOR : station.color}
         strokeWidth={selected ? 1.8 : 1.2}
         opacity={selected ? 1 : 0.85}
       />
@@ -137,8 +143,23 @@ function GameRoom({
           </SvgText>
         </G>
       )}
-      <SvgText x={x + w / 2} y={sessionY} textAnchor="middle" fill={station.color} fontSize={12} fontFamily={FONT} fontWeight="800">
-        {sessionLabel}
+      {inProgress && (
+        <G>
+          <Circle cx={x + 10} cy={y + 10} r={7} fill={`${IN_PROGRESS_COLOR}40`} stroke={IN_PROGRESS_COLOR} strokeWidth={1} />
+          <SvgText x={x + 10} y={y + 13} textAnchor="middle" fill={IN_PROGRESS_COLOR} fontSize={8} fontWeight="bold">
+            {activeCount}
+          </SvgText>
+        </G>
+      )}
+      <SvgText
+        x={x + w / 2}
+        y={sessionY}
+        textAnchor="middle"
+        fill={inProgress ? IN_PROGRESS_COLOR : station.color}
+        fontSize={12}
+        fontFamily={FONT}
+        fontWeight="800">
+        {inProgress ? '진행중...' : sessionLabel}
       </SvgText>
       <SvgText x={x + w / 2} y={labelY} textAnchor="middle" fill={station.color} fontSize={8} opacity={0.65} fontFamily={FONT}>
         {label}
@@ -220,6 +241,8 @@ type FloorProps = {
   clearedIds: Set<string>;
   selectedId: string | null;
   onSelect: (id: string) => void;
+  /** station_id -> number of teams currently mid-session there. */
+  activeCounts?: Record<string, number>;
 };
 
 function byId(stations: Station[], id: string) {
@@ -228,7 +251,7 @@ function byId(stations: Station[], id: string) {
   return s;
 }
 
-export function Floor10Young({ stations, clearedIds, selectedId, onSelect }: FloorProps) {
+export function Floor10Young({ stations, clearedIds, selectedId, onSelect, activeCounts = {} }: FloorProps) {
   const rahab = byId(stations, 'RAHAB');
   const jacob = byId(stations, 'JACOB');
   const abraham = byId(stations, 'ABRAHAM');
@@ -276,6 +299,7 @@ export function Floor10Young({ stations, clearedIds, selectedId, onSelect }: Flo
           onPress={() => onSelect(noah.id)}
           label="플레이그라운드"
           sessionLabel={noah.keyword}
+          activeCount={activeCounts[noah.id]}
         />
       )}
 
@@ -291,6 +315,7 @@ export function Floor10Young({ stations, clearedIds, selectedId, onSelect }: Flo
         label="이삭홀 (영아부)"
         sublabel="블러핑"
         sessionLabel="블러핑"
+        activeCount={activeCounts[jacob.id]}
       />
       <GameRoom
         x={312}
@@ -304,6 +329,7 @@ export function Floor10Young({ stations, clearedIds, selectedId, onSelect }: Flo
         label="아가페홀 (새가족부)"
         sublabel="믿음의 가정"
         sessionLabel="아브라함방"
+        activeCount={activeCounts[abraham.id]}
       />
 
       {/* 하단 별동: 라합방(사무엘홀+다니엘홀 병합) · EV/계단 · 삼손방(디모데홀) */}
@@ -319,6 +345,7 @@ export function Floor10Young({ stations, clearedIds, selectedId, onSelect }: Flo
         label="사무엘홀 · 다니엘홀"
         sublabel="방탈출 (초등부·유년부교사실 포함)"
         sessionLabel="라합방"
+        activeCount={activeCounts[rahab.id]}
       />
       <GrayBlock x={294} y={274} w={92} h={150} />
       <SvgText x={340} y={352} textAnchor="middle" fill="#1A2845" fontSize={9} fontFamily={FONT}>
@@ -336,6 +363,7 @@ export function Floor10Young({ stations, clearedIds, selectedId, onSelect }: Flo
         label="디모데홀 (아동부)"
         sublabel="미는 챌린지 (아동부교사실 포함)"
         sessionLabel="삼손방"
+        activeCount={activeCounts[samson.id]}
       />
 
       <SvgText x={10} y={16} fill="#2D4066" fontSize={10} fontFamily={FONT} fontWeight="600">
@@ -345,7 +373,7 @@ export function Floor10Young({ stations, clearedIds, selectedId, onSelect }: Flo
   );
 }
 
-export function Floor11Young({ stations, clearedIds, selectedId, onSelect }: FloorProps) {
+export function Floor11Young({ stations, clearedIds, selectedId, onSelect, activeCounts = {} }: FloorProps) {
   const joseph = byId(stations, 'JOSEPH');
 
   return (
@@ -388,6 +416,7 @@ export function Floor11Young({ stations, clearedIds, selectedId, onSelect }: Flo
         label="요셉홀"
         sublabel="릴레이"
         sessionLabel="요셉방"
+        activeCount={activeCounts[joseph.id]}
       />
 
       <SvgText x={10} y={16} fill="#2D4066" fontSize={10} fontFamily={FONT} fontWeight="600">
@@ -397,7 +426,7 @@ export function Floor11Young({ stations, clearedIds, selectedId, onSelect }: Flo
   );
 }
 
-export function Floor10Fashion({ stations, clearedIds, selectedId, onSelect }: FloorProps) {
+export function Floor10Fashion({ stations, clearedIds, selectedId, onSelect, activeCounts = {} }: FloorProps) {
   const david = byId(stations, 'DAVID');
 
   return (
@@ -452,6 +481,7 @@ export function Floor10Fashion({ stations, clearedIds, selectedId, onSelect }: F
         label="새로운홀 (중등부)"
         sublabel="도미노"
         sessionLabel="도미노"
+        activeCount={activeCounts[david.id]}
       />
 
       <SvgText x={10} y={108} fill="#2D4066" fontSize={10} fontFamily={FONT} fontWeight="600">

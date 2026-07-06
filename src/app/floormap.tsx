@@ -8,6 +8,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { floorLabels, floors, stations, type Floor } from '@/constants/stations';
 import { Colors, Spacing } from '@/constants/theme';
+import { formatRemaining, useActiveSessions } from '@/hooks/use-active-sessions';
 import { useStationProgress } from '@/hooks/use-station-progress';
 
 const FLOOR_MAPS: Record<Floor, typeof Floor10Young> = {
@@ -18,6 +19,7 @@ const FLOOR_MAPS: Record<Floor, typeof Floor10Young> = {
 
 export default function FloorMapScreen() {
   const { clearedIds, recordManualComplete } = useStationProgress();
+  const activeSessions = useActiveSessions();
   const [activeFloor, setActiveFloor] = useState<Floor>('young-10f');
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
@@ -27,6 +29,16 @@ export default function FloorMapScreen() {
   );
   const selectedStation = stations.find((s) => s.id === selectedId) ?? null;
   const FloorMap = FLOOR_MAPS[activeFloor];
+
+  const activeCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const s of activeSessions) counts[s.station_id] = (counts[s.station_id] ?? 0) + 1;
+    return counts;
+  }, [activeSessions]);
+
+  const selectedSessions = selectedStation
+    ? activeSessions.filter((s) => s.station_id === selectedStation.id)
+    : [];
 
   return (
     <ThemedView style={styles.container}>
@@ -61,6 +73,7 @@ export default function FloorMapScreen() {
             clearedIds={clearedIds}
             selectedId={selectedId}
             onSelect={setSelectedId}
+            activeCounts={activeCounts}
           />
         </Animated.View>
 
@@ -90,9 +103,15 @@ export default function FloorMapScreen() {
               <ThemedText type="small" themeColor="textSecondary">
                 {selectedStation.characterTitle} · 담당 {selectedStation.lead}
               </ThemedText>
-              <ThemedText type="small">
-                {clearedIds.has(selectedStation.id) ? '클리어 완료' : '아직 탐험 전'}
-              </ThemedText>
+              {selectedSessions.length > 0 ? (
+                <ThemedText type="small" style={{ color: '#FB923C' }}>
+                  🔴 {selectedSessions.map((s) => `${s.team_id}조 (${formatRemaining(s.expected_end_at)})`).join(', ')} 진행중
+                </ThemedText>
+              ) : (
+                <ThemedText type="small">
+                  {clearedIds.has(selectedStation.id) ? '클리어 완료' : '아직 탐험 전'}
+                </ThemedText>
+              )}
               <View style={styles.detailActions}>
                 <Link href={{ pathname: '/station/[id]', params: { id: selectedStation.id } }} asChild>
                   <Pressable style={({ pressed }) => pressed && styles.pressed}>

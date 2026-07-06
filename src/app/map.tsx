@@ -7,18 +7,22 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { stations } from '@/constants/stations';
 import { Colors, Spacing } from '@/constants/theme';
+import { formatRemaining, useActiveSessions } from '@/hooks/use-active-sessions';
 import { useStationProgress } from '@/hooks/use-station-progress';
 import { useTheme } from '@/hooks/use-theme';
+import type { ApiSession } from '@/lib/api';
 
 function StationCard({
   station,
   done,
   collectedLetters,
+  activeSessions,
   index,
 }: {
   station: (typeof stations)[number];
   done: boolean;
   collectedLetters: Set<number>;
+  activeSessions: ApiSession[];
   index: number;
 }) {
   return (
@@ -61,9 +65,16 @@ function StationCard({
                   </ThemedText>
                 </View>
               </View>
-              <ThemedText type="small" themeColor="textSecondary" numberOfLines={1}>
-                {station.description}
-              </ThemedText>
+              {activeSessions.length > 0 ? (
+                <ThemedText type="small" numberOfLines={1} style={{ color: '#FB923C' }}>
+                  🔴 {activeSessions.map((s) => `${s.team_id}조`).join(', ')} 진행중 ·{' '}
+                  {formatRemaining(activeSessions[0].expected_end_at)}
+                </ThemedText>
+              ) : (
+                <ThemedText type="small" themeColor="textSecondary" numberOfLines={1}>
+                  {station.description}
+                </ThemedText>
+              )}
 
               {station.letters.length > 0 && (
                 <View style={styles.dotsRow}>
@@ -107,6 +118,7 @@ function StationCard({
 export default function MapScreen() {
   const theme = useTheme();
   const { clearedIds, collectedLetters, newlyCollected } = useStationProgress();
+  const activeSessions = useActiveSessions();
   const total = 10;
   const allDone = collectedLetters.size === total;
 
@@ -155,6 +167,7 @@ export default function MapScreen() {
               station={station}
               done={clearedIds.has(station.id)}
               collectedLetters={collectedLetters}
+              activeSessions={activeSessions.filter((s) => s.station_id === station.id)}
               index={index}
             />
           ))}
