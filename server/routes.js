@@ -5,6 +5,10 @@ const { pool } = require('./db');
 const router = express.Router();
 
 const RUN_TO_JESUS = 'RUNTOJESUS';
+// Matches the client-side super-admin gate — checked server-side too since
+// this one wipes every team's progress (blast radius is the whole event,
+// unlike the per-user edit endpoints), see settings.tsx ADMIN_PASSWORD.
+const RESET_PASSWORD = 'saeroun0906';
 
 function parseLetters(row) {
   if (!row) return row;
@@ -235,6 +239,23 @@ router.put('/app-state', async (req, res) => {
   }
   await pool.query('UPDATE app_state SET game_state = ? WHERE id = 1', [game_state]);
   res.json({ game_state });
+});
+
+// Wipes every team's collected fragments and session history — for repeated
+// test runs before the real event. Leaves users/stations/app_state alone.
+router.post('/admin/reset-progress', async (req, res) => {
+  if (req.body.password !== RESET_PASSWORD) {
+    return res.status(403).json({ error: 'invalid password' });
+  }
+  const conn = await pool.getConnection();
+  try {
+    await conn.query('DELETE FROM tag_events');
+    await conn.query('DELETE FROM game_sessions');
+    await conn.query('DELETE FROM fragment_reveal_log');
+    res.json({ ok: true });
+  } finally {
+    conn.release();
+  }
 });
 
 // ── broadcast / ending stats ─────────────────────────────────────────────

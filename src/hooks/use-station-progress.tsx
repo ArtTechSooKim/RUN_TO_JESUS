@@ -54,7 +54,16 @@ export function StationProgressProvider({ children }: { children: ReactNode }) {
     // even though we never scanned it ourselves (see 기능정리 §3).
     const seenKey = `${SEEN_KEY_PREFIX}${user.team_id}`;
     const savedRaw = await AsyncStorage.getItem(seenKey);
-    const seen = new Set<string>(savedRaw ? JSON.parse(savedRaw) : []);
+    let seen = new Set<string>(savedRaw ? JSON.parse(savedRaw) : []);
+
+    // Self-heal after a super-admin progress reset: the server now says this
+    // team has cleared nothing, but this device still remembers old
+    // fragments as "seen" — drop that stale cache so future re-tags reveal again.
+    if (stationIds.length === 0 && seen.size > 0) {
+      seen = new Set();
+      await AsyncStorage.removeItem(seenKey);
+    }
+
     const newlySeen = stationIds.filter((id) => !seen.has(id));
 
     if (newlySeen.length) {

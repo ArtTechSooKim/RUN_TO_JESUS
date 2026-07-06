@@ -89,4 +89,7 @@ export const api = {
     request<{ game_state: 'progress' | 'ended' }>('/app-state', { method: 'PUT', body: JSON.stringify({ game_state }) }),
 
   getOverallStats: () => request<{ count: number; total: number; ratio: number }>('/stats/overall'),
+
+  resetAllProgress: (password: string) =>
+    request<{ ok: true }>('/admin/reset-progress', { method: 'POST', body: JSON.stringify({ password }) }),
 };
