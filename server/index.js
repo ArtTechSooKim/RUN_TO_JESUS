@@ -1,5 +1,6 @@
 const path = require('path');
 const express = require('express');
+const cors = require('cors');
 const { initSchema } = require('./db');
 const apiRoutes = require('./routes');
 
@@ -8,6 +9,10 @@ const PORT = process.env.PORT || 8080;
 const DIST_DIR = path.join(__dirname, '..', 'dist');
 
 app.use(express.json());
+// The API is always called via its absolute Railway URL (native app builds
+// aren't same-origin with anything), and the broadcast page is a separate
+// static page too — so this stays permissive rather than allowlisting origins.
+app.use(cors());
 app.use('/api', apiRoutes);
 
 app.use(express.static(DIST_DIR));
