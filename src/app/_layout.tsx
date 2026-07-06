@@ -47,6 +47,10 @@ export default function RootLayout() {
               options={{ headerShown: true, title: '탐험 지도', animation: 'fade' }}
             />
             <Stack.Screen
+              name="floormap"
+              options={{ headerShown: true, title: '공간 지도', animation: 'slide_from_bottom' }}
+            />
+            <Stack.Screen
               name="station/[id]"
               options={{ headerShown: true, title: '', animation: 'slide_from_right' }}
             />
