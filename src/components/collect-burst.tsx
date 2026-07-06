@@ -34,7 +34,8 @@ function BurstParticle({ angle, color, delay }: { angle: number; color: string; 
 }
 
 type CollectBurstProps = {
-  letter: string;
+  /** omit for mini-games that don't award a letter — shows a checkmark instead */
+  letter?: string;
   color: string;
   label: string;
 };
@@ -81,13 +82,15 @@ export function CollectBurst({ letter, color, label }: CollectBurstProps) {
             letterStyle,
             { borderColor: color, shadowColor: color },
           ]}>
-          <ThemedText style={[styles.letterText, { color: Colors.dark.gold }]}>{letter}</ThemedText>
+          <ThemedText style={[styles.letterText, { color: Colors.dark.gold }]}>
+            {letter ?? '✓'}
+          </ThemedText>
         </Animated.View>
       </View>
 
       <Animated.View style={[styles.textBlock, textStyle]}>
         <ThemedText type="subtitle" style={{ color: Colors.dark.gold }}>
-          조각 획득!
+          {letter ? '조각 획득!' : '참여 완료!'}
         </ThemedText>
         <ThemedText type="small" themeColor="textSecondary">
           {label}

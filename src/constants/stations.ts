@@ -8,17 +8,20 @@ export const QR_PREFIX = 'RTJ:';
 export const INTRO_QR_ID = 'INTRO';
 
 /**
- * 다니엘홀·사무엘홀 방탈출은 하나의 방으로 취급하기로 함 (2026-07-04) — 이미
- * 인쇄된 ABEL QR/태그가 있을 수 있어 id 자체는 없애지 않고, 스캔 시 NOAH로
- * 합쳐지도록 별칭 처리. 지도에는 두 홀 다 보이지만 완료 상태는 하나로 공유됨.
+ * 2026-07-05 회의로 라합방(구 방탈출)이 R,U,N 세 글자를 통째로 갖는 하나의
+ * 스테이션으로 확정됨 — RAHAB을 대표 id로 삼음. NOAH/ABEL은 그 전에 이미
+ * 물리 QR/NFC 태그로 인쇄·기록됐을 수 있어 id는 없애지 않고 RAHAB으로
+ * 합쳐지도록 별칭 처리. (노아방/아벨방은 이름은 겹치지만 완전히 다른,
+ * 글자 배정이 없는 별개의 미니게임이라 NOAH/ABEL과는 무관— 아래 참고.)
  */
 export const STATION_ALIASES: Record<string, string> = {
-  ABEL: 'NOAH',
+  NOAH: 'RAHAB',
+  ABEL: 'RAHAB',
 };
 
 export type Station = {
   id: string;
-  /** 게임명 (예: "방탈출") */
+  /** 게임명 (예: "라합방") */
   keyword: string;
   hall: string;
   /** 짧은 헤드라인 */
@@ -26,10 +29,11 @@ export type Station = {
   description: string;
   /** 담당자 */
   lead: string;
-  floor: Floor;
+  /** 장소 미확정인 스테이션은 비워둠 (지도에 아직 표시하지 않음) */
+  floor?: Floor;
   color: string;
   emoji: string;
-  /** indices into RUN_TO_JESUS collected on completing this station */
+  /** indices into RUN_TO_JESUS collected on completing this station. 글자가 없는 미니게임은 빈 배열 */
   letters: number[];
 };
 
@@ -41,42 +45,27 @@ export const floorLabels: Record<Floor, string> = {
 
 export const floors: Floor[] = ['young-10f', 'young-11f', 'fashion-10f'];
 
-// Confirmed 2026-07-03 station_fragment_mapping.md (최종 확정본) — supersedes
-// the earlier 8-character Hebrews 11 narrative mapping, which that doc
-// explicitly discards. Final line-up is 6 games; 방탈출 alone spans three
-// already-printed physical QR codes (NOAH/ABEL/RAHAB), so those three ids
-// are kept as-is (no reprinting needed) and just relabeled as one game,
-// splitting its 3 letters (R,U,N) one-per-QR across them.
+// Confirmed 2026-07-05 회의 (PROJECT_CONTEXT (1).md) — supersedes the 2026-07-03
+// station_fragment_mapping.md naming. 핵심 6 스테이션(글자 배정 있음) +
+// 미니게임 3개(겸임, 글자 배정 없음, 장소 일부 미정). RAHAB의 물리 QR/NFC는
+// 이미 인쇄·기록됐을 수 있어 id는 유지하고 NOAH/ABEL을 별칭으로 흡수.
 export const stations: Station[] = [
   {
-    id: 'NOAH',
-    keyword: '방탈출',
-    hall: '다니엘홀 · 사무엘홀',
-    characterTitle: '다니엘홀·사무엘홀 탈출 미션',
+    id: 'RAHAB',
+    keyword: '라합방',
+    hall: '사무엘홀 · 다니엘홀',
+    characterTitle: '라합방 탈출 미션',
     description:
-      '다니엘홀과 사무엘홀 두 곳에서 동시에 진행되는 하나의 방탈출이에요. 제한 시간 안에 흩어진 단서를 모아 탈출구를 찾아보세요.',
+      '동시 2세션으로 진행되는 방탈출이에요 (세션1: 사무엘홀·초등부교사실 / 세션2: 다니엘홀·유년부교사실). 제한 시간 안에 흩어진 단서를 모아 탈출구를 찾아보세요.',
     lead: '보민',
     floor: 'young-10f',
     color: '#6EA8FF',
     emoji: '🗝️',
-    letters: [0, 1],
-  },
-  {
-    id: 'RAHAB',
-    keyword: '방탈출',
-    hall: '다니엘홀 · 사무엘홀',
-    characterTitle: '방탈출 추가 미션',
-    description:
-      '방탈출 참가자를 위한 보너스 미션. 숨겨진 힌트를 찾아내면 조각을 더 모을 수 있어요.',
-    lead: '보민',
-    floor: 'young-10f',
-    color: '#FB923C',
-    emoji: '🗝️',
-    letters: [2],
+    letters: [0, 1, 2],
   },
   {
     id: 'JOSEPH',
-    keyword: '릴레이',
+    keyword: '요셉방',
     hall: '요셉홀',
     characterTitle: '이어달리기 릴레이',
     description: '팀이 하나가 되어 완주하는 릴레이 게임. 협력과 속도가 승부를 가릅니다.',
@@ -100,7 +89,7 @@ export const stations: Station[] = [
   },
   {
     id: 'ABRAHAM',
-    keyword: '믿음의 가정',
+    keyword: '아브라함방',
     hall: '아가페홀',
     characterTitle: '우리 가족의 믿음',
     description: '가정을 주제로 한 이야기와 활동을 함께 나누는 시간입니다.',
@@ -112,10 +101,11 @@ export const stations: Station[] = [
   },
   {
     id: 'SAMSON',
-    keyword: '미는 챌린지',
+    keyword: '삼손방',
     hall: '디모데홀',
-    characterTitle: '온 힘을 다해, 미는 챌린지',
-    description: '온몸으로 부딪히는 파워 게임. 팀의 힘을 하나로 모아보세요.',
+    characterTitle: '온 힘을 다해, 삼손방',
+    description:
+      '들릴라의 유혹 영상 후 완전 암전 상태에서 회전 맷돌 구조물을 미는 챌린지가 이어지고, 블레셋 심판 영상과 함께 탈출합니다.',
     lead: '수',
     floor: 'young-10f',
     color: '#EF4444',
@@ -133,5 +123,39 @@ export const stations: Station[] = [
     color: '#22D3EE',
     emoji: '🎲',
     letters: [7, 8, 9],
+  },
+  // 아래는 겸임 미니게임 — 글자 배정 없음, 참여 자체가 목적
+  {
+    id: 'NOAHROOM',
+    keyword: '노아방',
+    hall: '미정',
+    characterTitle: '노아방',
+    description: '장소와 세부 내용은 아직 준비 중입니다.',
+    lead: '보민',
+    color: '#38BDF8',
+    emoji: '🚢',
+    letters: [],
+  },
+  {
+    id: 'ABELROOM',
+    keyword: '아벨방',
+    hall: '미정',
+    characterTitle: '아벨방',
+    description: '장소와 세부 내용은 아직 준비 중입니다.',
+    lead: '혜선',
+    color: '#FDBA74',
+    emoji: '🕯️',
+    letters: [],
+  },
+  {
+    id: 'MYSTERYGAME',
+    keyword: '미정게임',
+    hall: '여호수아홀 (극장)',
+    characterTitle: '미정게임',
+    description: '세부 내용은 아직 준비 중입니다.',
+    lead: '보람',
+    color: '#94A3B8',
+    emoji: '❓',
+    letters: [],
   },
 ];

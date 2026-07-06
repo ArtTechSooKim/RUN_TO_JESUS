@@ -92,7 +92,7 @@ export default function NfcScanScreen() {
     return (
       <View style={styles.container}>
         <CollectBurst
-          letter={RUN_TO_JESUS[collectedStation.letters[0]]}
+          letter={collectedStation.letters.length ? RUN_TO_JESUS[collectedStation.letters[0]] : undefined}
           color={collectedStation.color}
           label={`${collectedStation.hall} · ${collectedStation.keyword}`}
         />

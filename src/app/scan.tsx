@@ -71,7 +71,7 @@ export default function ScanScreen() {
 
       {collectedStation && (
         <CollectBurst
-          letter={RUN_TO_JESUS[collectedStation.letters[0]]}
+          letter={collectedStation.letters.length ? RUN_TO_JESUS[collectedStation.letters[0]] : undefined}
           color={collectedStation.color}
           label={`${collectedStation.hall} · ${collectedStation.keyword}`}
         />

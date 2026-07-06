@@ -200,7 +200,9 @@ export default function StationDetailScreen() {
 
         <Animated.View entering={FadeInDown.delay(180).duration(400)} style={styles.badgeRow}>
           <InfoBadge icon="📍" label={station.hall} color={station.color} />
-          <InfoBadge icon="🏢" label={floorLabels[station.floor]} color={station.color} />
+          {station.floor && (
+            <InfoBadge icon="🏢" label={floorLabels[station.floor]} color={station.color} />
+          )}
         </Animated.View>
 
         <Animated.View
@@ -214,16 +216,18 @@ export default function StationDetailScreen() {
           </ThemedText>
         </Animated.View>
 
-        <View style={styles.letterRow}>
-          <ThemedText type="small" themeColor="textSecondary">
-            획득 조각
-          </ThemedText>
-          <View style={styles.letterChips}>
-            {station.letters.map((li) => (
-              <LetterPiece key={li} letter={RUN_TO_JESUS[li]} collected={cleared} size="sm" />
-            ))}
+        {station.letters.length > 0 && (
+          <View style={styles.letterRow}>
+            <ThemedText type="small" themeColor="textSecondary">
+              획득 조각
+            </ThemedText>
+            <View style={styles.letterChips}>
+              {station.letters.map((li) => (
+                <LetterPiece key={li} letter={RUN_TO_JESUS[li]} collected={cleared} size="sm" />
+              ))}
+            </View>
           </View>
-        </View>
+        )}
 
         {cleared ? (
           <View style={styles.doneBlock}>
