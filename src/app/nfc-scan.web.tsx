@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
-import { Pressable, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 
+import { SoundPressable } from '@/components/sound-pressable';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Colors, Spacing } from '@/constants/theme';
@@ -18,13 +19,13 @@ export default function NfcScanWebFallback() {
       <ThemedText type="small" themeColor="textSecondary" style={styles.text}>
         아래 QR 코드 스캔으로 진행해주세요.
       </ThemedText>
-      <Pressable
+      <SoundPressable
         onPress={() => router.back()}
         style={({ pressed }) => [styles.button, pressed && styles.pressed]}>
         <ThemedText type="smallBold" style={{ color: Colors.dark.background }}>
           돌아가기
         </ThemedText>
-      </Pressable>
+      </SoundPressable>
     </ThemedView>
   );
 }

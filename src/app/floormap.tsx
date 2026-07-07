@@ -1,14 +1,16 @@
 import { Link } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown, FadeOut } from 'react-native-reanimated';
 
 import { Floor10Fashion, Floor10Young, Floor11Young } from '@/components/floor-map-svg';
+import { SoundPressable } from '@/components/sound-pressable';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { floorLabels, floors, stations, type Floor } from '@/constants/stations';
 import { Colors, Spacing } from '@/constants/theme';
 import { formatRemaining, sessionProgressPercent, useActiveSessions } from '@/hooks/use-active-sessions';
+import { useSoundEffects } from '@/hooks/use-sound-effects';
 import { useStationProgress } from '@/hooks/use-station-progress';
 
 const FLOOR_MAPS: Record<Floor, typeof Floor10Young> = {
@@ -20,6 +22,7 @@ const FLOOR_MAPS: Record<Floor, typeof Floor10Young> = {
 export default function FloorMapScreen() {
   const { clearedIds, cancelStation } = useStationProgress();
   const { sessions: activeSessions } = useActiveSessions();
+  const { playButton } = useSoundEffects();
   const [activeFloor, setActiveFloor] = useState<Floor>('young-10f');
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
@@ -59,7 +62,7 @@ export default function FloorMapScreen() {
           {floors.map((floor) => {
             const isActive = floor === activeFloor;
             return (
-              <Pressable
+              <SoundPressable
                 key={floor}
                 onPress={() => {
                   setActiveFloor(floor);
@@ -74,7 +77,7 @@ export default function FloorMapScreen() {
                   style={isActive ? { color: Colors.dark.gold } : { color: Colors.dark.textSecondary }}>
                   {floorLabels[floor]}
                 </ThemedText>
-              </Pressable>
+              </SoundPressable>
             );
           })}
         </ScrollView>
@@ -84,7 +87,10 @@ export default function FloorMapScreen() {
             stations={floorStations}
             clearedIds={clearedIds}
             selectedId={selectedId}
-            onSelect={setSelectedId}
+            onSelect={(id) => {
+              playButton();
+              setSelectedId(id);
+            }}
             activeCounts={activeCounts}
             activePercents={activePercents}
           />
@@ -131,22 +137,22 @@ export default function FloorMapScreen() {
               )}
               <View style={styles.detailActions}>
                 <Link href={{ pathname: '/station/[id]', params: { id: selectedStation.id } }} asChild>
-                  <Pressable style={({ pressed }) => pressed && styles.pressed}>
+                  <SoundPressable style={({ pressed }) => pressed && styles.pressed}>
                     <View style={[styles.primaryButton, { backgroundColor: selectedStation.color }]}>
                       <ThemedText type="smallBold" style={{ color: Colors.dark.background }}>
                         스테이션 자세히 보기 →
                       </ThemedText>
                     </View>
-                  </Pressable>
+                  </SoundPressable>
                 </Link>
                 {clearedIds.has(selectedStation.id) && (
-                  <Pressable
+                  <SoundPressable
                     onPress={() => cancelStation(selectedStation.id)}
                     style={({ pressed }) => [styles.secondaryButton, { borderColor: 'rgba(248,113,113,0.4)' }, pressed && styles.pressed]}>
                     <ThemedText type="small" style={{ color: '#F87171' }}>
                       잘못 태그했어요 (취소)
                     </ThemedText>
-                  </Pressable>
+                  </SoundPressable>
                 )}
               </View>
             </ThemedView>

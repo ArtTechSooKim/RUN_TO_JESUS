@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 import Animated, {
   Easing,
   FadeIn,
@@ -14,6 +14,7 @@ import Animated, {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { HyperspaceBurst } from '@/components/hyperspace-burst';
+import { SoundPressable } from '@/components/sound-pressable';
 import { StarField } from '@/components/star-field';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -64,7 +65,7 @@ function PulsingCta({ onPress }: { onPress: () => void }) {
   }));
 
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => pressed && styles.pressed}>
+    <SoundPressable sound="twinkle" onPress={onPress} style={({ pressed }) => pressed && styles.pressed}>
       <Animated.View
         style={[
           styles.ctaButton,
@@ -75,7 +76,7 @@ function PulsingCta({ onPress }: { onPress: () => void }) {
           바통 이어받기
         </ThemedText>
       </Animated.View>
-    </Pressable>
+    </SoundPressable>
   );
 }
 

@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 import Animated, { FadeIn, FadeInUp, FadeOut } from 'react-native-reanimated';
 
+import { SoundPressable } from '@/components/sound-pressable';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Colors, Spacing } from '@/constants/theme';
@@ -54,19 +55,19 @@ function ResetConfirmModal({ onClose, onDone }: { onClose: () => void; onDone: (
           </ThemedText>
         )}
         <View style={styles.modalActions}>
-          <Pressable onPress={onClose} style={({ pressed }) => [styles.modalButtonGhost, pressed && styles.pressed]}>
+          <SoundPressable onPress={onClose} style={({ pressed }) => [styles.modalButtonGhost, pressed && styles.pressed]}>
             <ThemedText type="small" themeColor="textSecondary">
               취소
             </ThemedText>
-          </Pressable>
-          <Pressable
+          </SoundPressable>
+          <SoundPressable
             onPress={handleConfirm}
             disabled={loading}
             style={({ pressed }) => [styles.modalButtonDanger, pressed && styles.pressed]}>
             <ThemedText type="smallBold" style={{ color: '#fff' }}>
               {loading ? '초기화 중...' : '초기화'}
             </ThemedText>
-          </Pressable>
+          </SoundPressable>
         </View>
       </Animated.View>
     </Animated.View>
@@ -92,9 +93,9 @@ export default function SuperAdminScreen() {
   return (
     <ThemedView style={styles.container}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}>
+        <SoundPressable onPress={() => router.back()} style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}>
           <ThemedText type="small">← 뒤로</ThemedText>
-        </Pressable>
+        </SoundPressable>
         <View>
           <ThemedText type="small" style={{ color: '#F87171' }}>
             최고관리자
@@ -116,7 +117,7 @@ export default function SuperAdminScreen() {
       </View>
 
       <View style={styles.buttonGroup}>
-        <Pressable
+        <SoundPressable
           onPress={() => toggle('progress')}
           style={({ pressed }) => [
             styles.stateButton,
@@ -126,9 +127,9 @@ export default function SuperAdminScreen() {
           <ThemedText type="smallBold" style={{ color: isActive ? Colors.dark.background : Colors.dark.textSecondary }}>
             ⚡ 게임상태 (정상 운영)
           </ThemedText>
-        </Pressable>
+        </SoundPressable>
 
-        <Pressable
+        <SoundPressable
           onPress={() => toggle('ended')}
           style={({ pressed }) => [
             styles.stateButton,
@@ -138,7 +139,7 @@ export default function SuperAdminScreen() {
           <ThemedText type="smallBold" style={{ color: !isActive && gameState !== null ? '#F87171' : Colors.dark.textSecondary }}>
             🔌 게임종료상태 (전체 잠금)
           </ThemedText>
-        </Pressable>
+        </SoundPressable>
       </View>
 
       <View style={styles.warningBox}>
@@ -150,7 +151,7 @@ export default function SuperAdminScreen() {
         </ThemedText>
       </View>
 
-      <Pressable
+      <SoundPressable
         onPress={() => {
           setResetDone(false);
           setResetModalOpen(true);
@@ -159,7 +160,7 @@ export default function SuperAdminScreen() {
         <ThemedText type="smallBold" style={{ color: '#F87171' }}>
           🗑 모든 팀 진행도 리셋 (테스트용)
         </ThemedText>
-      </Pressable>
+      </SoundPressable>
       {resetDone && (
         <ThemedText type="small" style={{ color: Colors.dark.gold, textAlign: 'center' }}>
           ✓ 모든 팀의 진행도가 초기화됐어요

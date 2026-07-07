@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 import Animated, { FadeIn, FadeInUp, FadeOut } from 'react-native-reanimated';
 
+import { SoundPressable } from '@/components/sound-pressable';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Colors, Spacing } from '@/constants/theme';
@@ -71,16 +72,16 @@ function EditModal({
           </ThemedText>
         )}
         <View style={styles.modalActions}>
-          <Pressable onPress={onClose} style={({ pressed }) => [styles.modalButtonGhost, pressed && styles.pressed]}>
+          <SoundPressable onPress={onClose} style={({ pressed }) => [styles.modalButtonGhost, pressed && styles.pressed]}>
             <ThemedText type="small" themeColor="textSecondary">
               취소
             </ThemedText>
-          </Pressable>
-          <Pressable onPress={handleSave} style={({ pressed }) => [styles.modalButtonGold, pressed && styles.pressed]}>
+          </SoundPressable>
+          <SoundPressable onPress={handleSave} style={({ pressed }) => [styles.modalButtonGold, pressed && styles.pressed]}>
             <ThemedText type="smallBold" style={{ color: Colors.dark.background }}>
               저장
             </ThemedText>
-          </Pressable>
+          </SoundPressable>
         </View>
       </Animated.View>
     </Animated.View>
@@ -131,16 +132,16 @@ function AdminPasswordModal({ onSuccess, onClose }: { onSuccess: () => void; onC
           </ThemedText>
         )}
         <View style={styles.modalActions}>
-          <Pressable onPress={onClose} style={({ pressed }) => [styles.modalButtonGhost, pressed && styles.pressed]}>
+          <SoundPressable onPress={onClose} style={({ pressed }) => [styles.modalButtonGhost, pressed && styles.pressed]}>
             <ThemedText type="small" themeColor="textSecondary">
               취소
             </ThemedText>
-          </Pressable>
-          <Pressable onPress={handleSubmit} style={({ pressed }) => [styles.modalButtonGold, pressed && styles.pressed]}>
+          </SoundPressable>
+          <SoundPressable onPress={handleSubmit} style={({ pressed }) => [styles.modalButtonGold, pressed && styles.pressed]}>
             <ThemedText type="smallBold" style={{ color: Colors.dark.background }}>
               확인
             </ThemedText>
-          </Pressable>
+          </SoundPressable>
         </View>
       </Animated.View>
     </Animated.View>
@@ -191,37 +192,37 @@ export default function SettingsScreen() {
       </View>
 
       <View style={styles.rowGroup}>
-        <Pressable
+        <SoundPressable
           onPress={() => setEditModal('name')}
           style={({ pressed }) => [styles.row, styles.rowBorder, pressed && styles.pressed]}>
           <ThemedText type="small" themeColor="textSecondary" style={styles.rowLabel}>
             이름
           </ThemedText>
           <ThemedText type="small">{user.name}</ThemedText>
-        </Pressable>
-        <Pressable onPress={() => setEditModal('team')} style={({ pressed }) => [styles.row, pressed && styles.pressed]}>
+        </SoundPressable>
+        <SoundPressable onPress={() => setEditModal('team')} style={({ pressed }) => [styles.row, pressed && styles.pressed]}>
           <ThemedText type="small" themeColor="textSecondary" style={styles.rowLabel}>
             팀 번호
           </ThemedText>
           <ThemedText type="small">{user.team_id}조</ThemedText>
-        </Pressable>
+        </SoundPressable>
       </View>
 
-      <Pressable
+      <SoundPressable
         onPress={() => setAdminModalOpen(true)}
         style={({ pressed }) => [styles.row, styles.adminRow, pressed && styles.pressed]}>
         <ThemedText type="small" style={{ color: Colors.dark.gold }}>
           🛡️ 관리자 모드
         </ThemedText>
-      </Pressable>
+      </SoundPressable>
 
-      <Pressable onPress={handleLogout} style={({ pressed }) => [styles.row, styles.logoutRow, pressed && styles.pressed]}>
+      <SoundPressable onPress={handleLogout} style={({ pressed }) => [styles.row, styles.logoutRow, pressed && styles.pressed]}>
         <ThemedText type="small" style={styles.logoutText}>
           앱 종료 / 로그아웃
         </ThemedText>
-      </Pressable>
+      </SoundPressable>
 
-      <Pressable onPress={handleSuperTap} style={styles.hiddenSuperAdminTap} />
+      <SoundPressable onPress={handleSuperTap} style={styles.hiddenSuperAdminTap} />
 
       {editModal === 'name' && (
         <EditModal

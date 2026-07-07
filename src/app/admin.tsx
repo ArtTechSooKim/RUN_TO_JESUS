@@ -1,14 +1,16 @@
 import { router } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown, FadeOut } from 'react-native-reanimated';
 
 import { Floor10Fashion, Floor10Young, Floor11Young } from '@/components/floor-map-svg';
+import { SoundPressable } from '@/components/sound-pressable';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { floorLabels, floors, stations as allStations, type Floor } from '@/constants/stations';
 import { Colors, Spacing } from '@/constants/theme';
 import { formatRemaining, sessionProgressPercent, useActiveSessions } from '@/hooks/use-active-sessions';
+import { useSoundEffects } from '@/hooks/use-sound-effects';
 import { api, type ApiSession, type ApiStation } from '@/lib/api';
 
 const POLL_MS = 5000;
@@ -52,18 +54,18 @@ function StationCard({
             {s.team_id}조{s.started_by_name ? ` · ${s.started_by_name}` : ''} · {sessionProgressPercent(s)}% ·{' '}
             {formatRemaining(s.expected_end_at)}
           </ThemedText>
-          <Pressable onPress={() => onEnd(s.id, 'cancelled')} style={({ pressed }) => [styles.smallButton, pressed && styles.pressed]}>
+          <SoundPressable onPress={() => onEnd(s.id, 'cancelled')} style={({ pressed }) => [styles.smallButton, pressed && styles.pressed]}>
             <ThemedText type="small" style={{ color: '#F87171' }}>
               해지
             </ThemedText>
-          </Pressable>
-          <Pressable
+          </SoundPressable>
+          <SoundPressable
             onPress={() => onEnd(s.id, 'completed')}
             style={({ pressed }) => [styles.smallButton, styles.smallButtonGold, pressed && styles.pressed]}>
             <ThemedText type="small" style={{ color: '#34D399' }}>
               완료
             </ThemedText>
-          </Pressable>
+          </SoundPressable>
         </View>
       ))}
 
@@ -77,7 +79,7 @@ function StationCard({
             keyboardType="number-pad"
             style={styles.teamInput}
           />
-          <Pressable
+          <SoundPressable
             onPress={() => {
               const n = Number(teamInput);
               if (Number.isInteger(n) && n >= 1 && n <= 24) {
@@ -89,7 +91,7 @@ function StationCard({
             <ThemedText type="small" style={{ color: Colors.dark.background }}>
               세션 시작
             </ThemedText>
-          </Pressable>
+          </SoundPressable>
         </View>
       )}
     </View>
@@ -97,6 +99,7 @@ function StationCard({
 }
 
 function MapTab({ activeSessions }: { activeSessions: ApiSession[] }) {
+  const { playButton } = useSoundEffects();
   const [activeFloor, setActiveFloor] = useState<Floor>('young-10f');
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
@@ -130,7 +133,7 @@ function MapTab({ activeSessions }: { activeSessions: ApiSession[] }) {
         {floors.map((floor) => {
           const isActive = floor === activeFloor;
           return (
-            <Pressable
+            <SoundPressable
               key={floor}
               onPress={() => {
                 setActiveFloor(floor);
@@ -140,7 +143,7 @@ function MapTab({ activeSessions }: { activeSessions: ApiSession[] }) {
               <ThemedText type="smallBold" style={isActive ? { color: Colors.dark.gold } : { color: Colors.dark.textSecondary }}>
                 {floorLabels[floor]}
               </ThemedText>
-            </Pressable>
+            </SoundPressable>
           );
         })}
       </ScrollView>
@@ -150,7 +153,10 @@ function MapTab({ activeSessions }: { activeSessions: ApiSession[] }) {
           stations={floorStations}
           clearedIds={EMPTY_CLEARED}
           selectedId={selectedId}
-          onSelect={setSelectedId}
+          onSelect={(id) => {
+            playButton();
+            setSelectedId(id);
+          }}
           activeCounts={activeCounts}
           activePercents={activePercents}
         />
@@ -209,9 +215,9 @@ export default function AdminScreen() {
   return (
     <ThemedView style={styles.container}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}>
+        <SoundPressable onPress={() => router.back()} style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}>
           <ThemedText type="small">← 뒤로</ThemedText>
-        </Pressable>
+        </SoundPressable>
         <View>
           <ThemedText type="small" style={{ color: Colors.dark.gold }}>
             관리자 모드
@@ -221,18 +227,18 @@ export default function AdminScreen() {
       </View>
 
       <View style={styles.summaryRow}>
-        <Pressable
+        <SoundPressable
           onPress={() => setTab('stations')}
           style={[styles.tabButton, tab === 'stations' && styles.tabButtonActive]}>
           <ThemedText type="smallBold" style={{ color: tab === 'stations' ? Colors.dark.gold : Colors.dark.textSecondary }}>
             📋 스테이션 관리
           </ThemedText>
-        </Pressable>
-        <Pressable onPress={() => setTab('map')} style={[styles.tabButton, tab === 'map' && styles.tabButtonActive]}>
+        </SoundPressable>
+        <SoundPressable onPress={() => setTab('map')} style={[styles.tabButton, tab === 'map' && styles.tabButtonActive]}>
           <ThemedText type="smallBold" style={{ color: tab === 'map' ? Colors.dark.gold : Colors.dark.textSecondary }}>
             🗺 MAP 페이지
           </ThemedText>
-        </Pressable>
+        </SoundPressable>
       </View>
 
       {tab === 'stations' ? (

@@ -1,7 +1,8 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { StyleSheet, TextInput, View } from 'react-native';
 
+import { SoundPressable } from '@/components/sound-pressable';
 import { StarField } from '@/components/star-field';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -118,14 +119,15 @@ export default function LoginScreen() {
           </ThemedText>
         )}
 
-        <Pressable
+        <SoundPressable
+          sound="twinkle"
           onPress={handleSubmit}
           disabled={loading}
           style={({ pressed }) => [styles.button, pressed && styles.pressed, loading && styles.buttonLoading]}>
           <ThemedText type="smallBold" style={{ color: Colors.dark.background }}>
             {loading ? '입장 중...' : '입장하기 →'}
           </ThemedText>
-        </Pressable>
+        </SoundPressable>
 
         <ThemedText type="small" themeColor="textSecondary" style={styles.footnote}>
           앱을 다시 열면 자동으로 로그인됩니다

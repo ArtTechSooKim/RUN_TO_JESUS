@@ -1,7 +1,8 @@
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import { Platform, Pressable, StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 
 import { CollectBurst } from '@/components/collect-burst';
+import { SoundPressable } from '@/components/sound-pressable';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { RUN_TO_JESUS } from '@/constants/stations';
@@ -32,13 +33,13 @@ export default function ScanScreen() {
         <ThemedText type="small" themeColor="textSecondary" style={styles.centerText}>
           스테이션 QR 코드를 스캔하려면 카메라 권한이 필요해요.
         </ThemedText>
-        <Pressable
+        <SoundPressable
           onPress={requestPermission}
           style={({ pressed }) => [styles.permissionButton, pressed && styles.pressed]}>
           <ThemedText type="smallBold" style={{ color: Colors.dark.background }}>
             카메라 권한 허용
           </ThemedText>
-        </Pressable>
+        </SoundPressable>
       </ThemedView>
     );
   }

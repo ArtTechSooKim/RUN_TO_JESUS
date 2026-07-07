@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import NfcManager, { Ndef, NfcTech } from 'react-native-nfc-manager';
 import Animated, {
   Easing,
@@ -11,6 +11,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { CollectBurst } from '@/components/collect-burst';
+import { SoundPressable } from '@/components/sound-pressable';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { RUN_TO_JESUS } from '@/constants/stations';
@@ -117,13 +118,13 @@ export default function NfcScanScreen() {
           <ThemedText type="small" style={styles.errorText}>
             {message}
           </ThemedText>
-          <Pressable
+          <SoundPressable
             onPress={() => setAttempt((a) => a + 1)}
             style={({ pressed }) => [styles.retryButton, pressed && styles.pressed]}>
             <ThemedText type="smallBold" style={{ color: Colors.dark.background }}>
               다시 시도
             </ThemedText>
-          </Pressable>
+          </SoundPressable>
         </ThemedView>
       )}
     </ThemedView>

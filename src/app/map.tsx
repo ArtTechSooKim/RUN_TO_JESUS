@@ -1,8 +1,9 @@
 import { Link, Stack, router } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { CollectionBar } from '@/components/collection-bar';
+import { SoundPressable } from '@/components/sound-pressable';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { stations } from '@/constants/stations';
@@ -28,7 +29,7 @@ function StationCard({
   return (
     <Animated.View entering={FadeInDown.delay(index * 60).duration(320)}>
       <Link href={{ pathname: '/station/[id]', params: { id: station.id } }} asChild>
-        <Pressable style={({ pressed }) => pressed && styles.pressed}>
+        <SoundPressable style={({ pressed }) => pressed && styles.pressed}>
           <View
             style={[
               styles.card,
@@ -109,7 +110,7 @@ function StationCard({
               )}
             </View>
           </View>
-        </Pressable>
+        </SoundPressable>
       </Link>
     </Animated.View>
   );
@@ -127,19 +128,19 @@ export default function MapScreen() {
       <Stack.Screen
         options={{
           headerRight: () => (
-            <Pressable
+            <SoundPressable
               onPress={() => router.push('/settings')}
               style={({ pressed }) => [styles.settingsButton, pressed && styles.pressed]}>
               <ThemedText style={{ color: theme.textSecondary }}>⚙️</ThemedText>
-            </Pressable>
+            </SoundPressable>
           ),
         }}
       />
       <ScrollView contentContainerStyle={styles.content}>
         <Link href="/collection" asChild>
-          <Pressable style={({ pressed }) => pressed && styles.pressed}>
+          <SoundPressable style={({ pressed }) => pressed && styles.pressed}>
             <CollectionBar collectedIndices={collectedLetters} newlyCollected={newlyCollected} />
-          </Pressable>
+          </SoundPressable>
         </Link>
 
         <View style={styles.headingBlock}>
@@ -150,13 +151,13 @@ export default function MapScreen() {
             <ThemedText type="subtitle" style={styles.headingText}>
               {stations.length}개 공간을 탐험하세요
             </ThemedText>
-            <Pressable
+            <SoundPressable
               onPress={() => router.push('/floormap')}
               style={({ pressed }) => [styles.floorMapButton, pressed && styles.pressed]}>
               <ThemedText type="small" style={{ color: Colors.dark.gold }}>
                 🗺 지도
               </ThemedText>
-            </Pressable>
+            </SoundPressable>
           </View>
         </View>
 
@@ -175,7 +176,7 @@ export default function MapScreen() {
 
         {collectedLetters.size > 0 && (
           <Link href="/collection" asChild>
-            <Pressable style={({ pressed }) => pressed && styles.pressed}>
+            <SoundPressable style={({ pressed }) => pressed && styles.pressed}>
               <View
                 style={[
                   styles.collectionCta,
@@ -189,17 +190,17 @@ export default function MapScreen() {
                   {allDone ? '✦  완성된 메시지 보기' : `수집 현황 보기 (${collectedLetters.size}/${total})`}
                 </ThemedText>
               </View>
-            </Pressable>
+            </SoundPressable>
           </Link>
         )}
       </ScrollView>
 
       <Link href="/scan" asChild>
-        <Pressable style={({ pressed }) => [styles.scanFab, pressed && styles.pressed]}>
+        <SoundPressable sound="stamp" style={({ pressed }) => [styles.scanFab, pressed && styles.pressed]}>
           <ThemedText type="smallBold" style={{ color: Colors.dark.background }}>
             QR 스캔
           </ThemedText>
-        </Pressable>
+        </SoundPressable>
       </Link>
     </ThemedView>
   );

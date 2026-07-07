@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
-import { Pressable, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 
+import { SoundPressable } from '@/components/sound-pressable';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Colors, Spacing } from '@/constants/theme';
@@ -12,13 +13,13 @@ export default function NfcWriteWebFallback() {
       <ThemedText type="default" style={styles.text}>
         이 브라우저에서는 NFC 태그 쓰기를 지원하지 않아요.
       </ThemedText>
-      <Pressable
+      <SoundPressable
         onPress={() => router.back()}
         style={({ pressed }) => [styles.button, pressed && styles.pressed]}>
         <ThemedText type="smallBold" style={{ color: Colors.dark.background }}>
           돌아가기
         </ThemedText>
-      </Pressable>
+      </SoundPressable>
     </ThemedView>
   );
 }

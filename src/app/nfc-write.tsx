@@ -1,8 +1,9 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 import NfcManager, { Ndef, NfcTech } from 'react-native-nfc-manager';
 
+import { SoundPressable } from '@/components/sound-pressable';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { QR_PREFIX, stations } from '@/constants/stations';
@@ -52,14 +53,14 @@ export default function NfcWriteScreen() {
         기록될 데이터: {payload}
       </ThemedText>
 
-      <Pressable
+      <SoundPressable
         onPress={write}
         disabled={status === 'writing'}
         style={({ pressed }) => [styles.button, pressed && styles.pressed]}>
         <ThemedText type="smallBold" style={{ color: Colors.dark.background }}>
           {status === 'writing' ? '태그를 대는 중...' : '빈 태그에 쓰기 시작'}
         </ThemedText>
-      </Pressable>
+      </SoundPressable>
 
       {status === 'success' && (
         <ThemedText type="smallBold" style={[styles.center, { color: station.color }]}>
