@@ -18,7 +18,7 @@ const FLOOR_MAPS: Record<Floor, typeof Floor10Young> = {
 };
 
 export default function FloorMapScreen() {
-  const { clearedIds, recordManualComplete, cancelStation } = useStationProgress();
+  const { clearedIds, cancelStation } = useStationProgress();
   const { sessions: activeSessions } = useActiveSessions();
   const [activeFloor, setActiveFloor] = useState<Floor>('young-10f');
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -139,19 +139,6 @@ export default function FloorMapScreen() {
                     </View>
                   </Pressable>
                 </Link>
-                {!clearedIds.has(selectedStation.id) && (
-                  <Pressable
-                    onPress={() => recordManualComplete(selectedStation.id)}
-                    style={({ pressed }) => [
-                      styles.secondaryButton,
-                      { borderColor: `${selectedStation.color}60` },
-                      pressed && styles.pressed,
-                    ]}>
-                    <ThemedText type="small" style={{ color: selectedStation.color }}>
-                      스캔이 안 될 때: 직접 완료 처리 (수동 백업)
-                    </ThemedText>
-                  </Pressable>
-                )}
                 {clearedIds.has(selectedStation.id) && (
                   <Pressable
                     onPress={() => cancelStation(selectedStation.id)}
