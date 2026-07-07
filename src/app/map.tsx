@@ -118,7 +118,7 @@ function StationCard({
 export default function MapScreen() {
   const theme = useTheme();
   const { clearedIds, collectedLetters, newlyCollected } = useStationProgress();
-  const activeSessions = useActiveSessions();
+  const { sessions: activeSessions } = useActiveSessions();
   const total = 10;
   const allDone = collectedLetters.size === total;
 

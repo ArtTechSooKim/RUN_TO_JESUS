@@ -22,7 +22,7 @@ export function useActiveSessions() {
     return () => clearInterval(timer);
   }, [refresh]);
 
-  return sessions;
+  return { sessions, refresh };
 }
 
 export function formatRemaining(expectedEndAt: string) {

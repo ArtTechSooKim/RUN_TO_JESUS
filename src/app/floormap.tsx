@@ -19,7 +19,7 @@ const FLOOR_MAPS: Record<Floor, typeof Floor10Young> = {
 
 export default function FloorMapScreen() {
   const { clearedIds, recordManualComplete, cancelStation } = useStationProgress();
-  const activeSessions = useActiveSessions();
+  const { sessions: activeSessions } = useActiveSessions();
   const [activeFloor, setActiveFloor] = useState<Floor>('young-10f');
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
