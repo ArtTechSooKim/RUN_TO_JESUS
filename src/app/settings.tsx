@@ -10,7 +10,6 @@ import { Colors, Spacing } from '@/constants/theme';
 import { useAuth } from '@/hooks/use-auth';
 
 const ADMIN_PASSWORD = 'saeroun0906';
-const SUPER_ADMIN_TAP_THRESHOLD = 7;
 
 function EditModal({
   title,
@@ -152,7 +151,6 @@ export default function SettingsScreen() {
   const { user, updateUser, logout } = useAuth();
   const [editModal, setEditModal] = useState<'name' | 'team' | null>(null);
   const [adminModalOpen, setAdminModalOpen] = useState(false);
-  const [superTapCount, setSuperTapCount] = useState(0);
 
   if (!user) {
     return (
@@ -160,16 +158,6 @@ export default function SettingsScreen() {
         <ThemedText>로그인이 필요해요.</ThemedText>
       </ThemedView>
     );
-  }
-
-  function handleSuperTap() {
-    const next = superTapCount + 1;
-    if (next >= SUPER_ADMIN_TAP_THRESHOLD) {
-      setSuperTapCount(0);
-      router.push('/superadmin');
-    } else {
-      setSuperTapCount(next);
-    }
   }
 
   async function handleLogout() {
@@ -221,8 +209,6 @@ export default function SettingsScreen() {
           앱 종료 / 로그아웃
         </ThemedText>
       </SoundPressable>
-
-      <SoundPressable onPress={handleSuperTap} style={styles.hiddenSuperAdminTap} />
 
       {editModal === 'name' && (
         <EditModal
@@ -325,15 +311,6 @@ const styles = StyleSheet.create({
   },
   logoutText: {
     color: '#F87171',
-  },
-  hiddenSuperAdminTap: {
-    position: 'absolute',
-    bottom: Spacing.five,
-    right: Spacing.five,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: 'rgba(107,122,153,0.08)',
   },
   pressed: {
     opacity: 0.7,
