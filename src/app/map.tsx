@@ -3,12 +3,14 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { CollectionBar } from '@/components/collection-bar';
+import { RunnerProgressBar } from '@/components/runner-progress-bar';
 import { SoundPressable } from '@/components/sound-pressable';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { stations } from '@/constants/stations';
 import { Colors, Spacing } from '@/constants/theme';
 import { formatRemaining, sessionProgressPercent, useActiveSessions } from '@/hooks/use-active-sessions';
+import { useOverallStats } from '@/hooks/use-overall-stats';
 import { useStationProgress } from '@/hooks/use-station-progress';
 import { useTheme } from '@/hooks/use-theme';
 import type { ApiSession } from '@/lib/api';
@@ -120,6 +122,7 @@ export default function MapScreen() {
   const theme = useTheme();
   const { clearedIds, collectedLetters, newlyCollected } = useStationProgress();
   const { sessions: activeSessions } = useActiveSessions();
+  const overallRatio = useOverallStats();
   const total = 10;
   const allDone = collectedLetters.size === total;
 
@@ -137,6 +140,13 @@ export default function MapScreen() {
         }}
       />
       <ScrollView contentContainerStyle={styles.content}>
+        <View style={styles.overallBlock}>
+          <ThemedText type="small" themeColor="textSecondary" style={styles.eyebrow}>
+            전체 진행률 · 모든 팀
+          </ThemedText>
+          <RunnerProgressBar percent={overallRatio * 100} mode="progress" />
+        </View>
+
         <Link href="/collection" asChild>
           <SoundPressable style={({ pressed }) => pressed && styles.pressed}>
             <CollectionBar collectedIndices={collectedLetters} newlyCollected={newlyCollected} />
@@ -214,6 +224,9 @@ const styles = StyleSheet.create({
     gap: Spacing.four,
     padding: Spacing.four,
     paddingBottom: Spacing.six + Spacing.five,
+  },
+  overallBlock: {
+    gap: Spacing.two,
   },
   headingBlock: {
     gap: Spacing.one,

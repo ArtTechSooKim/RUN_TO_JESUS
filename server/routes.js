@@ -252,8 +252,22 @@ router.put('/app-state', async (req, res) => {
   res.json({ game_state });
 });
 
+// Triggers the runner-progress-bar finish-line animation on broadcast.html.
+// One-way (ended -> ending only) — the client animates to 100% itself, this
+// endpoint is just the signal. See RUN_TO_JESUS_앱_개발문서.md §ending flow.
+router.post('/admin/ending/start', async (req, res) => {
+  const [rows] = await pool.query('SELECT game_state FROM app_state WHERE id = 1');
+  if (rows[0].game_state !== 'ended') {
+    return res.status(400).json({ error: "game_state must be 'ended' before starting the ending" });
+  }
+  await pool.query(`UPDATE app_state SET game_state = 'ending' WHERE id = 1`);
+  res.json({ game_state: 'ending' });
+});
+
 // Wipes every team's collected fragments and session history — for repeated
-// test runs before the real event. Leaves users/stations/app_state alone.
+// test runs before the real event. Leaves users/stations alone but resets
+// app_state back to 'progress' too, since a leftover 'ended'/'ending' would
+// otherwise still lock participant screens after a reset.
 router.post('/admin/reset-progress', async (req, res) => {
   if (req.body.password !== RESET_PASSWORD) {
     return res.status(403).json({ error: 'invalid password' });
@@ -263,6 +277,7 @@ router.post('/admin/reset-progress', async (req, res) => {
     await conn.query('DELETE FROM tag_events');
     await conn.query('DELETE FROM game_sessions');
     await conn.query('DELETE FROM fragment_reveal_log');
+    await conn.query(`UPDATE app_state SET game_state = 'progress' WHERE id = 1`);
     res.json({ ok: true });
   } finally {
     conn.release();

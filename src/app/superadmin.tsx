@@ -7,7 +7,7 @@ import { SoundPressable } from '@/components/sound-pressable';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Colors, Spacing } from '@/constants/theme';
-import { api } from '@/lib/api';
+import { api, type GameState } from '@/lib/api';
 
 function ResetConfirmModal({ onClose, onDone }: { onClose: () => void; onDone: () => void }) {
   const [password, setPassword] = useState('');
@@ -74,10 +74,63 @@ function ResetConfirmModal({ onClose, onDone }: { onClose: () => void; onDone: (
   );
 }
 
+function EndingConfirmModal({ onClose, onDone }: { onClose: () => void; onDone: () => void }) {
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  async function handleConfirm() {
+    setLoading(true);
+    setError('');
+    try {
+      await api.startEnding();
+      onDone();
+    } catch {
+      setError('요청이 실패했어요 (게임상태가 종료 상태인지 확인하세요)');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <Animated.View entering={FadeIn.duration(150)} exiting={FadeOut.duration(150)} style={styles.modalBackdrop}>
+      <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
+      <Animated.View entering={FadeInUp.duration(200)} style={styles.modalCard}>
+        <ThemedText type="smallBold" style={{ color: Colors.dark.gold }}>
+          🏁 엔딩 시작
+        </ThemedText>
+        <ThemedText type="small" themeColor="textSecondary">
+          본당 상영 화면(broadcast.html)의 진행률 바가 즉시 100%까지 차오르며 골인 연출이 재생됩니다. 되돌릴 수 없으니, 참가자 전원이 본당에 모이고 엔딩 영상 타이밍에 맞춰서 눌러주세요.
+        </ThemedText>
+        {error !== '' && (
+          <ThemedText type="small" style={styles.errorText}>
+            {error}
+          </ThemedText>
+        )}
+        <View style={styles.modalActions}>
+          <SoundPressable onPress={onClose} style={({ pressed }) => [styles.modalButtonGhost, pressed && styles.pressed]}>
+            <ThemedText type="small" themeColor="textSecondary">
+              취소
+            </ThemedText>
+          </SoundPressable>
+          <SoundPressable
+            onPress={handleConfirm}
+            disabled={loading}
+            style={({ pressed }) => [styles.modalButtonGold, pressed && styles.pressed]}>
+            <ThemedText type="smallBold" style={{ color: Colors.dark.background }}>
+              {loading ? '시작 중...' : '엔딩 시작'}
+            </ThemedText>
+          </SoundPressable>
+        </View>
+      </Animated.View>
+    </Animated.View>
+  );
+}
+
 export default function SuperAdminScreen() {
-  const [gameState, setGameState] = useState<'progress' | 'ended' | null>(null);
+  const [gameState, setGameState] = useState<GameState | null>(null);
   const [resetModalOpen, setResetModalOpen] = useState(false);
   const [resetDone, setResetDone] = useState(false);
+  const [endingModalOpen, setEndingModalOpen] = useState(false);
 
   useEffect(() => {
     api.getAppState().then((s) => setGameState(s.game_state));
@@ -89,6 +142,7 @@ export default function SuperAdminScreen() {
   }
 
   const isActive = gameState === 'progress';
+  const isEnding = gameState === 'ending';
 
   return (
     <ThemedView style={styles.container}>
@@ -110,9 +164,9 @@ export default function SuperAdminScreen() {
           { borderColor: isActive ? 'rgba(255,215,0,0.5)' : 'rgba(248,113,113,0.5)' },
           { backgroundColor: isActive ? 'rgba(255,215,0,0.1)' : 'rgba(248,113,113,0.1)' },
         ]}>
-        <ThemedText style={styles.indicatorIcon}>{isActive ? '⚡' : '🔌'}</ThemedText>
+        <ThemedText style={styles.indicatorIcon}>{isEnding ? '🏁' : isActive ? '⚡' : '🔌'}</ThemedText>
         <ThemedText type="smallBold" style={{ color: isActive ? Colors.dark.gold : '#F87171' }}>
-          {gameState === null ? '불러오는 중...' : isActive ? '게임 진행중' : '게임 종료'}
+          {gameState === null ? '불러오는 중...' : isEnding ? '엔딩 진행중' : isActive ? '게임 진행중' : '게임 종료'}
         </ThemedText>
       </View>
 
@@ -152,6 +206,22 @@ export default function SuperAdminScreen() {
       </View>
 
       <SoundPressable
+        onPress={() => setEndingModalOpen(true)}
+        disabled={gameState !== 'ended'}
+        style={({ pressed }) => [
+          styles.endingButton,
+          gameState !== 'ended' && styles.endingButtonDisabled,
+          pressed && styles.pressed,
+        ]}>
+        <ThemedText type="smallBold" style={{ color: gameState === 'ended' ? Colors.dark.gold : Colors.dark.textSecondary }}>
+          🏁 엔딩 시작 (본당 골인 연출){isEnding ? ' — 이미 시작됨' : ''}
+        </ThemedText>
+      </SoundPressable>
+      <ThemedText type="small" themeColor="textSecondary" style={styles.endingHint}>
+        게임종료상태일 때만 누를 수 있어요. 본당 상영 화면의 진행률 바를 100%까지 골인시킵니다.
+      </ThemedText>
+
+      <SoundPressable
         onPress={() => {
           setResetDone(false);
           setResetModalOpen(true);
@@ -173,6 +243,16 @@ export default function SuperAdminScreen() {
           onDone={() => {
             setResetModalOpen(false);
             setResetDone(true);
+          }}
+        />
+      )}
+
+      {endingModalOpen && (
+        <EndingConfirmModal
+          onClose={() => setEndingModalOpen(false)}
+          onDone={() => {
+            setEndingModalOpen(false);
+            setGameState('ending');
           }}
         />
       )}
@@ -225,6 +305,23 @@ const styles = StyleSheet.create({
   stateButtonActiveRed: {
     backgroundColor: 'rgba(248,113,113,0.2)',
     borderColor: 'rgba(248,113,113,0.4)',
+  },
+  endingButton: {
+    paddingVertical: Spacing.three,
+    borderRadius: Spacing.four,
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,215,0,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,215,0,0.3)',
+  },
+  endingButtonDisabled: {
+    opacity: 0.4,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
+  endingHint: {
+    marginTop: -Spacing.three,
+    textAlign: 'center',
   },
   warningBox: {
     padding: Spacing.three,
@@ -303,5 +400,12 @@ const styles = StyleSheet.create({
     borderRadius: Spacing.three,
     alignItems: 'center',
     backgroundColor: '#DC2626',
+  },
+  modalButtonGold: {
+    flex: 1,
+    paddingVertical: Spacing.three,
+    borderRadius: Spacing.three,
+    alignItems: 'center',
+    backgroundColor: Colors.dark.gold,
   },
 });

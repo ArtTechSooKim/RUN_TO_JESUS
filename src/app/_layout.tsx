@@ -29,7 +29,9 @@ const navigationTheme = {
 function GlobalGameLock() {
   const gameState = useGameState();
   const pathname = usePathname();
-  if (gameState !== 'ended' || pathname === '/superadmin') return null;
+  // 'ending' keeps the same lock UX as 'ended' — it's just the finish-line
+  // animation trigger for broadcast.html, not a participant-facing state.
+  if (gameState === 'progress' || pathname === '/superadmin') return null;
   return <GameEndOverlay />;
 }
 

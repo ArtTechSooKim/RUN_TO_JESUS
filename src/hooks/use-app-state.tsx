@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 
-import { api } from '@/lib/api';
+import { api, type GameState } from '@/lib/api';
 
 const POLL_INTERVAL_MS = 12000;
 
-/** Polls the global game_state (progress/ended) so the whole app can lock when the event wraps up. */
+/** Polls the global game_state (progress/ended/ending) so the whole app can lock when the event wraps up. */
 export function useGameState() {
-  const [gameState, setGameState] = useState<'progress' | 'ended'>('progress');
+  const [gameState, setGameState] = useState<GameState>('progress');
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {

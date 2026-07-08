@@ -19,6 +19,8 @@ export type ApiStation = {
   is_active: 0 | 1;
 };
 
+export type GameState = 'progress' | 'ended' | 'ending';
+
 export type ApiSession = {
   id: number;
   station_id: string;
@@ -86,13 +88,15 @@ export const api = {
   endSession: (id: number, body: { status: 'completed' | 'cancelled'; ended_by?: 'auto' | 'admin' }) =>
     request<ApiSession>(`/sessions/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
 
-  getAppState: () => request<{ game_state: 'progress' | 'ended'; updated_at: string }>('/app-state'),
+  getAppState: () => request<{ game_state: GameState; updated_at: string }>('/app-state'),
 
   setAppState: (game_state: 'progress' | 'ended') =>
-    request<{ game_state: 'progress' | 'ended' }>('/app-state', { method: 'PUT', body: JSON.stringify({ game_state }) }),
+    request<{ game_state: GameState }>('/app-state', { method: 'PUT', body: JSON.stringify({ game_state }) }),
 
   getOverallStats: () => request<{ count: number; total: number; ratio: number }>('/stats/overall'),
 
   resetAllProgress: (password: string) =>
     request<{ ok: true }>('/admin/reset-progress', { method: 'POST', body: JSON.stringify({ password }) }),
+
+  startEnding: () => request<{ game_state: GameState }>('/admin/ending/start', { method: 'POST' }),
 };

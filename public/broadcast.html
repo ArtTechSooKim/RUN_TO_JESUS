@@ -77,6 +77,9 @@
         }
       }
 
+      /* ── Runner progress bar — pill track, one runner badge riding the
+         fill edge, a fixed flag at the goal. Mirrors src/components/
+         runner-progress-bar.tsx (RN) so both surfaces read as one system. ── */
       #bar-wrap {
         width: 100%;
         max-width: 900px;
@@ -84,57 +87,52 @@
       #bar-track {
         position: relative;
         height: 80px;
-        border-radius: 20px;
-        background: rgba(255, 255, 255, 0.04);
-        border: 1px solid rgba(255, 215, 0, 0.15);
-        overflow: hidden;
+        border-radius: 40px;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        overflow: visible;
       }
       #bar-fill {
         position: absolute;
         inset: 0 auto 0 0;
         width: 0%;
-        border-radius: 20px;
-        background: linear-gradient(90deg, rgba(255, 215, 0, 0.3), rgba(255, 215, 0, 0.6));
-        transition: width 1.2s ease-out;
+        border-radius: 40px;
+        background: #ffd700;
+        transition: width 0.7s ease-out;
+        overflow: visible;
       }
-      #bar-label {
+      #runner-badge {
         position: absolute;
-        inset: 0;
+        top: 50%;
+        right: -34px;
+        transform: translateY(-50%);
+        width: 68px;
+        height: 68px;
+        border-radius: 50%;
+        background: #0a0d17;
+        border: 3px solid #ffd700;
         display: flex;
         align-items: center;
         justify-content: center;
-        color: rgba(255, 255, 255, 0.12);
-        font-size: 26px;
-        font-weight: 900;
-        letter-spacing: 0.5em;
-        text-transform: uppercase;
-        user-select: none;
+        font-size: 30px;
       }
-      #runners {
+      #flag-badge {
         position: absolute;
-        inset: 0;
-      }
-      .runner {
-        position: absolute;
-        bottom: 4px;
-        animation: bob 0.5s ease-in-out infinite;
-      }
-      @keyframes bob {
-        0%,
-        100% {
-          transform: translateY(0);
-        }
-        50% {
-          transform: translateY(-4px);
-        }
+        right: 20px;
+        top: 0;
+        bottom: 0;
+        display: flex;
+        align-items: center;
+        font-size: 30px;
+        z-index: 1;
       }
 
       #stats-row {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-top: 12px;
-        padding: 0 4px;
+        margin-top: 16px;
+        padding: 0 8px;
       }
       #count-label {
         color: #6b7a99;
@@ -145,6 +143,11 @@
         font-size: 32px;
         font-weight: 900;
         text-shadow: 0 0 16px rgba(255, 215, 0, 0.5);
+      }
+      #goal-label {
+        color: #6b7a99;
+        font-size: 15px;
+        letter-spacing: 0.2em;
       }
 
       #verse {
@@ -219,13 +222,14 @@
 
       <div id="bar-wrap">
         <div id="bar-track">
-          <div id="bar-fill"></div>
-          <div id="bar-label">RUN TO JESUS</div>
-          <div id="runners"></div>
+          <div id="bar-fill">
+            <div id="runner-badge">🏃</div>
+          </div>
+          <div id="flag-badge">🏁</div>
         </div>
         <div id="stats-row">
-          <span id="count-label">- / - 태그</span>
-          <span id="pct-label">0%</span>
+          <span><span id="count-label">- / -</span> 태그 · <span id="pct-label">0%</span></span>
+          <span id="goal-label">🏁 GOAL</span>
         </div>
       </div>
 
@@ -263,35 +267,6 @@
         }
       }
 
-      function runnerSvg(delay) {
-        return (
-          '<svg width="28" height="40" viewBox="0 0 28 40" fill="none" style="animation-delay:' +
-          delay +
-          's">' +
-          '<circle cx="14" cy="5" r="4" fill="rgba(255,255,255,0.85)"/>' +
-          '<line x1="14" y1="9" x2="14" y2="24" stroke="rgba(255,255,255,0.85)" stroke-width="2.5" stroke-linecap="round"/>' +
-          '<line x1="14" y1="14" x2="5" y2="21" stroke="rgba(255,255,255,0.7)" stroke-width="2" stroke-linecap="round"/>' +
-          '<line x1="14" y1="14" x2="23" y2="21" stroke="rgba(255,255,255,0.7)" stroke-width="2" stroke-linecap="round"/>' +
-          '<line x1="14" y1="24" x2="7" y2="36" stroke="rgba(255,255,255,0.85)" stroke-width="2.5" stroke-linecap="round"/>' +
-          '<line x1="14" y1="24" x2="21" y2="36" stroke="rgba(255,255,255,0.85)" stroke-width="2.5" stroke-linecap="round"/>' +
-          '</svg>'
-        );
-      }
-
-      function renderRunners(ratio) {
-        const wrap = document.getElementById('runners');
-        wrap.innerHTML = '';
-        const bases = [2, 8, 14, 20, 26];
-        bases.forEach((base, i) => {
-          const x = Math.min(base + ratio * 68, 90);
-          const el = document.createElement('div');
-          el.className = 'runner';
-          el.style.left = x + '%';
-          el.innerHTML = runnerSvg(i * 0.12);
-          wrap.appendChild(el);
-        });
-      }
-
       function spawnRings() {
         const wrap = document.getElementById('rings');
         for (let i = 0; i < 20; i++) {
@@ -302,26 +277,36 @@
         }
       }
 
-      let wormholeShown = false;
+      // Once the staff triggers the ending (game_state -> 'ending'), the bar
+      // locks at 100% and the finish-line reveal plays — one-way until reload,
+      // regardless of what the real tag ratio was at that moment.
+      let endingTriggered = false;
+
+      function renderBar(pct) {
+        document.getElementById('bar-fill').style.width = pct + '%';
+        document.getElementById('pct-label').textContent = pct + '%';
+      }
 
       async function poll() {
         try {
-          const res = await fetch(`${API_BASE}/stats/overall`);
-          const { count, total, ratio } = await res.json();
-          const pct = Math.round(ratio * 100);
+          const [statsRes, stateRes] = await Promise.all([
+            fetch(`${API_BASE}/stats/overall`),
+            fetch(`${API_BASE}/app-state`),
+          ]);
+          const { count, total, ratio } = await statsRes.json();
+          const { game_state } = await stateRes.json();
 
-          document.getElementById('bar-fill').style.width = pct + '%';
-          document.getElementById('count-label').textContent = `${count} / ${total} 태그`;
-          document.getElementById('pct-label').textContent = pct + '%';
-          renderRunners(ratio);
-
-          if (ratio >= 1 && !wormholeShown) {
-            wormholeShown = true;
+          if (endingTriggered) {
+            // stay pinned at 100 — ignore further real-ratio updates
+          } else if (game_state === 'ending') {
+            endingTriggered = true;
+            renderBar(100);
             spawnRings();
             document.getElementById('wormhole').classList.add('show');
-          } else if (ratio < 1 && wormholeShown) {
-            wormholeShown = false;
-            document.getElementById('wormhole').classList.remove('show');
+          } else {
+            const pct = Math.round(ratio * 100);
+            renderBar(pct);
+            document.getElementById('count-label').textContent = `${count} / ${total}`;
           }
         } catch {
           // transient network hiccup — keep showing the last known state

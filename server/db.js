@@ -91,6 +91,13 @@ async function initSchema() {
       )
     `);
 
+    // Widen the enum for the runner-progress-bar ending flow — safe to
+    // re-run every deploy (MODIFY COLUMN with the same definition is a no-op).
+    await conn.query(`
+      ALTER TABLE app_state
+      MODIFY COLUMN game_state ENUM('progress','ended','ending') NOT NULL DEFAULT 'progress'
+    `);
+
     await conn.query(`INSERT IGNORE INTO app_state (id, game_state) VALUES (1, 'progress')`);
 
     for (const s of STATION_SEED) {
