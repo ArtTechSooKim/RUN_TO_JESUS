@@ -172,23 +172,24 @@
       #wormhole.show {
         display: flex;
       }
-      .ring {
+      #ending-stars {
+        position: absolute;
+        inset: 0;
+      }
+      .ending-star {
         position: absolute;
         border-radius: 50%;
-        border: 1px solid #ffd700;
-        width: 10px;
-        height: 10px;
-        opacity: 0.9;
-        animation: expand 2.5s ease-out infinite;
+        animation: bright-twinkle ease-in-out infinite;
       }
-      .ring:nth-child(even) {
-        border-color: #fff;
-      }
-      @keyframes expand {
-        to {
-          width: 2000px;
-          height: 2000px;
-          opacity: 0;
+      @keyframes bright-twinkle {
+        0%,
+        100% {
+          opacity: 0.15;
+          transform: scale(0.7);
+        }
+        50% {
+          opacity: 1;
+          transform: scale(1.3);
         }
       }
       #wormhole-text {
@@ -240,7 +241,7 @@
     </div>
 
     <div id="wormhole">
-      <div id="rings"></div>
+      <div id="ending-stars"></div>
       <div id="wormhole-text">
         <p class="title">RUN TO JESUS</p>
         <p class="subtitle">경주가 완성되었습니다!</p>
@@ -267,13 +268,23 @@
         }
       }
 
-      function spawnRings() {
-        const wrap = document.getElementById('rings');
-        for (let i = 0; i < 20; i++) {
-          const r = document.createElement('div');
-          r.className = 'ring';
-          r.style.animationDelay = i * 0.1 + 's';
-          wrap.appendChild(r);
+      function spawnEndingStars() {
+        const wrap = document.getElementById('ending-stars');
+        const colors = ['#ffd700', '#ffffff', '#fff8dc'];
+        for (let i = 0; i < 160; i++) {
+          const s = document.createElement('div');
+          s.className = 'ending-star';
+          const size = Math.random() * 4 + 1.5;
+          const color = colors[Math.floor(Math.random() * colors.length)];
+          s.style.width = size + 'px';
+          s.style.height = size + 'px';
+          s.style.left = Math.random() * 100 + '%';
+          s.style.top = Math.random() * 100 + '%';
+          s.style.background = color;
+          s.style.boxShadow = `0 0 ${size * 3}px ${size}px ${color}66`;
+          s.style.animationDuration = Math.random() * 2.5 + 1.5 + 's';
+          s.style.animationDelay = Math.random() * 3 + 's';
+          wrap.appendChild(s);
         }
       }
 
@@ -301,7 +312,7 @@
           } else if (game_state === 'ending') {
             endingTriggered = true;
             renderBar(100);
-            spawnRings();
+            spawnEndingStars();
             document.getElementById('wormhole').classList.add('show');
           } else {
             const pct = Math.round(ratio * 100);
