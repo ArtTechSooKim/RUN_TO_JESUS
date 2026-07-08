@@ -9,12 +9,15 @@ const STORAGE_KEY = 'rtj_user';
 // jump straight to the super-admin screen — see RUN_TO_JESUS_기능정리_v1.md §7.
 const SUPER_ADMIN_NAME = '김수';
 const SUPER_ADMIN_TEAM = 100;
+// name="본당" + team=100 is the 본당 relay-screen kiosk device — routes to
+// the standalone broadcast.html instead of /superadmin, same bypass pattern.
+const BROADCAST_NAME = '본당';
 
 type AuthValue = {
   user: ApiUser | null;
   loading: boolean;
-  /** Returns 'superadmin' for the special-case credentials without touching the users table. */
-  login: (name: string, teamId: number) => Promise<ApiUser | 'superadmin'>;
+  /** Returns 'superadmin'/'broadcast' for the special-case credentials without touching the users table. */
+  login: (name: string, teamId: number) => Promise<ApiUser | 'superadmin' | 'broadcast'>;
   updateUser: (patch: { name?: string; team_id?: number }) => Promise<void>;
   logout: () => Promise<void>;
 };
@@ -46,6 +49,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (name: string, teamId: number) => {
     if (name.trim() === SUPER_ADMIN_NAME && teamId === SUPER_ADMIN_TEAM) {
       return 'superadmin' as const;
+    }
+    if (name.trim() === BROADCAST_NAME && teamId === SUPER_ADMIN_TEAM) {
+      return 'broadcast' as const;
     }
     const fresh = await api.login({ name: name.trim(), team_id: teamId });
     setUser(fresh);

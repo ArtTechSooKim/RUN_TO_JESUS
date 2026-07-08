@@ -248,7 +248,7 @@ router.put('/app-state', async (req, res) => {
   if (!['progress', 'ended'].includes(game_state)) {
     return res.status(400).json({ error: "game_state must be 'progress' or 'ended'" });
   }
-  await pool.query('UPDATE app_state SET game_state = ? WHERE id = 1', [game_state]);
+  await pool.query('UPDATE app_state SET game_state = ?, updated_at = NOW() WHERE id = 1', [game_state]);
   res.json({ game_state });
 });
 
@@ -260,7 +260,7 @@ router.post('/admin/ending/start', async (req, res) => {
   if (rows[0].game_state !== 'ended') {
     return res.status(400).json({ error: "game_state must be 'ended' before starting the ending" });
   }
-  await pool.query(`UPDATE app_state SET game_state = 'ending' WHERE id = 1`);
+  await pool.query(`UPDATE app_state SET game_state = 'ending', updated_at = NOW() WHERE id = 1`);
   res.json({ game_state: 'ending' });
 });
 
@@ -277,7 +277,7 @@ router.post('/admin/reset-progress', async (req, res) => {
     await conn.query('DELETE FROM tag_events');
     await conn.query('DELETE FROM game_sessions');
     await conn.query('DELETE FROM fragment_reveal_log');
-    await conn.query(`UPDATE app_state SET game_state = 'progress' WHERE id = 1`);
+    await conn.query(`UPDATE app_state SET game_state = 'progress', updated_at = NOW() WHERE id = 1`);
     res.json({ ok: true });
   } finally {
     conn.release();

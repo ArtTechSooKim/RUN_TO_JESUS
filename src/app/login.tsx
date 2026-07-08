@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { StyleSheet, TextInput, View } from 'react-native';
+import { Platform, StyleSheet, TextInput, View } from 'react-native';
 
 import { SoundPressable } from '@/components/sound-pressable';
 import { StarField } from '@/components/star-field';
@@ -28,9 +28,10 @@ export default function LoginScreen() {
   }
 
   async function handleSubmit() {
-    // Super admin bypass (name="김수"/team=100) skips the 1~24 range check entirely.
-    const isSuperAdminAttempt = name.trim() === '김수' && teamNumber === '100';
-    const e = isSuperAdminAttempt ? {} : validate();
+    // Super admin ("김수") and 본당 relay-screen ("본당") bypasses both use
+    // team=100 and skip the 1~24 range check entirely.
+    const isBypassAttempt = (name.trim() === '김수' || name.trim() === '본당') && teamNumber === '100';
+    const e = isBypassAttempt ? {} : validate();
     if (Object.keys(e).length) {
       setErrors(e);
       return;
@@ -42,6 +43,13 @@ export default function LoginScreen() {
       const result = await login(name, Number(teamNumber));
       if (result === 'superadmin') {
         router.replace('/superadmin');
+      } else if (result === 'broadcast') {
+        // Static page outside expo-router — full navigation, web only.
+        if (Platform.OS === 'web') {
+          window.location.assign('/broadcast.html');
+        } else {
+          setServerError('본당 화면은 웹 브라우저에서만 지원돼요.');
+        }
       } else {
         router.replace('/map');
       }

@@ -26,12 +26,17 @@ const navigationTheme = {
   },
 };
 
+// Always reachable regardless of game_state — /superadmin is the control
+// screen itself, and /login must stay open or a locked-out admin (or anyone
+// who logs out while the game is ended/ending) has no way back in at all.
+const LOCK_EXEMPT_ROUTES = new Set(['/superadmin', '/login']);
+
 function GlobalGameLock() {
   const gameState = useGameState();
   const pathname = usePathname();
   // 'ending' keeps the same lock UX as 'ended' — it's just the finish-line
   // animation trigger for broadcast.html, not a participant-facing state.
-  if (gameState === 'progress' || pathname === '/superadmin') return null;
+  if (gameState === 'progress' || LOCK_EXEMPT_ROUTES.has(pathname)) return null;
   return <GameEndOverlay />;
 }
 
