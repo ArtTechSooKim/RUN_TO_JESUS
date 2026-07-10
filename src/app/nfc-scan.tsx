@@ -165,6 +165,7 @@ const styles = StyleSheet.create({
   },
   ringIcon: {
     fontSize: 36,
+    lineHeight: 42,
   },
   statusText: {
     textAlign: 'center',

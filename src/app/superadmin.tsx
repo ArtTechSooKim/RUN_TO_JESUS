@@ -286,6 +286,7 @@ const styles = StyleSheet.create({
   },
   indicatorIcon: {
     fontSize: 36,
+    lineHeight: 42,
   },
   buttonGroup: {
     gap: Spacing.two,

@@ -22,9 +22,9 @@ type LetterPieceProps = {
 };
 
 const SIZES = {
-  sm: { box: 24, font: 13 },
-  md: { box: 36, font: 18 },
-  lg: { box: 56, font: 28 },
+  sm: { box: 24, font: 13, lineHeight: 20 },
+  md: { box: 36, font: 18, lineHeight: 24 },
+  lg: { box: 56, font: 28, lineHeight: 34 },
 };
 
 export function LetterPiece({ letter, collected, size = 'md', animateIn = false }: LetterPieceProps) {
@@ -74,6 +74,7 @@ export function LetterPiece({ letter, collected, size = 'md', animateIn = false 
       <ThemedText
         style={{
           fontSize: dims.font,
+          lineHeight: dims.lineHeight,
           fontWeight: '700',
           color: collected ? Colors.dark.gold : 'rgba(255,255,255,0.18)',
         }}>

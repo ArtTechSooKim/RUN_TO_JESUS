@@ -145,6 +145,7 @@ const styles = StyleSheet.create({
   },
   letterText: {
     fontSize: 40,
+    lineHeight: 46,
     fontWeight: '700',
   },
   textBlock: {

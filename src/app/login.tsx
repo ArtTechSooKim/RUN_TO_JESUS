@@ -170,6 +170,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
+    lineHeight: 34,
     fontWeight: '700',
     letterSpacing: 2,
     color: Colors.dark.gold,

@@ -313,6 +313,7 @@ const styles = StyleSheet.create({
   },
   heroEmoji: {
     fontSize: 48,
+    lineHeight: 56,
   },
   keywordBadge: {
     paddingHorizontal: Spacing.three,
