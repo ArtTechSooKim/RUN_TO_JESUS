@@ -112,8 +112,10 @@ function GameRoom({
   rx = 4,
 }: GameRoomProps) {
   const inProgress = activeCount > 0;
-  const badgeText = activeTeamIds.length === 1 ? String(activeTeamIds[0]) : String(activeCount);
-  const badgeR = badgeText.length > 1 ? 9 : 7;
+  const badgeText = activeTeamIds.length > 0 ? activeTeamIds.join(',') : String(activeCount);
+  const badgeFontSize = 7;
+  const badgeH = 13;
+  const badgeW = Math.min(w - 8, Math.max(badgeH, badgeText.length * (badgeFontSize * 0.62) + 10));
   const sessionY = y + h / 2 - (sublabel ? 15 : 10);
   const labelY = y + h / 2 + 4;
   const sublabelY = y + h / 2 + 15;
@@ -153,8 +155,23 @@ function GameRoom({
       )}
       {inProgress && (
         <G>
-          <Circle cx={x + 10} cy={y + 10} r={badgeR} fill={`${IN_PROGRESS_COLOR}40`} stroke={IN_PROGRESS_COLOR} strokeWidth={1} />
-          <SvgText x={x + 10} y={y + 13} textAnchor="middle" fill={IN_PROGRESS_COLOR} fontSize={badgeText.length > 1 ? 7.5 : 8} fontWeight="bold">
+          <Rect
+            x={x + 4}
+            y={y + 3}
+            width={badgeW}
+            height={badgeH}
+            rx={badgeH / 2}
+            fill={`${IN_PROGRESS_COLOR}40`}
+            stroke={IN_PROGRESS_COLOR}
+            strokeWidth={1}
+          />
+          <SvgText
+            x={x + 4 + badgeW / 2}
+            y={y + 3 + badgeH / 2 + 2.5}
+            textAnchor="middle"
+            fill={IN_PROGRESS_COLOR}
+            fontSize={badgeFontSize}
+            fontWeight="bold">
             {badgeText}
           </SvgText>
         </G>
