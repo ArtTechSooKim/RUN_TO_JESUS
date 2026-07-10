@@ -116,9 +116,14 @@ function GameRoom({
   const badgeFontSize = 7;
   const badgeH = 13;
   const badgeW = Math.min(w - 8, Math.max(badgeH, badgeText.length * (badgeFontSize * 0.62) + 10));
-  const sessionY = y + h / 2 - (sublabel ? 15 : 10);
-  const labelY = y + h / 2 + 4;
-  const sublabelY = y + h / 2 + 15;
+  // When the room is short, the badge eats into the vertically-centered session/label text —
+  // push everything down just enough to clear the badge, but leave taller rooms centered as before.
+  const centerSessionOffset = h / 2 - (sublabel ? 15 : 10);
+  const minSessionOffset = 3 + badgeH + 12;
+  const pushDown = inProgress ? Math.max(0, minSessionOffset - centerSessionOffset) : 0;
+  const sessionY = y + centerSessionOffset + pushDown;
+  const labelY = y + Math.min(h / 2 + 4 + pushDown, h - 14);
+  const sublabelY = y + Math.min(h / 2 + 15 + pushDown, h - 4);
 
   return (
     <G onPress={onPress}>
