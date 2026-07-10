@@ -1,13 +1,57 @@
-import { router } from 'expo-router';
+import { Link, router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import Animated, { FadeIn, FadeInUp, FadeOut } from 'react-native-reanimated';
 
 import { SoundPressable } from '@/components/sound-pressable';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { MASTER_STATION, stations } from '@/constants/stations';
 import { Colors, Spacing } from '@/constants/theme';
 import { api, type GameState } from '@/lib/api';
+
+function TagManagementTab() {
+  return (
+    <ScrollView contentContainerStyle={styles.tagList}>
+      <ThemedText type="small" themeColor="textSecondary">
+        방을 선택하면 그 방의 NFC 태그를 쓸 수 있어요. 빈 태그를 기기 뒷면에 가까이 대고 진행하세요.
+      </ThemedText>
+
+      <Link href={{ pathname: '/nfc-write', params: { id: MASTER_STATION.id } }} asChild>
+        <SoundPressable
+          style={({ pressed }) => [
+            styles.tagRow,
+            { borderColor: `${MASTER_STATION.color}55`, backgroundColor: `${MASTER_STATION.color}12` },
+            pressed && styles.pressed,
+          ]}>
+          <ThemedText style={styles.tagRowEmoji}>{MASTER_STATION.emoji}</ThemedText>
+          <View style={styles.tagRowInfo}>
+            <ThemedText type="smallBold" style={{ color: MASTER_STATION.color }}>
+              {MASTER_STATION.keyword}
+            </ThemedText>
+            <ThemedText type="small" themeColor="textSecondary">
+              {MASTER_STATION.description}
+            </ThemedText>
+          </View>
+        </SoundPressable>
+      </Link>
+
+      {stations.map((station) => (
+        <Link key={station.id} href={{ pathname: '/nfc-write', params: { id: station.id } }} asChild>
+          <SoundPressable style={({ pressed }) => [styles.tagRow, pressed && styles.pressed]}>
+            <ThemedText style={styles.tagRowEmoji}>{station.emoji}</ThemedText>
+            <View style={styles.tagRowInfo}>
+              <ThemedText type="smallBold">{station.keyword}</ThemedText>
+              <ThemedText type="small" themeColor="textSecondary">
+                {station.hall}
+              </ThemedText>
+            </View>
+          </SoundPressable>
+        </Link>
+      ))}
+    </ScrollView>
+  );
+}
 
 function ResetConfirmModal({ onClose, onDone }: { onClose: () => void; onDone: () => void }) {
   const [password, setPassword] = useState('');
@@ -127,6 +171,7 @@ function EndingConfirmModal({ onClose, onDone }: { onClose: () => void; onDone: 
 }
 
 export default function SuperAdminScreen() {
+  const [tab, setTab] = useState<'global' | 'tags'>('global');
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [resetModalOpen, setResetModalOpen] = useState(false);
   const [resetDone, setResetDone] = useState(false);
@@ -158,6 +203,27 @@ export default function SuperAdminScreen() {
         </View>
       </View>
 
+      <View style={styles.tabRowOuter}>
+        <SoundPressable
+          onPress={() => setTab('global')}
+          style={[styles.tabButton, tab === 'global' && styles.tabButtonActive]}>
+          <ThemedText type="smallBold" style={{ color: tab === 'global' ? Colors.dark.gold : Colors.dark.textSecondary }}>
+            ⚡ 전역 상태
+          </ThemedText>
+        </SoundPressable>
+        <SoundPressable
+          onPress={() => setTab('tags')}
+          style={[styles.tabButton, tab === 'tags' && styles.tabButtonActive]}>
+          <ThemedText type="smallBold" style={{ color: tab === 'tags' ? Colors.dark.gold : Colors.dark.textSecondary }}>
+            🏷 태그 관리
+          </ThemedText>
+        </SoundPressable>
+      </View>
+
+      {tab === 'tags' ? (
+        <TagManagementTab />
+      ) : (
+        <>
       <View
         style={[
           styles.indicator,
@@ -256,6 +322,8 @@ export default function SuperAdminScreen() {
           }}
         />
       )}
+        </>
+      )}
     </ThemedView>
   );
 }
@@ -273,6 +341,44 @@ const styles = StyleSheet.create({
   },
   backButton: {
     paddingVertical: Spacing.one,
+  },
+  tabRowOuter: {
+    flexDirection: 'row',
+    gap: Spacing.two,
+  },
+  tabButton: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: Spacing.three,
+    borderRadius: Spacing.three,
+    backgroundColor: 'rgba(17,24,39,0.7)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.07)',
+  },
+  tabButtonActive: {
+    backgroundColor: 'rgba(255,215,0,0.08)',
+    borderColor: 'rgba(255,215,0,0.3)',
+  },
+  tagList: {
+    gap: Spacing.two,
+    paddingBottom: Spacing.five,
+  },
+  tagRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.three,
+    padding: Spacing.three,
+    borderRadius: Spacing.three,
+    backgroundColor: 'rgba(17,24,39,0.7)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.07)',
+  },
+  tagRowEmoji: {
+    fontSize: 24,
+  },
+  tagRowInfo: {
+    flex: 1,
+    gap: 2,
   },
   indicator: {
     alignSelf: 'center',

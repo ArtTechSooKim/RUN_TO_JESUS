@@ -8,6 +8,26 @@ export const QR_PREFIX = 'RTJ:';
 export const INTRO_QR_ID = 'INTRO';
 
 /**
+ * Admin-only master tag — tagging it marks every real station complete for
+ * the scanning team in one go. Not a real station (no DB row, no letters),
+ * so it's kept out of `stations` and handled as a special case wherever a
+ * scanned id is resolved. Written/used only from 최고관리자 mode.
+ */
+export const MASTER_QR_ID = 'MASTER';
+
+export const MASTER_STATION: Station = {
+  id: MASTER_QR_ID,
+  keyword: '마스터 카드',
+  hall: '전체 스테이션',
+  characterTitle: '모든 방 즉시 완료',
+  description: '태그하면 이 팀의 모든 스테이션이 한번에 완료 처리돼요. 관리자 전용 카드입니다.',
+  lead: '관리자',
+  color: '#FFD700',
+  emoji: '👑',
+  letters: [],
+};
+
+/**
  * 2026-07-05 회의로 라합방(구 방탈출)이 R,U,N 세 글자를 통째로 갖는 하나의
  * 스테이션으로 확정됨 — RAHAB을 대표 id로 삼음. NOAH/ABEL은 그 전에 이미
  * 물리 QR/NFC 태그로 인쇄·기록됐을 수 있어 id는 없애지 않고 RAHAB으로

@@ -6,14 +6,14 @@ import NfcManager, { Ndef, NfcTech } from 'react-native-nfc-manager';
 import { SoundPressable } from '@/components/sound-pressable';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { QR_PREFIX, stations } from '@/constants/stations';
+import { MASTER_QR_ID, MASTER_STATION, QR_PREFIX, stations } from '@/constants/stations';
 import { Colors, Spacing } from '@/constants/theme';
 
 type Status = 'idle' | 'writing' | 'success' | 'error';
 
 export default function NfcWriteScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const station = stations.find((s) => s.id === id);
+  const station = id === MASTER_QR_ID ? MASTER_STATION : stations.find((s) => s.id === id);
   const [status, setStatus] = useState<Status>('idle');
 
   if (!station) {

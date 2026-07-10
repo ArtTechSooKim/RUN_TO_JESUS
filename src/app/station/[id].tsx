@@ -1,13 +1,11 @@
 import { Link, Stack, useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import QRCode from 'react-native-qrcode-svg';
 import Svg, { Defs, LinearGradient as SvgLinearGradient, Rect, Stop } from 'react-native-svg';
 import Animated, {
   Easing,
   FadeIn,
   FadeInDown,
-  FadeOut,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
@@ -20,7 +18,7 @@ import { LetterPiece } from '@/components/letter-piece';
 import { SoundPressable } from '@/components/sound-pressable';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { floorLabels, QR_PREFIX, RUN_TO_JESUS, STATION_ALIASES, stations } from '@/constants/stations';
+import { floorLabels, RUN_TO_JESUS, STATION_ALIASES, stations } from '@/constants/stations';
 import { Colors, Spacing } from '@/constants/theme';
 import { useStationProgress } from '@/hooks/use-station-progress';
 
@@ -146,7 +144,6 @@ export default function StationDetailScreen() {
   const resolvedId = id ? (STATION_ALIASES[id] ?? id) : id;
   const station = stations.find((s) => s.id === resolvedId);
   const { clearedIds, recordManualComplete, cancelStation } = useStationProgress();
-  const [showQr, setShowQr] = useState(false);
 
   if (!station) {
     return (
@@ -263,32 +260,6 @@ export default function StationDetailScreen() {
             </SoundPressable>
           </View>
         )}
-
-        <SoundPressable
-          onPress={() => setShowQr((v) => !v)}
-          style={({ pressed }) => [styles.ghostButton, styles.qrToggle, pressed && styles.pressed]}>
-          <ThemedText type="small" themeColor="textSecondary">
-            {showQr ? '테스트용 QR 코드 닫기' : '테스트용 QR 코드 보기'}
-          </ThemedText>
-        </SoundPressable>
-        {showQr && (
-          <Animated.View entering={FadeIn.duration(200)} exiting={FadeOut.duration(150)} style={styles.qrOuter}>
-            <View style={styles.qrBox}>
-              <QRCode value={`${QR_PREFIX}${station.id}`} size={160} backgroundColor="#fff" />
-            </View>
-            <ThemedText type="small" themeColor="textSecondary">
-              다른 기기의 스캔 화면으로 이 코드를 찍어보세요
-            </ThemedText>
-          </Animated.View>
-        )}
-
-        <Link href={{ pathname: '/nfc-write', params: { id: station.id } }} asChild>
-          <SoundPressable style={({ pressed }) => [styles.ghostButton, styles.qrToggle, pressed && styles.pressed]}>
-            <ThemedText type="small" themeColor="textSecondary">
-              테스트용 NFC 태그 쓰기
-            </ThemedText>
-          </SoundPressable>
-        </Link>
       </ScrollView>
     </ThemedView>
   );
@@ -401,18 +372,6 @@ const styles = StyleSheet.create({
     borderRadius: Spacing.five,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.16)',
-  },
-  qrToggle: {
-    marginTop: Spacing.one,
-  },
-  qrOuter: {
-    alignItems: 'center',
-    gap: Spacing.two,
-  },
-  qrBox: {
-    padding: Spacing.four,
-    borderRadius: Spacing.four,
-    backgroundColor: '#fff',
   },
   doneBlock: {
     alignItems: 'center',

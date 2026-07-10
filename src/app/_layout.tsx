@@ -27,9 +27,11 @@ const navigationTheme = {
 };
 
 // Always reachable regardless of game_state — /superadmin is the control
-// screen itself, and /login must stay open or a locked-out admin (or anyone
-// who logs out while the game is ended/ending) has no way back in at all.
-const LOCK_EXEMPT_ROUTES = new Set(['/superadmin', '/login']);
+// screen itself, /login must stay open or a locked-out admin (or anyone
+// who logs out while the game is ended/ending) has no way back in at all,
+// and /nfc-write is now driven from 최고관리자's 태그 관리 tab, which admins
+// need before doors open (game_state is 'ended' at that point).
+const LOCK_EXEMPT_ROUTES = new Set(['/superadmin', '/login', '/nfc-write']);
 
 function GlobalGameLock() {
   const gameState = useGameState();
@@ -94,7 +96,7 @@ export default function RootLayout() {
               />
               <Stack.Screen
                 name="nfc-write"
-                options={{ headerShown: true, title: '태그 쓰기 (테스트용)', animation: 'slide_from_bottom' }}
+                options={{ headerShown: true, title: 'NFC 태그 쓰기', animation: 'slide_from_bottom' }}
               />
               <Stack.Screen
                 name="settings"

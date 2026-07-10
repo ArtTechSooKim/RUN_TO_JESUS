@@ -18,6 +18,8 @@ type StationProgressValue = {
   refresh: () => Promise<void>;
   /** Fallback for when scanning doesn't work — records a real tag event same as a scan would. */
   recordManualComplete: (stationId: string) => Promise<void>;
+  /** Admin-only master tag — records a tag event for every station this team hasn't cleared yet. */
+  recordMasterComplete: () => Promise<void>;
   /** Undo a mistaken tag. Team-wide, since progress is team truth — every teammate's device picks it up on the next poll. */
   cancelStation: (stationId: string) => Promise<void>;
 };
@@ -103,6 +105,15 @@ export function StationProgressProvider({ children }: { children: ReactNode }) {
     [user, refresh],
   );
 
+  const recordMasterComplete = useCallback(async () => {
+    if (!user) return;
+    const remaining = stations.filter((s) => !clearedIds.has(s.id));
+    await Promise.all(
+      remaining.map((s) => api.postTagEvent({ person_id: user.person_id, team_id: user.team_id, station_id: s.id })),
+    );
+    await refresh();
+  }, [user, clearedIds, refresh]);
+
   const cancelStation = useCallback(
     async (stationId: string) => {
       if (!user) return;
@@ -123,7 +134,15 @@ export function StationProgressProvider({ children }: { children: ReactNode }) {
 
   return (
     <StationProgressContext.Provider
-      value={{ clearedIds, collectedLetters, newlyCollected, refresh, recordManualComplete, cancelStation }}>
+      value={{
+        clearedIds,
+        collectedLetters,
+        newlyCollected,
+        refresh,
+        recordManualComplete,
+        recordMasterComplete,
+        cancelStation,
+      }}>
       {children}
     </StationProgressContext.Provider>
   );

@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
 
-import { INTRO_QR_ID, QR_PREFIX, STATION_ALIASES, stations, type Station } from '@/constants/stations';
+import { INTRO_QR_ID, MASTER_QR_ID, MASTER_STATION, QR_PREFIX, STATION_ALIASES, stations, type Station } from '@/constants/stations';
 import { useAuth } from '@/hooks/use-auth';
 import { useStationProgress } from '@/hooks/use-station-progress';
 import { api } from '@/lib/api';
@@ -11,7 +11,7 @@ const BURST_DURATION_MS = 1500;
 /** Shared by the QR camera screen and the NFC screen — both scan the same `RTJ:{id}` payload. */
 export function useTagScanHandler() {
   const { user } = useAuth();
-  const { refresh } = useStationProgress();
+  const { refresh, recordMasterComplete } = useStationProgress();
   const [errorText, setErrorText] = useState('');
   const [collectedStation, setCollectedStation] = useState<Station | null>(null);
   const scannedRef = useRef(false);
@@ -27,6 +27,24 @@ export function useTagScanHandler() {
       if (id === INTRO_QR_ID) {
         scannedRef.current = true;
         router.replace('/map');
+        return;
+      }
+
+      if (id === MASTER_QR_ID) {
+        if (!user) {
+          setErrorText('로그인이 필요해요.');
+          return;
+        }
+        scannedRef.current = true;
+        setErrorText('');
+        try {
+          await recordMasterComplete();
+          setCollectedStation(MASTER_STATION);
+          setTimeout(() => router.replace('/map'), BURST_DURATION_MS);
+        } catch {
+          scannedRef.current = false;
+          setErrorText('기록에 실패했어요. 네트워크를 확인하고 다시 시도해주세요.');
+        }
         return;
       }
 
@@ -55,7 +73,7 @@ export function useTagScanHandler() {
         setErrorText('기록에 실패했어요. 네트워크를 확인하고 다시 시도해주세요.');
       }
     },
-    [user, refresh],
+    [user, refresh, recordMasterComplete],
   );
 
   return { handleScan, errorText, collectedStation };
