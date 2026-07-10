@@ -70,7 +70,7 @@ export default function RootLayout() {
               />
               <Stack.Screen
                 name="map"
-                options={{ headerShown: true, title: '탐험 지도', animation: 'fade' }}
+                options={{ headerShown: true, title: '레이스 코스', animation: 'fade' }}
               />
               <Stack.Screen
                 name="floormap"

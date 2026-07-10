@@ -32,7 +32,7 @@ export function CollectionBar({ collectedIndices, newlyCollected = null }: Colle
     <ThemedView type="backgroundElement" style={styles.container}>
       <View style={styles.headerRow}>
         <ThemedText type="small" themeColor="textSecondary" style={styles.label}>
-          글자 조각 수집
+          우리팀 레이스 현황{'\n'}글자 조각 수집
         </ThemedText>
         <ThemedText
           type="smallBold"
@@ -75,6 +75,7 @@ const styles = StyleSheet.create({
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'flex-start',
   },
   label: {
     textTransform: 'uppercase',

@@ -142,7 +142,7 @@ export default function MapScreen() {
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.overallBlock}>
           <ThemedText type="small" themeColor="textSecondary" style={styles.eyebrow}>
-            전체 진행률 · 모든 팀
+            전체팀 레이스 현황
           </ThemedText>
           <RunnerProgressBar percent={overallRatio * 100} mode="progress" />
         </View>
@@ -155,11 +155,11 @@ export default function MapScreen() {
 
         <View style={styles.headingBlock}>
           <ThemedText type="small" themeColor="textSecondary" style={styles.eyebrow}>
-            공간 탐험 · Time Travel
+            레이스 존
           </ThemedText>
           <View style={styles.headingRow}>
             <ThemedText type="subtitle" style={styles.headingText}>
-              {stations.length}개 공간을 탐험하세요
+              {stations.length}개 존을 만나보세요
             </ThemedText>
             <SoundPressable
               onPress={() => router.push('/floormap')}

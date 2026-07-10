@@ -132,7 +132,7 @@ export default function FloorMapScreen() {
                 </ThemedText>
               ) : (
                 <ThemedText type="small">
-                  {clearedIds.has(selectedStation.id) ? '클리어 완료' : '아직 탐험 전'}
+                  {clearedIds.has(selectedStation.id) ? '클리어 완료' : '아직 도착 전'}
                 </ThemedText>
               )}
               <View style={styles.detailActions}>
