@@ -39,6 +39,12 @@ export default function FloorMapScreen() {
     return counts;
   }, [activeSessions]);
 
+  const activeTeamIds = useMemo(() => {
+    const ids: Record<string, number[]> = {};
+    for (const s of activeSessions) (ids[s.station_id] ??= []).push(s.team_id);
+    return ids;
+  }, [activeSessions]);
+
   const activePercents = useMemo(() => {
     const sums: Record<string, number> = {};
     const counts: Record<string, number> = {};
@@ -92,6 +98,7 @@ export default function FloorMapScreen() {
               setSelectedId(id);
             }}
             activeCounts={activeCounts}
+            activeTeamIds={activeTeamIds}
             activePercents={activePercents}
           />
         </Animated.View>

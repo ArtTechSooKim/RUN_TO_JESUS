@@ -84,6 +84,8 @@ type GameRoomProps = {
   sessionLabel: string;
   /** Number of teams currently mid-session here (game_sessions status='in_progress') — shows a live "진행중" marker. */
   activeCount?: number;
+  /** team_id of every team currently mid-session here — shown on the badge instead of a bare count when there's just one. */
+  activeTeamIds?: number[];
   /** Average % through the expected duration, across active sessions here. */
   activePercent?: number;
   rx?: number;
@@ -105,10 +107,13 @@ function GameRoom({
   sublabel,
   sessionLabel,
   activeCount = 0,
+  activeTeamIds = [],
   activePercent,
   rx = 4,
 }: GameRoomProps) {
   const inProgress = activeCount > 0;
+  const badgeText = activeTeamIds.length === 1 ? String(activeTeamIds[0]) : String(activeCount);
+  const badgeR = badgeText.length > 1 ? 9 : 7;
   const sessionY = y + h / 2 - (sublabel ? 15 : 10);
   const labelY = y + h / 2 + 4;
   const sublabelY = y + h / 2 + 15;
@@ -148,9 +153,9 @@ function GameRoom({
       )}
       {inProgress && (
         <G>
-          <Circle cx={x + 10} cy={y + 10} r={7} fill={`${IN_PROGRESS_COLOR}40`} stroke={IN_PROGRESS_COLOR} strokeWidth={1} />
-          <SvgText x={x + 10} y={y + 13} textAnchor="middle" fill={IN_PROGRESS_COLOR} fontSize={8} fontWeight="bold">
-            {activeCount}
+          <Circle cx={x + 10} cy={y + 10} r={badgeR} fill={`${IN_PROGRESS_COLOR}40`} stroke={IN_PROGRESS_COLOR} strokeWidth={1} />
+          <SvgText x={x + 10} y={y + 13} textAnchor="middle" fill={IN_PROGRESS_COLOR} fontSize={badgeText.length > 1 ? 7.5 : 8} fontWeight="bold">
+            {badgeText}
           </SvgText>
         </G>
       )}
@@ -246,6 +251,8 @@ type FloorProps = {
   onSelect: (id: string) => void;
   /** station_id -> number of teams currently mid-session there. */
   activeCounts?: Record<string, number>;
+  /** station_id -> team_id of every team currently mid-session there. */
+  activeTeamIds?: Record<string, number[]>;
   /** station_id -> average % through expected duration, across active sessions there. */
   activePercents?: Record<string, number>;
 };
@@ -256,7 +263,7 @@ function byId(stations: Station[], id: string) {
   return s;
 }
 
-export function Floor10Young({ stations, clearedIds, selectedId, onSelect, activeCounts = {}, activePercents = {} }: FloorProps) {
+export function Floor10Young({ stations, clearedIds, selectedId, onSelect, activeCounts = {}, activeTeamIds = {}, activePercents = {} }: FloorProps) {
   const rahab = byId(stations, 'RAHAB');
   const jacob = byId(stations, 'JACOB');
   const abraham = byId(stations, 'ABRAHAM');
@@ -305,6 +312,7 @@ export function Floor10Young({ stations, clearedIds, selectedId, onSelect, activ
           label="플레이그라운드"
           sessionLabel={noah.keyword}
           activeCount={activeCounts[noah.id]}
+          activeTeamIds={activeTeamIds[noah.id]}
           activePercent={activePercents[noah.id]}
         />
       )}
@@ -322,6 +330,7 @@ export function Floor10Young({ stations, clearedIds, selectedId, onSelect, activ
         sublabel="블러핑"
         sessionLabel="블러핑"
         activeCount={activeCounts[jacob.id]}
+        activeTeamIds={activeTeamIds[jacob.id]}
         activePercent={activePercents[jacob.id]}
       />
       <GameRoom
@@ -337,6 +346,7 @@ export function Floor10Young({ stations, clearedIds, selectedId, onSelect, activ
         sublabel="믿음의 가정"
         sessionLabel="아브라함방"
         activeCount={activeCounts[abraham.id]}
+        activeTeamIds={activeTeamIds[abraham.id]}
         activePercent={activePercents[abraham.id]}
       />
 
@@ -354,6 +364,7 @@ export function Floor10Young({ stations, clearedIds, selectedId, onSelect, activ
         sublabel="방탈출 (초등부·유년부교사실 포함)"
         sessionLabel="라합방"
         activeCount={activeCounts[rahab.id]}
+        activeTeamIds={activeTeamIds[rahab.id]}
         activePercent={activePercents[rahab.id]}
       />
       <GrayBlock x={294} y={274} w={92} h={150} />
@@ -373,6 +384,7 @@ export function Floor10Young({ stations, clearedIds, selectedId, onSelect, activ
         sublabel="미는 챌린지 (아동부교사실 포함)"
         sessionLabel="삼손방"
         activeCount={activeCounts[samson.id]}
+        activeTeamIds={activeTeamIds[samson.id]}
         activePercent={activePercents[samson.id]}
       />
 
@@ -383,7 +395,7 @@ export function Floor10Young({ stations, clearedIds, selectedId, onSelect, activ
   );
 }
 
-export function Floor11Young({ stations, clearedIds, selectedId, onSelect, activeCounts = {}, activePercents = {} }: FloorProps) {
+export function Floor11Young({ stations, clearedIds, selectedId, onSelect, activeCounts = {}, activeTeamIds = {}, activePercents = {} }: FloorProps) {
   const joseph = byId(stations, 'JOSEPH');
 
   return (
@@ -427,6 +439,7 @@ export function Floor11Young({ stations, clearedIds, selectedId, onSelect, activ
         sublabel="릴레이"
         sessionLabel="요셉방"
         activeCount={activeCounts[joseph.id]}
+        activeTeamIds={activeTeamIds[joseph.id]}
         activePercent={activePercents[joseph.id]}
       />
 
@@ -437,7 +450,7 @@ export function Floor11Young({ stations, clearedIds, selectedId, onSelect, activ
   );
 }
 
-export function Floor10Fashion({ stations, clearedIds, selectedId, onSelect, activeCounts = {}, activePercents = {} }: FloorProps) {
+export function Floor10Fashion({ stations, clearedIds, selectedId, onSelect, activeCounts = {}, activeTeamIds = {}, activePercents = {} }: FloorProps) {
   const david = byId(stations, 'DAVID');
 
   return (
@@ -493,6 +506,7 @@ export function Floor10Fashion({ stations, clearedIds, selectedId, onSelect, act
         sublabel="도미노"
         sessionLabel="도미노"
         activeCount={activeCounts[david.id]}
+        activeTeamIds={activeTeamIds[david.id]}
         activePercent={activePercents[david.id]}
       />
 

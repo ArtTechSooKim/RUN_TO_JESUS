@@ -35,7 +35,6 @@ function StationCard({
   onEnd: (id: number, status: 'completed' | 'cancelled') => void;
 }) {
   const [teamInput, setTeamInput] = useState('');
-  const atCapacity = sessions.length >= station.concurrent_capacity;
 
   return (
     <View style={[styles.card, sessions.length > 0 && { borderColor: `${Colors.dark.gold}40` }]}>
@@ -69,31 +68,29 @@ function StationCard({
         </View>
       ))}
 
-      {!atCapacity && (
-        <View style={styles.startRow}>
-          <TextInput
-            value={teamInput}
-            onChangeText={setTeamInput}
-            placeholder="팀 번호"
-            placeholderTextColor={Colors.dark.textSecondary}
-            keyboardType="number-pad"
-            style={styles.teamInput}
-          />
-          <SoundPressable
-            onPress={() => {
-              const n = Number(teamInput);
-              if (Number.isInteger(n) && n >= 1 && n <= 24) {
-                onStart(n);
-                setTeamInput('');
-              }
-            }}
-            style={({ pressed }) => [styles.startButton, pressed && styles.pressed]}>
-            <ThemedText type="small" style={{ color: Colors.dark.background }}>
-              세션 시작
-            </ThemedText>
-          </SoundPressable>
-        </View>
-      )}
+      <View style={styles.startRow}>
+        <TextInput
+          value={teamInput}
+          onChangeText={setTeamInput}
+          placeholder="팀 번호"
+          placeholderTextColor={Colors.dark.textSecondary}
+          keyboardType="number-pad"
+          style={styles.teamInput}
+        />
+        <SoundPressable
+          onPress={() => {
+            const n = Number(teamInput);
+            if (Number.isInteger(n) && n >= 1 && n <= 24 && !sessions.some((s) => s.team_id === n)) {
+              onStart(n);
+              setTeamInput('');
+            }
+          }}
+          style={({ pressed }) => [styles.startButton, pressed && styles.pressed]}>
+          <ThemedText type="small" style={{ color: Colors.dark.background }}>
+            세션 시작
+          </ThemedText>
+        </SoundPressable>
+      </View>
     </View>
   );
 }
@@ -111,6 +108,12 @@ function MapTab({ activeSessions }: { activeSessions: ApiSession[] }) {
     const counts: Record<string, number> = {};
     for (const s of activeSessions) counts[s.station_id] = (counts[s.station_id] ?? 0) + 1;
     return counts;
+  }, [activeSessions]);
+
+  const activeTeamIds = useMemo(() => {
+    const ids: Record<string, number[]> = {};
+    for (const s of activeSessions) (ids[s.station_id] ??= []).push(s.team_id);
+    return ids;
   }, [activeSessions]);
 
   const activePercents = useMemo(() => {
@@ -158,6 +161,7 @@ function MapTab({ activeSessions }: { activeSessions: ApiSession[] }) {
             setSelectedId(id);
           }}
           activeCounts={activeCounts}
+          activeTeamIds={activeTeamIds}
           activePercents={activePercents}
         />
       </Animated.View>

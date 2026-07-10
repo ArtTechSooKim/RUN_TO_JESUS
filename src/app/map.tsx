@@ -70,8 +70,11 @@ function StationCard({
               </View>
               {activeSessions.length > 0 ? (
                 <ThemedText type="small" numberOfLines={1} style={{ color: '#FB923C' }}>
-                  🔴 {activeSessions.map((s) => `${s.team_id}조 ${sessionProgressPercent(s)}%`).join(', ')} 진행중 ·{' '}
-                  {formatRemaining(activeSessions[0].expected_end_at)} 남음
+                  🔴{' '}
+                  {activeSessions
+                    .map((s) => `${s.team_id}조 ${sessionProgressPercent(s)}% (${formatRemaining(s.expected_end_at)})`)
+                    .join(', ')}{' '}
+                  진행중
                 </ThemedText>
               ) : (
                 <ThemedText type="small" themeColor="textSecondary" numberOfLines={1}>
