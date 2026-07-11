@@ -100,6 +100,16 @@ async function initSchema() {
 
     await conn.query(`INSERT IGNORE INTO app_state (id, game_state) VALUES (1, 'progress')`);
 
+    // Login's dedup check (see routes.js dedupedName) scans users.name on every
+    // signup; ~300 rows is trivial either way, but the index is free insurance.
+    // ADD INDEX has no IF NOT EXISTS in this MySQL version, so swallow the
+    // "duplicate key name" error on repeat deploys instead.
+    try {
+      await conn.query('ALTER TABLE users ADD INDEX idx_name (name)');
+    } catch (err) {
+      if (err.code !== 'ER_DUP_KEYNAME') throw err;
+    }
+
     for (const s of STATION_SEED) {
       await conn.query(
         `INSERT INTO stations (station_id, name, hall_name, duration_minutes, concurrent_capacity, letters, is_active)

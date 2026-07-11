@@ -16,6 +16,7 @@ function EditModal({
   initialValue,
   placeholder,
   keyboardType,
+  warning,
   onSave,
   onClose,
 }: {
@@ -23,13 +24,16 @@ function EditModal({
   initialValue: string;
   placeholder: string;
   keyboardType?: 'default' | 'number-pad';
-  onSave: (value: string) => void;
+  /** Consequence note shown under the input — for edits that aren't purely cosmetic (e.g. changing team). */
+  warning?: string;
+  onSave: (value: string) => Promise<void>;
   onClose: () => void;
 }) {
   const [value, setValue] = useState(initialValue);
   const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
 
-  function handleSave() {
+  async function handleSave() {
     const trimmed = value.trim();
     if (!trimmed) {
       setError('값을 입력해주세요');
@@ -45,7 +49,15 @@ function EditModal({
       setError('10자 이내로 입력해주세요');
       return;
     }
-    onSave(trimmed);
+    setSaving(true);
+    setError('');
+    try {
+      await onSave(trimmed);
+    } catch {
+      setError('저장에 실패했어요. 네트워크를 확인하고 다시 시도해주세요.');
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -65,20 +77,28 @@ function EditModal({
           autoFocus
           style={[styles.input, error && styles.inputError]}
         />
+        {warning && (
+          <ThemedText type="small" themeColor="textSecondary">
+            {warning}
+          </ThemedText>
+        )}
         {error !== '' && (
           <ThemedText type="small" style={styles.errorText}>
             {error}
           </ThemedText>
         )}
         <View style={styles.modalActions}>
-          <SoundPressable onPress={onClose} style={({ pressed }) => [styles.modalButtonGhost, pressed && styles.pressed]}>
+          <SoundPressable onPress={onClose} disabled={saving} style={({ pressed }) => [styles.modalButtonGhost, pressed && styles.pressed]}>
             <ThemedText type="small" themeColor="textSecondary">
               취소
             </ThemedText>
           </SoundPressable>
-          <SoundPressable onPress={handleSave} style={({ pressed }) => [styles.modalButtonGold, pressed && styles.pressed]}>
+          <SoundPressable
+            onPress={handleSave}
+            disabled={saving}
+            style={({ pressed }) => [styles.modalButtonGold, pressed && styles.pressed]}>
             <ThemedText type="smallBold" style={{ color: Colors.dark.background }}>
-              저장
+              {saving ? '저장 중...' : '저장'}
             </ThemedText>
           </SoundPressable>
         </View>
@@ -215,8 +235,8 @@ export default function SettingsScreen() {
           title="이름 변경"
           initialValue={user.name}
           placeholder="새 이름 입력"
-          onSave={(v) => {
-            updateUser({ name: v });
+          onSave={async (v) => {
+            await updateUser({ name: v });
             setEditModal(null);
           }}
           onClose={() => setEditModal(null)}
@@ -228,8 +248,9 @@ export default function SettingsScreen() {
           initialValue={String(user.team_id)}
           placeholder="1 ~ 24"
           keyboardType="number-pad"
-          onSave={(v) => {
-            updateUser({ team_id: Number(v) });
+          warning="팀을 바꾸면 지금까지 모은 조각도 새 팀 기준으로 표시돼요."
+          onSave={async (v) => {
+            await updateUser({ team_id: Number(v) });
             setEditModal(null);
           }}
           onClose={() => setEditModal(null)}

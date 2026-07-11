@@ -15,7 +15,9 @@ const cosmic = {
   background: '#0A0D17',
   backgroundElement: '#151A2B',
   backgroundSelected: '#1E2540',
-  textSecondary: '#6B7A99',
+  // #6B7A99 sat right at the WCAG AA line (4.5:1) against `background` — bumped
+  // lighter for a comfortable margin (~6.75:1) in bright/outdoor event lighting.
+  textSecondary: '#8B98BB',
   gold: '#FFD700',
 } as const;
 

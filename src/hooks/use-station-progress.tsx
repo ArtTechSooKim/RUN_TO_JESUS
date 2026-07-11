@@ -13,6 +13,8 @@ type StationProgressValue = {
   /** Station ids the current TEAM has tagged, per the server — shared truth across every device on the team. */
   clearedIds: Set<string>;
   collectedLetters: Set<number>;
+  /** True until the first fetch (success or failure) resolves — lets screens avoid showing "0 collected" as if it were real. */
+  loading: boolean;
   /** Letter index currently pinging, for one-shot "ping" animations (own scan or team-sync reveal). */
   newlyCollected: number | null;
   /** Cuts the current reveal short (tap-to-skip) and immediately advances to the next queued one, if any. */
@@ -37,6 +39,7 @@ const StationProgressContext = createContext<StationProgressValue | null>(null);
 export function StationProgressProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const [clearedIds, setClearedIds] = useState<Set<string>>(new Set());
+  const [hasLoaded, setHasLoaded] = useState(false);
   const [newlyCollected, setNewlyCollected] = useState<number | null>(null);
   const revealTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const revealQueue = useRef<number[]>([]);
@@ -65,43 +68,48 @@ export function StationProgressProvider({ children }: { children: ReactNode }) {
   const refresh = useCallback(async () => {
     if (!user) {
       setClearedIds(new Set());
+      setHasLoaded(true);
       return;
     }
 
-    const { stationIds } = await api.getTeamFragments(user.team_id);
-    setClearedIds(new Set(stationIds));
+    try {
+      const { stationIds } = await api.getTeamFragments(user.team_id);
+      setClearedIds(new Set(stationIds));
 
-    // Reconcile against what THIS device has already shown a reveal for — a
-    // teammate tagging a station should still ping the letter here once,
-    // even though we never scanned it ourselves (see 기능정리 §3).
-    const seenKey = `${SEEN_KEY_PREFIX}${user.team_id}`;
-    const savedRaw = await AsyncStorage.getItem(seenKey);
-    let seen = new Set<string>(savedRaw ? JSON.parse(savedRaw) : []);
+      // Reconcile against what THIS device has already shown a reveal for — a
+      // teammate tagging a station should still ping the letter here once,
+      // even though we never scanned it ourselves (see 기능정리 §3).
+      const seenKey = `${SEEN_KEY_PREFIX}${user.team_id}`;
+      const savedRaw = await AsyncStorage.getItem(seenKey);
+      let seen = new Set<string>(savedRaw ? JSON.parse(savedRaw) : []);
 
-    // Self-heal after a cancelled tag or a super-admin progress reset: drop
-    // "seen" markers for stations the team no longer has, so a future re-tag
-    // of that same station correctly replays the reveal instead of being
-    // suppressed by stale local state.
-    const stillCleared = new Set(stationIds);
-    const reconciledSeen = new Set([...seen].filter((id) => stillCleared.has(id)));
-    if (reconciledSeen.size !== seen.size) {
-      seen = reconciledSeen;
-      await AsyncStorage.setItem(seenKey, JSON.stringify([...seen]));
-    }
-
-    const newlySeen = stationIds.filter((id) => !seen.has(id));
-
-    if (newlySeen.length) {
-      const newLetters = new Set<number>();
-      for (const id of newlySeen) {
-        const station = stations.find((s) => s.id === id);
-        station?.letters.forEach((li) => newLetters.add(li));
+      // Self-heal after a cancelled tag or a super-admin progress reset: drop
+      // "seen" markers for stations the team no longer has, so a future re-tag
+      // of that same station correctly replays the reveal instead of being
+      // suppressed by stale local state.
+      const stillCleared = new Set(stationIds);
+      const reconciledSeen = new Set([...seen].filter((id) => stillCleared.has(id)));
+      if (reconciledSeen.size !== seen.size) {
+        seen = reconciledSeen;
+        await AsyncStorage.setItem(seenKey, JSON.stringify([...seen]));
       }
-      revealQueue.current.push(...newLetters);
-      playNextReveal();
 
-      const nextSeen = [...seen, ...newlySeen];
-      await AsyncStorage.setItem(seenKey, JSON.stringify(nextSeen));
+      const newlySeen = stationIds.filter((id) => !seen.has(id));
+
+      if (newlySeen.length) {
+        const newLetters = new Set<number>();
+        for (const id of newlySeen) {
+          const station = stations.find((s) => s.id === id);
+          station?.letters.forEach((li) => newLetters.add(li));
+        }
+        revealQueue.current.push(...newLetters);
+        playNextReveal();
+
+        const nextSeen = [...seen, ...newlySeen];
+        await AsyncStorage.setItem(seenKey, JSON.stringify(nextSeen));
+      }
+    } finally {
+      setHasLoaded(true);
     }
   }, [user, playNextReveal]);
 
@@ -167,6 +175,7 @@ export function StationProgressProvider({ children }: { children: ReactNode }) {
       value={{
         clearedIds,
         collectedLetters,
+        loading: !hasLoaded,
         newlyCollected,
         skipReveal,
         refresh,

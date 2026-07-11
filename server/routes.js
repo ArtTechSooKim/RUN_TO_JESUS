@@ -69,33 +69,45 @@ router.post('/tag-events', async (req, res) => {
     return res.status(400).json({ error: 'person_id, team_id, station_id are required' });
   }
 
+  // Two teammates can tag the same station within milliseconds of each
+  // other; without serializing, both requests would read "not tagged yet"
+  // and each insert a full set of letter rows. A named lock (scoped to this
+  // one connection) closes that race without a schema change.
+  const lockName = `tag_events:${team_id}:${station_id}`;
   const conn = await pool.getConnection();
   try {
-    const [stationRows] = await conn.query('SELECT * FROM stations WHERE station_id = ? AND is_active = TRUE', [station_id]);
-    if (!stationRows.length) return res.status(404).json({ error: 'unknown or inactive station' });
-    const station = parseLetters(stationRows[0]);
+    const [lockRows] = await conn.query('SELECT GET_LOCK(?, 5) AS acquired', [lockName]);
+    if (!lockRows[0].acquired) return res.status(503).json({ error: 'busy, try again' });
 
-    const [priorRows] = await conn.query(
-      'SELECT COUNT(*) AS count FROM tag_events WHERE team_id = ? AND station_id = ?',
-      [team_id, station_id],
-    );
-    const newForTeam = priorRows[0].count === 0;
+    try {
+      const [stationRows] = await conn.query('SELECT * FROM stations WHERE station_id = ? AND is_active = TRUE', [station_id]);
+      if (!stationRows.length) return res.status(404).json({ error: 'unknown or inactive station' });
+      const station = parseLetters(stationRows[0]);
 
-    if (station.letters.length) {
-      for (const li of station.letters) {
+      const [priorRows] = await conn.query(
+        'SELECT COUNT(*) AS count FROM tag_events WHERE team_id = ? AND station_id = ?',
+        [team_id, station_id],
+      );
+      const newForTeam = priorRows[0].count === 0;
+
+      if (station.letters.length) {
+        for (const li of station.letters) {
+          await conn.query(
+            'INSERT INTO tag_events (person_id, team_id, station_id, fragment_letter) VALUES (?, ?, ?, ?)',
+            [person_id, team_id, station_id, RUN_TO_JESUS[li]],
+          );
+        }
+      } else {
         await conn.query(
-          'INSERT INTO tag_events (person_id, team_id, station_id, fragment_letter) VALUES (?, ?, ?, ?)',
-          [person_id, team_id, station_id, RUN_TO_JESUS[li]],
+          'INSERT INTO tag_events (person_id, team_id, station_id, fragment_letter) VALUES (?, ?, ?, NULL)',
+          [person_id, team_id, station_id],
         );
       }
-    } else {
-      await conn.query(
-        'INSERT INTO tag_events (person_id, team_id, station_id, fragment_letter) VALUES (?, ?, ?, NULL)',
-        [person_id, team_id, station_id],
-      );
-    }
 
-    res.status(201).json({ station_id, letters: station.letters, newForTeam });
+      res.status(201).json({ station_id, letters: station.letters, newForTeam });
+    } finally {
+      await conn.query('SELECT RELEASE_LOCK(?)', [lockName]);
+    }
   } finally {
     conn.release();
   }
@@ -198,7 +210,10 @@ async function autoCompleteExpiredSessions() {
 }
 
 router.get('/sessions', async (req, res) => {
-  await autoCompleteExpiredSessions();
+  // Expiring sessions is handled by a background interval (see server/index.js)
+  // rather than inline here — this is polled every 5s by the participant
+  // floormap screen, and running an UPDATE on every one of those hits would
+  // multiply into dozens of mostly-no-op writes/sec at ~300 concurrent users.
   const { status } = req.query;
   const [rows] = status
     ? await pool.query('SELECT * FROM game_sessions WHERE status = ? ORDER BY started_at DESC', [status])
@@ -301,3 +316,5 @@ router.get('/stats/overall', async (req, res) => {
 });
 
 module.exports = router;
+// Also run on a fixed background interval instead of per-request — see server/index.js.
+module.exports.autoCompleteExpiredSessions = autoCompleteExpiredSessions;

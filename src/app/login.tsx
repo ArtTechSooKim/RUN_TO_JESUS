@@ -16,12 +16,13 @@ export default function LoginScreen() {
   const [errors, setErrors] = useState<{ team?: string; name?: string }>({});
   const [loading, setLoading] = useState(false);
   const [serverError, setServerError] = useState('');
+  const [dedupNotice, setDedupNotice] = useState('');
 
   function validate() {
     const e: { team?: string; name?: string } = {};
     const n = Number(teamNumber);
     if (!teamNumber) e.team = '팀 번호를 입력해주세요';
-    else if (!Number.isInteger(n) || n < 1 || n > 24) e.team = '1~24 사이의 팀 번호를 입력해주세요 (최고관리자는 100)';
+    else if (!Number.isInteger(n) || n < 1 || n > 24) e.team = '1~24 사이의 팀 번호를 입력해주세요';
     if (!name.trim()) e.name = '이름을 입력해주세요';
     else if (name.trim().length > 10) e.name = '10자 이내로 입력해주세요';
     return e;
@@ -39,6 +40,7 @@ export default function LoginScreen() {
 
     setLoading(true);
     setServerError('');
+    setDedupNotice('');
     try {
       const result = await login(name, Number(teamNumber));
       if (result === 'superadmin') {
@@ -50,6 +52,12 @@ export default function LoginScreen() {
         } else {
           setServerError('본당 화면은 웹 브라우저에서만 지원돼요.');
         }
+      } else if (result.name !== name.trim()) {
+        // Server appended a suffix because that name was already taken on
+        // this team — team progress is unaffected (it's team-level truth),
+        // but worth a beat of explanation before jumping to the map.
+        setDedupNotice(`이미 있는 이름이라 "${result.name}"(으)로 등록했어요. 팀 진행 상황은 그대로예요.`);
+        setTimeout(() => router.replace('/map'), 1600);
       } else {
         router.replace('/map');
       }
@@ -124,6 +132,11 @@ export default function LoginScreen() {
         {serverError !== '' && (
           <ThemedText type="small" style={styles.errorText}>
             {serverError}
+          </ThemedText>
+        )}
+        {dedupNotice !== '' && (
+          <ThemedText type="small" style={{ color: Colors.dark.gold, textAlign: 'center' }}>
+            {dedupNotice}
           </ThemedText>
         )}
 

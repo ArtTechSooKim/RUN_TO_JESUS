@@ -6,7 +6,8 @@ import { api, type ApiUser } from '@/lib/api';
 const STORAGE_KEY = 'rtj_user';
 
 // Login form values name="김수" + team=100 bypass real signup entirely and
-// jump straight to the super-admin screen — see RUN_TO_JESUS_기능정리_v1.md §7.
+// jump straight to the super-admin screen — see RUN_TO_JESUS_앱_개발문서.md
+// (super-admin entry section) for the full rationale.
 const SUPER_ADMIN_NAME = '김수';
 const SUPER_ADMIN_TEAM = 100;
 // name="본당" + team=100 is the 본당 relay-screen kiosk device — routes to

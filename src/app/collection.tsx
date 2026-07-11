@@ -107,7 +107,7 @@ function EndingLetterTile({
 }
 
 export default function CollectionScreen() {
-  const { collectedLetters } = useStationProgress();
+  const { collectedLetters, loading } = useStationProgress();
   const total = RUN_TO_JESUS.length;
   const collected = collectedLetters.size;
   const allCollected = collected === total;
@@ -226,6 +226,10 @@ export default function CollectionScreen() {
               )}
             </View>
           )
+        ) : loading ? (
+          <ThemedText type="small" themeColor="textSecondary">
+            불러오는 중...
+          </ThemedText>
         ) : (
           <View style={styles.progressBlock}>
             <View style={styles.progressTrack}>
