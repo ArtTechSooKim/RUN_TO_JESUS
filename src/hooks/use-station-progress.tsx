@@ -15,7 +15,15 @@ type StationProgressValue = {
   collectedLetters: Set<number>;
   /** Letter index currently pinging, for one-shot "ping" animations (own scan or team-sync reveal). */
   newlyCollected: number | null;
+  /** Cuts the current reveal short (tap-to-skip) and immediately advances to the next queued one, if any. */
+  skipReveal: () => void;
   refresh: () => Promise<void>;
+  /**
+   * Marks a station as already-revealed on THIS device without touching the reveal queue —
+   * used right after a device's own scan so it doesn't play the full-screen reveal twice
+   * (once from the scan screen's own burst, once from the team-sync reveal on the next refresh).
+   */
+  suppressReveal: (stationId: string) => Promise<void>;
   /** Fallback for when scanning doesn't work — records a real tag event same as a scan would. */
   recordManualComplete: (stationId: string) => Promise<void>;
   /** Admin-only master tag — records a tag event for every station this team hasn't cleared yet. */
@@ -44,6 +52,15 @@ export function StationProgressProvider({ children }: { children: ReactNode }) {
       playNextReveal();
     }, REVEAL_DURATION_MS);
   }, []);
+
+  const skipReveal = useCallback(() => {
+    if (revealTimer.current) {
+      clearTimeout(revealTimer.current);
+      revealTimer.current = null;
+    }
+    setNewlyCollected(null);
+    playNextReveal();
+  }, [playNextReveal]);
 
   const refresh = useCallback(async () => {
     if (!user) {
@@ -87,6 +104,19 @@ export function StationProgressProvider({ children }: { children: ReactNode }) {
       await AsyncStorage.setItem(seenKey, JSON.stringify(nextSeen));
     }
   }, [user, playNextReveal]);
+
+  const suppressReveal = useCallback(
+    async (stationId: string) => {
+      if (!user) return;
+      const seenKey = `${SEEN_KEY_PREFIX}${user.team_id}`;
+      const savedRaw = await AsyncStorage.getItem(seenKey);
+      const seen = new Set<string>(savedRaw ? JSON.parse(savedRaw) : []);
+      if (seen.has(stationId)) return;
+      seen.add(stationId);
+      await AsyncStorage.setItem(seenKey, JSON.stringify([...seen]));
+    },
+    [user],
+  );
 
   useEffect(() => {
     refresh();
@@ -138,7 +168,9 @@ export function StationProgressProvider({ children }: { children: ReactNode }) {
         clearedIds,
         collectedLetters,
         newlyCollected,
+        skipReveal,
         refresh,
+        suppressReveal,
         recordManualComplete,
         recordMasterComplete,
         cancelStation,

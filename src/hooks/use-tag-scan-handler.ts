@@ -11,7 +11,7 @@ const BURST_DURATION_MS = 1500;
 /** Shared by the QR camera screen and the NFC screen — both scan the same `RTJ:{id}` payload. */
 export function useTagScanHandler() {
   const { user } = useAuth();
-  const { refresh, recordMasterComplete } = useStationProgress();
+  const { refresh, recordMasterComplete, suppressReveal } = useStationProgress();
   const [errorText, setErrorText] = useState('');
   const [collectedStation, setCollectedStation] = useState<Station | null>(null);
   const scannedRef = useRef(false);
@@ -63,6 +63,9 @@ export function useTagScanHandler() {
       setErrorText('');
       try {
         await api.postTagEvent({ person_id: user.person_id, team_id: user.team_id, station_id: station.id });
+        // This device already gets its own burst below — don't also queue the
+        // full-screen team-sync reveal for the same letters a moment later.
+        await suppressReveal(station.id);
         await refresh();
         setCollectedStation(station);
         setTimeout(() => {
@@ -73,7 +76,7 @@ export function useTagScanHandler() {
         setErrorText('기록에 실패했어요. 네트워크를 확인하고 다시 시도해주세요.');
       }
     },
-    [user, refresh, recordMasterComplete],
+    [user, refresh, recordMasterComplete, suppressReveal],
   );
 
   return { handleScan, errorText, collectedStation };

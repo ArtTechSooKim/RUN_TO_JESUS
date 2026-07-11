@@ -3,12 +3,13 @@ import { useEffect } from 'react';
 import * as SplashScreen from 'expo-splash-screen';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
+import { FragmentRevealOverlay } from '@/components/fragment-reveal-overlay';
 import { GameEndOverlay } from '@/components/game-end-overlay';
 import { Colors } from '@/constants/theme';
 import { useGameState } from '@/hooks/use-app-state';
 import { AuthProvider } from '@/hooks/use-auth';
 import { SoundEffectsProvider, useSoundEffects } from '@/hooks/use-sound-effects';
-import { StationProgressProvider } from '@/hooks/use-station-progress';
+import { StationProgressProvider, useStationProgress } from '@/hooks/use-station-progress';
 
 const AMBIENT_ROUTES = new Set(['/', '/login']);
 
@@ -55,6 +56,12 @@ function AmbientSoundController() {
   return null;
 }
 
+/** Global "믿음의 조각 획득" celebration — fires for every device on the team, not just whoever scanned. */
+function FragmentRevealController() {
+  const { newlyCollected, skipReveal } = useStationProgress();
+  return <FragmentRevealOverlay letterIndex={newlyCollected} onDone={skipReveal} />;
+}
+
 export default function RootLayout() {
   return (
     <ThemeProvider value={navigationTheme}>
@@ -64,6 +71,7 @@ export default function RootLayout() {
             <AnimatedSplashOverlay />
             <GlobalGameLock />
             <AmbientSoundController />
+            <FragmentRevealController />
             <Stack screenOptions={{ headerShown: false }}>
               <Stack.Screen name="index" />
               <Stack.Screen

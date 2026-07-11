@@ -99,7 +99,7 @@ function ScanCta({ color, onPress }: { color: string; onPress?: () => void }) {
           ]}>
           <Animated.View style={[styles.ctaSweep, sweepStyle, { backgroundColor: `${color}25` }]} />
           <ThemedText type="smallBold" style={{ color }}>
-            QR 코드 스캔하기
+            QR 스캔하기
           </ThemedText>
         </Animated.View>
       </SoundPressable>
@@ -131,7 +131,7 @@ function NfcCta({ color }: { color: string }) {
         <Animated.View
           style={[styles.nfcButton, glowStyle, { backgroundColor: color, shadowColor: color }]}>
           <ThemedText type="smallBold" style={{ color: Colors.dark.background }}>
-            NFC 태그 스캔하기
+            NFC 스캔하기
           </ThemedText>
         </Animated.View>
       </SoundPressable>
@@ -284,7 +284,7 @@ const styles = StyleSheet.create({
   },
   heroEmoji: {
     fontSize: 48,
-    lineHeight: 56,
+    lineHeight: 72,
   },
   keywordBadge: {
     paddingHorizontal: Spacing.three,
@@ -346,6 +346,7 @@ const styles = StyleSheet.create({
   ctaButton: {
     width: '100%',
     paddingVertical: Spacing.four,
+    paddingHorizontal: Spacing.five,
     borderRadius: Spacing.four,
     borderWidth: 2,
     alignItems: 'center',
@@ -362,6 +363,7 @@ const styles = StyleSheet.create({
   nfcButton: {
     width: '100%',
     paddingVertical: Spacing.four,
+    paddingHorizontal: Spacing.five,
     borderRadius: Spacing.four,
     alignItems: 'center',
   },
