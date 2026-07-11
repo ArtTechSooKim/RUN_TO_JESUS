@@ -6,7 +6,10 @@ import { useAuth } from '@/hooks/use-auth';
 import { api } from '@/lib/api';
 
 const SEEN_KEY_PREFIX = 'rtj_seen_fragments_team_';
-const REVEAL_DURATION_MS = 3000;
+// Fallback only — FragmentRevealOverlay normally self-dismisses (and calls
+// skipReveal) well before this via its own AUTO_DISMISS_MS timer. Kept well
+// above that so it never races the overlay's own dismissal.
+const REVEAL_DURATION_MS = 4500;
 const POLL_MS = 8000;
 
 type StationProgressValue = {

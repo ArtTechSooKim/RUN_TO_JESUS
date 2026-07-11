@@ -17,7 +17,7 @@ import { useSoundEffects } from '@/hooks/use-sound-effects';
 
 const PARTICLE_COUNT = 18;
 /** How long the animation runs before it dismisses itself, ahead of the provider's longer fallback timer. */
-const AUTO_DISMISS_MS = 1900;
+const AUTO_DISMISS_MS = 3000;
 
 function ConvergingParticle({ angle, dist, delay }: { angle: number; dist: number; delay: number }) {
   const t = useSharedValue(0);
@@ -100,7 +100,9 @@ export function FragmentRevealOverlay({ letterIndex, onDone }: FragmentRevealOve
     letterRotate.value = withDelay(650, withSpring(0, { damping: 12, stiffness: 260 }));
     glow.value = withDelay(650, withSequence(withTiming(1, { duration: 180 }), withTiming(0.5, { duration: 300 })));
     labelOpacity.value = withDelay(950, withTiming(1, { duration: 300 }));
-    overlayOpacity.value = withDelay(1550, withTiming(0, { duration: 350 }));
+    // Hold the settled letter + label on screen for a while before fading —
+    // otherwise it reads as vanishing mid-animation.
+    overlayOpacity.value = withDelay(2600, withTiming(0, { duration: 400 }));
 
     const autoTimer = setTimeout(dismiss, AUTO_DISMISS_MS);
     return () => clearTimeout(autoTimer);
