@@ -225,31 +225,64 @@ function byId(stations: Station[], id: string) {
 export function Floor10Young({ stations, clearedIds, selectedId, onSelect, activeCounts = {}, activeTeamIds = {}, activePercents = {} }: FloorProps) {
   const rahab = byId(stations, 'RAHAB');
   const jacob = byId(stations, 'JACOB');
-  const abraham = byId(stations, 'ABRAHAM');
+  const joseph = byId(stations, 'JOSEPH');
   const samson = byId(stations, 'SAMSON');
   const noah = stations.find((s) => s.id === 'NOAHROOM');
   const mystery = stations.find((s) => s.id === 'MYSTERYGAME');
 
   return (
     <Svg viewBox="0 0 590 460" width="100%" height={undefined} style={{ aspectRatio: 590 / 460 }}>
-      {/* building outline */}
-      <Rect x={128} y={22} width={388} height={230} rx={4} fill="#0C1628" stroke="#1E2A45" strokeWidth={1.5} />
-      <Rect x={8} y={82} width={120} height={196} rx={4} fill="#0C1628" stroke="#1E2A45" strokeWidth={1.5} />
-      <Rect x={516} y={22} width={58} height={200} rx={29} fill="#0A1220" stroke="#151F35" strokeWidth={1} />
-      <Rect x={260} y={4} width={110} height={20} rx={3} fill="#0A1220" stroke="#151F35" strokeWidth={1} />
-      <Rect x={8} y={272} width={510} height={157} rx={4} fill="#0C1628" stroke="#1E2A45" strokeWidth={1.5} />
+      {/* background panels */}
+      <Rect x={2} y={14} width={120} height={204} rx={4} fill="#0C1628" stroke="#1E2A45" strokeWidth={1.5} />
+      <Rect x={118} y={14} width={320} height={210} rx={4} fill="#0C1628" stroke="#1E2A45" strokeWidth={1.5} />
+      <Rect x={434} y={14} width={150} height={432} rx={4} fill="#0C1628" stroke="#1E2A45" strokeWidth={1.5} />
+      <Rect x={2} y={216} width={436} height={144} rx={4} fill="#0C1628" stroke="#1E2A45" strokeWidth={1.5} />
+      <Rect x={2} y={376} width={436} height={70} rx={4} fill="#0C1628" stroke="#1E2A45" strokeWidth={1.5} />
+      <Rect x={270} y={2} width={110} height={16} rx={3} fill="#0A1220" stroke="#151F35" strokeWidth={1} />
 
-      <DimRoom x={138} y={30} w={225} h={200} label="본당" />
-      <DimRoom x={371} y={30} w={58} h={100} label="방송실" />
-      <DimRoom x={371} y={135} w={58} h={115} label="겟세마네홀" sublabel="(침묵기도실)" />
-      <DimRoom x={8} y={145} w={120} h={75} label="프레이즈홀" />
+      {/* top row */}
+      <DimRoom x={6} y={18} w={112} h={140} label="계단" />
+      {evStrip([14, 36], 24)}
+      <DimRoom x={122} y={18} w={84} h={42} label="화장실" />
+      <DimRoom x={210} y={18} w={100} h={42} label="대기실" />
+      <EvBox x={302} y={20} />
+      <DimRoom x={326} y={18} w={108} h={42} label="화장실" />
+      <DimRoom x={438} y={18} w={146} h={42} label="선샤인 라운지" />
+
+      {/* mid row */}
+      <DimRoom x={122} y={64} w={84} h={56} label="임시 백색실" />
+      <DimRoom x={210} y={64} w={228} h={150} label="본당" />
+      <DimRoom x={438} y={64} w={146} h={112} label="새로운 광장" />
+      {evStrip([446, 468], 70)}
+
+      <DimRoom x={122} y={124} w={84} h={54} label="창고" />
+      <GameRoom
+        station={joseph}
+        x={6}
+        y={162}
+        w={112}
+        h={54}
+        cleared={clearedIds.has(joseph.id)}
+        selected={selectedId === joseph.id}
+        onPress={() => onSelect(joseph.id)}
+        label="요셉홀"
+        sublabel="유아부"
+        sessionLabel="요셉방"
+        activeCount={activeCounts[joseph.id]}
+        activeTeamIds={activeTeamIds[joseph.id]}
+        activePercent={activePercents[joseph.id]}
+      />
+      <DimRoom x={122} y={182} w={84} h={36} label="이삭교사실" />
+      <DimRoom x={438} y={180} w={146} h={266} label="프라미스 라운지" />
+
+      {/* station row */}
       {mystery && (
         <GameRoom
-          x={8}
-          y={82}
-          w={120}
-          h={60}
           station={mystery}
+          x={6}
+          y={220}
+          w={112}
+          h={156}
           cleared={clearedIds.has(mystery.id)}
           selected={selectedId === mystery.id}
           onPress={() => onSelect(mystery.id)}
@@ -261,99 +294,96 @@ export function Floor10Young({ stations, clearedIds, selectedId, onSelect, activ
           activePercent={activePercents[mystery.id]}
         />
       )}
-      <DimRoom x={8} y={254} w={120} h={16} label="고등부교사실" />
-      <DimRoom x={432} y={30} w={82} h={100} label="어노인팅홀" sublabel="(중보기도팀)" />
+      <GameRoom
+        station={jacob}
+        x={122}
+        y={220}
+        w={94}
+        h={80}
+        cleared={clearedIds.has(jacob.id)}
+        selected={selectedId === jacob.id}
+        onPress={() => onSelect(jacob.id)}
+        label="이삭홀"
+        sublabel="영아부"
+        sessionLabel="야곱방"
+        activeCount={activeCounts[jacob.id]}
+        activeTeamIds={activeTeamIds[jacob.id]}
+        activePercent={activePercents[jacob.id]}
+      />
+      <DimRoom x={220} y={220} w={106} h={84} label="에스더홀" sublabel="(유치부)" />
+      <DimRoom x={330} y={220} w={104} h={84} label="헤세드홀" />
 
       {noah && (
         <GameRoom
-          x={138}
-          y={194}
-          w={58}
-          h={58}
           station={noah}
+          x={122}
+          y={308}
+          w={94}
+          h={52}
           cleared={clearedIds.has(noah.id)}
           selected={selectedId === noah.id}
           onPress={() => onSelect(noah.id)}
           label="플레이그라운드"
-          sessionLabel={noah.keyword}
+          sessionLabel="노아방"
           activeCount={activeCounts[noah.id]}
           activeTeamIds={activeTeamIds[noah.id]}
           activePercent={activePercents[noah.id]}
         />
       )}
 
+      {/* bottom row */}
       <GameRoom
-        x={198}
-        y={195}
-        w={110}
-        h={57}
-        station={jacob}
-        cleared={clearedIds.has(jacob.id)}
-        selected={selectedId === jacob.id}
-        onPress={() => onSelect(jacob.id)}
-        label="이삭홀 (영아부)"
-        sublabel="야곱방"
-        sessionLabel="야곱방"
-        activeCount={activeCounts[jacob.id]}
-        activeTeamIds={activeTeamIds[jacob.id]}
-        activePercent={activePercents[jacob.id]}
-      />
-      <GameRoom
-        x={312}
-        y={195}
-        w={110}
-        h={57}
-        station={abraham}
-        cleared={clearedIds.has(abraham.id)}
-        selected={selectedId === abraham.id}
-        onPress={() => onSelect(abraham.id)}
-        label="아가페홀 (새가족부)"
-        sublabel="믿음의 가정"
-        sessionLabel="아브라함·사라방"
-        activeCount={activeCounts[abraham.id]}
-        activeTeamIds={activeTeamIds[abraham.id]}
-        activePercent={activePercents[abraham.id]}
-      />
-
-      {/* 하단 별동: 라합방(사무엘홀+다니엘홀 병합) · EV/계단 · 삼손방(디모데홀) */}
-      <GameRoom
-        x={10}
-        y={274}
-        w={280}
-        h={150}
         station={rahab}
+        x={6}
+        y={376}
+        w={130}
+        h={66}
         cleared={clearedIds.has(rahab.id)}
         selected={selectedId === rahab.id}
         onPress={() => onSelect(rahab.id)}
-        label="사무엘홀 · 다니엘홀"
-        sublabel="방탈출 (초등부·유년부교사실 포함)"
+        label="사무엘홀"
+        sublabel="사무엘교사실"
         sessionLabel="라합방"
         activeCount={activeCounts[rahab.id]}
         activeTeamIds={activeTeamIds[rahab.id]}
         activePercent={activePercents[rahab.id]}
       />
-      <GrayBlock x={294} y={274} w={92} h={150} />
-      <SvgText x={340} y={352} textAnchor="middle" fill="#1A2845" fontSize={9} fontFamily={FONT}>
-        계단
-      </SvgText>
       <GameRoom
-        x={390}
-        y={274}
-        w={126}
-        h={150}
+        station={rahab}
+        x={140}
+        y={376}
+        w={116}
+        h={66}
+        cleared={clearedIds.has(rahab.id)}
+        selected={selectedId === rahab.id}
+        onPress={() => onSelect(rahab.id)}
+        label="다니엘홀"
+        sublabel="유년부교사실"
+        sessionLabel="라합방"
+        activeCount={activeCounts[rahab.id]}
+        activeTeamIds={activeTeamIds[rahab.id]}
+        activePercent={activePercents[rahab.id]}
+      />
+      <DimRoom x={260} y={376} w={38} h={66} label="다니엘" sublabel="교사실" />
+      <DimRoom x={302} y={376} w={42} h={66} label="디모데" sublabel="교사실" />
+      <GameRoom
         station={samson}
+        x={348}
+        y={376}
+        w={88}
+        h={66}
         cleared={clearedIds.has(samson.id)}
         selected={selectedId === samson.id}
         onPress={() => onSelect(samson.id)}
-        label="디모데홀 (아동부)"
-        sublabel="미는 챌린지 (아동부교사실 포함)"
+        label="디모데홀"
         sessionLabel="삼손방"
         activeCount={activeCounts[samson.id]}
         activeTeamIds={activeTeamIds[samson.id]}
         activePercent={activePercents[samson.id]}
       />
+      <EvBox x={352} y={380} />
 
-      <SvgText x={10} y={16} fill="#2D4066" fontSize={10} fontFamily={FONT} fontWeight="600">
+      <SvgText x={10} y={12} fill="#2D4066" fontSize={10} fontFamily={FONT} fontWeight="600">
         10층 영관
       </SvgText>
     </Svg>
@@ -361,73 +391,83 @@ export function Floor10Young({ stations, clearedIds, selectedId, onSelect, activ
 }
 
 export function Floor11Young({ stations, clearedIds, selectedId, onSelect, activeCounts = {}, activeTeamIds = {}, activePercents = {} }: FloorProps) {
-  const joseph = byId(stations, 'JOSEPH');
+  const abraham = byId(stations, 'ABRAHAM');
   const jonah = stations.find((s) => s.id === 'ABELROOM');
 
   return (
-    <Svg viewBox="0 0 580 430" width="100%" height={undefined} style={{ aspectRatio: 580 / 430 }}>
-      <Rect x={128} y={22} width={390} height={258} rx={4} fill="#0C1628" stroke="#1E2A45" strokeWidth={1.5} />
-      <Rect x={8} y={82} width={120} height={198} rx={4} fill="#0C1628" stroke="#1E2A45" strokeWidth={1.5} />
-      <Rect x={518} y={22} width={54} height={215} rx={27} fill="#0A1220" stroke="#151F35" strokeWidth={1} />
-      <Rect x={262} y={4} width={110} height={22} rx={3} fill="#0A1220" stroke="#151F35" strokeWidth={1} />
-      <Rect x={128} y={278} width={390} height={88} rx={4} fill="#0C1628" stroke="#1E2A45" strokeWidth={1.5} />
-      <Rect x={8} y={278} width={120} height={148} rx={4} fill="#0C1628" stroke="#1E2A45" strokeWidth={1.5} />
+    <Svg viewBox="0 0 580 460" width="100%" height={undefined} style={{ aspectRatio: 580 / 460 }}>
+      {/* background panels */}
+      <Rect x={2} y={12} width={124} height={196} rx={4} fill="#0C1628" stroke="#1E2A45" strokeWidth={1.5} />
+      <Rect x={130} y={12} width={272} height={244} rx={4} fill="#0C1628" stroke="#1E2A45" strokeWidth={1.5} />
+      <Rect x={402} y={12} width={156} height={342} rx={4} fill="#0C1628" stroke="#1E2A45" strokeWidth={1.5} />
+      <Rect x={2} y={214} width={400} height={96} rx={4} fill="#0C1628" stroke="#1E2A45" strokeWidth={1.5} />
+      <Rect x={2} y={358} width={402} height={92} rx={4} fill="#0C1628" stroke="#1E2A45" strokeWidth={1.5} />
 
-      <DimRoom x={138} y={35} w={228} h={222} label="본당" />
-      <DimRoom x={374} y={35} w={60} h={100} label="방송실" />
-      <DimRoom x={438} y={35} w={75} h={100} label="어노인팅홀" sublabel="(중보기도팀)" />
-      <DimRoom x={374} y={140} w={60} h={110} label="겟세마네홀" sublabel="(침묵기도실)" />
-      <DimRoom x={8} y={82} w={120} h={58} label="새로운극장" sublabel="(고등부)" />
-      <DimRoom x={8} y={208} w={120} h={68} label="음향조정실" />
-      <DimRoom x={250} y={285} w={268} h={74} label="에스더홀" sublabel="(유치부 / 비활성)" />
-      <DimRoom x={136} y={285} w={108} h={74} label="유아부" sublabel="교사실" />
-      <GrayBlock x={10} y={352} w={118} h={72} />
-      <SvgText x={69} y={390} textAnchor="middle" fill="#1A2845" fontSize={9} fontFamily={FONT}>
-        유아부 교사실
-      </SvgText>
-
-      {evStrip([527, 527, 527, 527], 32)}
-      <GrayBlock x={266} y={5} w={100} h={20} />
-      <GrayBlock x={214} y={5} w={50} h={20} />
-      <GrayBlock x={372} y={5} w={50} h={20} />
-
-      <GameRoom
-        x={10}
-        y={280}
-        w={118}
-        h={68}
-        station={joseph}
-        cleared={clearedIds.has(joseph.id)}
-        selected={selectedId === joseph.id}
-        onPress={() => onSelect(joseph.id)}
-        label="요셉홀"
-        sublabel="릴레이"
-        sessionLabel="요셉방"
-        activeCount={activeCounts[joseph.id]}
-        activeTeamIds={activeTeamIds[joseph.id]}
-        activePercent={activePercents[joseph.id]}
-      />
-
+      {/* top row */}
       {jonah && (
         <GameRoom
-          x={8}
-          y={145}
-          w={120}
-          h={60}
           station={jonah}
+          x={10}
+          y={20}
+          w={118}
+          h={82}
           cleared={clearedIds.has(jonah.id)}
           selected={selectedId === jonah.id}
           onPress={() => onSelect(jonah.id)}
           label="다윗홀"
-          sublabel="마리아실 겸용"
           sessionLabel="요나방"
           activeCount={activeCounts[jonah.id]}
           activeTeamIds={activeTeamIds[jonah.id]}
           activePercent={activePercents[jonah.id]}
         />
       )}
+      <DimRoom x={196} y={20} w={88} h={36} label="회의실" />
+      {evStrip([288, 310, 332], 20)}
+      <SvgText x={362} y={40} textAnchor="middle" fill="#1E3055" fontSize={7.5} fontFamily={FONT}>
+        계단
+      </SvgText>
+      <DimRoom x={406} y={16} w={150} h={58} label="시온광장" />
 
-      <SvgText x={10} y={16} fill="#2D4066" fontSize={10} fontFamily={FONT} fontWeight="600">
+      {/* mid row */}
+      <DimRoom x={10} y={106} w={118} h={62} label="음향조정실" />
+      <DimRoom x={170} y={62} w={226} h={194} label="본당" />
+      <GrayBlock x={140} y={62} w={22} h={194} />
+      <DimRoom x={406} y={78} w={72} h={66} label="방송실" />
+      <DimRoom x={482} y={78} w={74} h={66} label="어노인팅홀" sublabel="(중보기도팀)" />
+      <DimRoom x={406} y={148} w={150} h={64} label="겟세마네홀" sublabel="(침묵기도실)" />
+
+      <DimRoom x={10} y={172} w={118} h={86} label="다목적홀" sublabel="(고등부/YEF)" />
+      <DimRoom x={406} y={216} w={72} h={132} label="헤번 라운지" />
+
+      {/* lower row */}
+      <DimRoom x={10} y={262} w={74} h={48} label="화장실" />
+      {evStrip([90, 112], 266)}
+      <DimRoom x={170} y={258} w={118} h={52} label="영상실" />
+      <DimRoom x={292} y={258} w={114} h={52} label="무대기술팀" />
+      {evStrip([406, 428], 348)}
+
+      {/* bottom row */}
+      <GameRoom
+        station={abraham}
+        x={10}
+        y={362}
+        w={146}
+        h={84}
+        cleared={clearedIds.has(abraham.id)}
+        selected={selectedId === abraham.id}
+        onPress={() => onSelect(abraham.id)}
+        label="아가페홀"
+        sublabel="뉴젠 Kids"
+        sessionLabel="아브라함·사라방"
+        activeCount={activeCounts[abraham.id]}
+        activeTeamIds={activeTeamIds[abraham.id]}
+        activePercent={activePercents[abraham.id]}
+      />
+      <DimRoom x={162} y={362} w={66} h={84} label="아가페" sublabel="교사실" />
+      <DimRoom x={232} y={362} w={168} h={32} label="프레이즈교사실" />
+      <DimRoom x={232} y={398} w={168} h={48} label="프레이즈홀" sublabel="(뉴젠 Jr/유치부)" />
+
+      <SvgText x={10} y={12} fill="#2D4066" fontSize={10} fontFamily={FONT} fontWeight="600">
         11층 영관
       </SvgText>
     </Svg>
@@ -465,7 +505,9 @@ export function Floor10Fashion({ stations, clearedIds, selectedId, onSelect, act
 
       <DimRoom x={336} y={285} w={100} h={88} label="목회리더십" sublabel="연구원" />
       <DimRoom x={440} y={285} w={80} h={88} label="뉴젠가정" sublabel="연구소" />
-      <DimRoom x={360} y={118} w={192} h={58} label="바울센터" sublabel="(비활성)" />
+      <DimRoom x={360} y={118} w={192} h={46} label="바울센터" sublabel="(선교본부)" />
+      <DimRoom x={360} y={168} w={92} h={42} label="음향조정실" />
+      <DimRoom x={456} y={168} w={96} h={42} label="마리아실" sublabel="(지모실)" />
 
       <GrayBlock x={42} y={377} w={38} h={46} />
       {evStrip([120, 145, 335, 360, 385, 410, 458, 490], 388)}
@@ -478,15 +520,15 @@ export function Floor10Fashion({ stations, clearedIds, selectedId, onSelect, act
 
       <GameRoom
         x={360}
-        y={178}
+        y={214}
         w={192}
-        h={105}
+        h={68}
         station={david}
         cleared={clearedIds.has(david.id)}
         selected={selectedId === david.id}
         onPress={() => onSelect(david.id)}
-        label="새로운홀 (중등부)"
-        sublabel="도미노"
+        label="새로운홀"
+        sublabel="중등부·Jr.청년부·새가족부"
         sessionLabel="도미노"
         activeCount={activeCounts[david.id]}
         activeTeamIds={activeTeamIds[david.id]}

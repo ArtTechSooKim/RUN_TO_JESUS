@@ -124,7 +124,7 @@ export const stations: Station[] = [
     description:
       '꿈은 축복이었지만, 현실은 시련의 연속이었다. 그러나 그는 원망 대신 믿음을, 포기 대신 성실함을 선택했다.\n하나님께서 이루시는 반전의 역사를, 이제 당신이 직접 경험해 보세요.',
     lead: '선재',
-    floor: 'young-11f',
+    floor: 'young-10f',
     color: '#F59E0B',
     emoji: '🏃',
     letters: [3],
@@ -150,7 +150,7 @@ export const stations: Station[] = [
     description:
       '보이지 않는 약속 하나를 붙들고, 두 사람은 길을 떠났다.\n흔들리던 날도, 넘어지던 순간도 있었지만\n혼자가 아니었기에 다시 일어설 수 있었다.\n결함은 채워지는 것, 완벽해서가 아니라 함께였기에.',
     lead: '혜선',
-    floor: 'young-10f',
+    floor: 'young-11f',
     color: '#A78BFA',
     emoji: '🏠',
     letters: [5],
