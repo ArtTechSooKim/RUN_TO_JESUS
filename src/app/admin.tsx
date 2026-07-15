@@ -197,7 +197,8 @@ export default function AdminScreen() {
   const { sessions, refresh: refreshSessions } = useActiveSessions();
 
   const refreshStations = useCallback(async () => {
-    setStations(await api.getStations(true));
+    // 숨은글자찾기는 물리적 방/세션 개념이 없는 QR 전용 스테이션이라 관리 목록에서 제외.
+    setStations((await api.getStations(true)).filter((s) => !s.is_hidden));
   }, []);
 
   useEffect(() => {

@@ -1,53 +1,75 @@
 import { Link, router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import QRCode from 'react-native-qrcode-svg';
 import Animated, { FadeIn, FadeInUp, FadeOut } from 'react-native-reanimated';
 
 import { SoundPressable } from '@/components/sound-pressable';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { MASTER_STATION, stations } from '@/constants/stations';
+import { MASTER_STATION, QR_PREFIX, stations, type Station } from '@/constants/stations';
 import { Colors, Spacing } from '@/constants/theme';
 import { api, type GameState } from '@/lib/api';
+
+function TagRow({ station }: { station: Station }) {
+  const [showQr, setShowQr] = useState(false);
+
+  return (
+    <View
+      style={[
+        styles.tagRow,
+        station.isHidden && { borderColor: `${station.color}55`, backgroundColor: `${station.color}12` },
+      ]}>
+      <View style={styles.tagRowHeader}>
+        <ThemedText style={styles.tagRowEmoji}>{station.emoji}</ThemedText>
+        <View style={styles.tagRowInfo}>
+          <ThemedText type="smallBold" style={station.isHidden ? { color: station.color } : undefined}>
+            {station.keyword}
+          </ThemedText>
+          <ThemedText type="small" themeColor="textSecondary">
+            {station.hall}
+          </ThemedText>
+        </View>
+      </View>
+
+      <View style={styles.tagRowActions}>
+        <SoundPressable
+          onPress={() => setShowQr((v) => !v)}
+          style={({ pressed }) => [styles.tagRowButton, pressed && styles.pressed]}>
+          <ThemedText type="small" themeColor="textSecondary">
+            {showQr ? 'QR 코드 닫기' : 'QR 코드 보기'}
+          </ThemedText>
+        </SoundPressable>
+        {!station.isQrOnly && (
+          <Link href={{ pathname: '/nfc-write', params: { id: station.id } }} asChild>
+            <SoundPressable style={({ pressed }) => [styles.tagRowButton, pressed && styles.pressed]}>
+              <ThemedText type="small" themeColor="textSecondary">
+                NFC 태그 쓰기
+              </ThemedText>
+            </SoundPressable>
+          </Link>
+        )}
+      </View>
+
+      {showQr && (
+        <Animated.View entering={FadeIn.duration(200)} exiting={FadeOut.duration(150)} style={styles.qrBox}>
+          <QRCode value={`${QR_PREFIX}${station.id}`} size={140} backgroundColor="#fff" />
+        </Animated.View>
+      )}
+    </View>
+  );
+}
 
 function TagManagementTab() {
   return (
     <ScrollView contentContainerStyle={styles.tagList}>
       <ThemedText type="small" themeColor="textSecondary">
-        방을 선택하면 그 방의 NFC 태그를 쓸 수 있어요. 빈 태그를 기기 뒷면에 가까이 대고 진행하세요.
+        방을 선택하면 그 방의 QR 코드를 보거나 NFC 태그를 쓸 수 있어요. 숨은글자찾기는 QR 전용이라 NFC 쓰기가 없어요.
       </ThemedText>
 
-      <Link href={{ pathname: '/nfc-write', params: { id: MASTER_STATION.id } }} asChild>
-        <SoundPressable
-          style={({ pressed }) => [
-            styles.tagRow,
-            { borderColor: `${MASTER_STATION.color}55`, backgroundColor: `${MASTER_STATION.color}12` },
-            pressed && styles.pressed,
-          ]}>
-          <ThemedText style={styles.tagRowEmoji}>{MASTER_STATION.emoji}</ThemedText>
-          <View style={styles.tagRowInfo}>
-            <ThemedText type="smallBold" style={{ color: MASTER_STATION.color }}>
-              {MASTER_STATION.keyword}
-            </ThemedText>
-            <ThemedText type="small" themeColor="textSecondary">
-              {MASTER_STATION.description}
-            </ThemedText>
-          </View>
-        </SoundPressable>
-      </Link>
-
+      <TagRow station={MASTER_STATION} />
       {stations.map((station) => (
-        <Link key={station.id} href={{ pathname: '/nfc-write', params: { id: station.id } }} asChild>
-          <SoundPressable style={({ pressed }) => [styles.tagRow, pressed && styles.pressed]}>
-            <ThemedText style={styles.tagRowEmoji}>{station.emoji}</ThemedText>
-            <View style={styles.tagRowInfo}>
-              <ThemedText type="smallBold">{station.keyword}</ThemedText>
-              <ThemedText type="small" themeColor="textSecondary">
-                {station.hall}
-              </ThemedText>
-            </View>
-          </SoundPressable>
-        </Link>
+        <TagRow key={station.id} station={station} />
       ))}
     </ScrollView>
   );
@@ -364,14 +386,17 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.five,
   },
   tagRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.three,
+    gap: Spacing.two,
     padding: Spacing.three,
     borderRadius: Spacing.three,
     backgroundColor: 'rgba(17,24,39,0.7)',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.07)',
+  },
+  tagRowHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.three,
   },
   tagRowEmoji: {
     fontSize: 24,
@@ -379,6 +404,25 @@ const styles = StyleSheet.create({
   tagRowInfo: {
     flex: 1,
     gap: 2,
+  },
+  tagRowActions: {
+    flexDirection: 'row',
+    gap: Spacing.two,
+  },
+  tagRowButton: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: Spacing.two,
+    borderRadius: Spacing.two,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  qrBox: {
+    alignItems: 'center',
+    padding: Spacing.three,
+    borderRadius: Spacing.three,
+    backgroundColor: '#fff',
   },
   indicator: {
     alignSelf: 'center',

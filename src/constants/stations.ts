@@ -29,10 +29,11 @@ export const MASTER_STATION: Station = {
 
 /**
  * 2026-07-05 회의로 라합방(구 방탈출)이 R,U,N 세 글자를 통째로 갖는 하나의
- * 스테이션으로 확정됨 — RAHAB을 대표 id로 삼음. NOAH/ABEL은 그 전에 이미
- * 물리 QR/NFC 태그로 인쇄·기록됐을 수 있어 id는 없애지 않고 RAHAB으로
- * 합쳐지도록 별칭 처리. (노아방/아벨방은 이름은 겹치지만 완전히 다른,
- * 글자 배정이 없는 별개의 미니게임이라 NOAH/ABEL과는 무관— 아래 참고.)
+ * 스테이션으로 확정됨 — RAHAB을 대표 id로 삼음(2026-07 재배치로 라합방은 R 1개만
+ * 남고 U/N은 노아방·요나방으로 분산됨, 아래 stations 참고). NOAH/ABEL은 그 전에
+ * 이미 물리 QR/NFC 태그로 인쇄·기록됐을 수 있어 id는 없애지 않고 RAHAB으로 합쳐
+ * 지도록 별칭 처리. (station id "NOAHROOM"/"ABELROOM"은 이름은 겹치지만 완전히
+ * 다른, 별개의 스테이션이라 이 NOAH/ABEL 별칭과는 무관.)
  */
 export const STATION_ALIASES: Record<string, string> = {
   NOAH: 'RAHAB',
@@ -55,6 +56,10 @@ export type Station = {
   emoji: string;
   /** indices into RUN_TO_JESUS collected on completing this station. 글자가 없는 미니게임은 빈 배열 */
   letters: number[];
+  /** 숨은글자찾기 전용 — 지도/스테이션 목록에서 제외 (당일 QR만 부착, 동선에 없음). */
+  isHidden?: boolean;
+  /** 숨은글자찾기 전용 — NFC 없이 QR만 사용 (관리자 태그 관리 화면에서 NFC 쓰기 링크를 숨기는 데 씀). */
+  isQrOnly?: boolean;
 };
 
 export const floorLabels: Record<Floor, string> = {
@@ -65,10 +70,11 @@ export const floorLabels: Record<Floor, string> = {
 
 export const floors: Floor[] = ['young-10f', 'young-11f', 'fashion-10f'];
 
-// Confirmed 2026-07-05 회의 (PROJECT_CONTEXT (1).md) — supersedes the 2026-07-03
-// station_fragment_mapping.md naming. 핵심 6 스테이션(글자 배정 있음) +
-// 미니게임 3개(겸임, 글자 배정 없음, 장소 일부 미정). RAHAB의 물리 QR/NFC는
-// 이미 인쇄·기록됐을 수 있어 id는 유지하고 NOAH/ABEL을 별칭으로 흡수.
+// 2026-07 재배치 확정 (STATION_REASSIGNMENT_GUIDE.md "최종 확정 배치") — 순서는
+// 그 가이드의 모자이크 칸 순서(=letters 인덱스 오름차순)를 그대로 따름. 미니게임도
+// 이제 전부 실제 글자를 하나씩 배정받아 "겸임 미니게임 = 글자 없음" 구분은 없어짐;
+// 대신 노아방/요나방/영화관은 세션 타이머를 관리자가 아니라 태그 시점에 자동으로
+// 시작한다는 의미로 서버의 `is_minigame`이 따로 구분함(여긴 프론트 표시용 데이터라 무관).
 export const stations: Station[] = [
   {
     id: 'RAHAB',
@@ -81,14 +87,42 @@ export const stations: Station[] = [
     floor: 'young-10f',
     color: '#6EA8FF',
     emoji: '🗝️',
-    letters: [0, 1, 2],
+    letters: [0],
+  },
+  {
+    id: 'NOAHROOM',
+    keyword: '노아방',
+    hall: '플레이그라운드',
+    characterTitle: '노아방',
+    description: '세부 내용은 아직 준비 중입니다.',
+    lead: '보민',
+    floor: 'young-10f',
+    color: '#38BDF8',
+    emoji: '🚢',
+    letters: [1],
+  },
+  {
+    // 구 "아벨방" — 장소가 다윗홀로 확정되며 요나방으로 개편. id는 물리 태그 호환을
+    // 위해 유지(가이드 §4.1 "기존 row 업데이트" 방식 채택, 별도 alias 불필요 —
+    // 이 코드베이스의 QR/NFC 페이로드는 항상 station.id를 쓰지 한글명을 쓰지 않음).
+    id: 'ABELROOM',
+    keyword: '요나방',
+    hall: '다윗홀',
+    characterTitle: '요나방',
+    description: '세부 내용은 아직 준비 중입니다.',
+    lead: '혜선',
+    floor: 'young-11f',
+    color: '#FDBA74',
+    emoji: '🐳',
+    letters: [2],
   },
   {
     id: 'JOSEPH',
     keyword: '요셉방',
     hall: '요셉홀',
     characterTitle: '이어달리기 릴레이',
-    description: '팀이 하나가 되어 완주하는 릴레이 게임. 협력과 속도가 승부를 가릅니다.',
+    description:
+      '꿈은 축복이었지만, 현실은 시련의 연속이었다. 그러나 그는 원망 대신 믿음을, 포기 대신 성실함을 선택했다.\n하나님께서 이루시는 반전의 역사를, 이제 당신이 직접 경험해 보세요.',
     lead: '선재',
     floor: 'young-11f',
     color: '#F59E0B',
@@ -97,10 +131,11 @@ export const stations: Station[] = [
   },
   {
     id: 'JACOB',
-    keyword: '블러핑',
+    keyword: '야곱방',
     hall: '이삭홀',
-    characterTitle: '진실 혹은 허풍, 블러핑',
-    description: '상대의 표정을 읽고 허풍을 간파하세요. 눈치와 배짱이 필요한 게임입니다.',
+    characterTitle: '속고 속여라 야곱방! 그리고...',
+    description:
+      '야곱, 그 이름은 "발뒤꿈치를 잡는 자" 혹은 "남을 속이는 자." 명석한 두뇌와 꾀로 형도 삼촌도 속이며 살아온 그처럼, 우리 또한 속이고 빼앗으며 올라간다.\n\n당신은 어디까지 속이며 오를 수 있을까? 그리고 그 끝에서 마주할 얍복강가의 밤, 그곳에서 야곱은 새 이름을 얻는데….',
     lead: '은규',
     floor: 'young-10f',
     color: '#C084FC',
@@ -109,10 +144,11 @@ export const stations: Station[] = [
   },
   {
     id: 'ABRAHAM',
-    keyword: '아브라함방',
+    keyword: '아브라함·사라방',
     hall: '아가페홀',
-    characterTitle: '우리 가족의 믿음',
-    description: '가정을 주제로 한 이야기와 활동을 함께 나누는 시간입니다.',
+    characterTitle: '실수해도, 함께라면!!',
+    description:
+      '보이지 않는 약속 하나를 붙들고, 두 사람은 길을 떠났다.\n흔들리던 날도, 넘어지던 순간도 있었지만\n혼자가 아니었기에 다시 일어설 수 있었다.\n결함은 채워지는 것, 완벽해서가 아니라 함께였기에.',
     lead: '혜선',
     floor: 'young-10f',
     color: '#A78BFA',
@@ -142,42 +178,34 @@ export const stations: Station[] = [
     floor: 'fashion-10f',
     color: '#22D3EE',
     emoji: '🎲',
-    letters: [7, 8, 9],
-  },
-  // 아래는 겸임 미니게임 — 글자 배정 없음, 참여 자체가 목적
-  {
-    id: 'NOAHROOM',
-    keyword: '노아방',
-    hall: '플레이그라운드',
-    characterTitle: '노아방',
-    description: '세부 내용은 아직 준비 중입니다.',
-    lead: '보민',
-    floor: 'young-10f',
-    color: '#38BDF8',
-    emoji: '🚢',
-    letters: [],
+    letters: [7],
   },
   {
-    id: 'ABELROOM',
-    keyword: '아벨방',
-    hall: '미정',
-    characterTitle: '아벨방',
-    description: '장소와 세부 내용은 아직 준비 중입니다.',
-    lead: '혜선',
-    color: '#FDBA74',
-    emoji: '🕯️',
-    letters: [],
-  },
-  {
+    // 구 "미정게임" — 여호수아홀 위치는 그대로, 정식 이름 확정.
     id: 'MYSTERYGAME',
-    keyword: '미정게임',
-    hall: '여호수아홀 (극장)',
-    characterTitle: '미정게임',
+    keyword: '영화관',
+    hall: '여호수아홀',
+    characterTitle: '영화관',
     description: '세부 내용은 아직 준비 중입니다.',
     lead: '보람',
     floor: 'young-10f',
     color: '#94A3B8',
-    emoji: '❓',
-    letters: [],
+    emoji: '🎬',
+    letters: [8],
+  },
+  {
+    // 신규 — 장소 당일 결정, QR 전용(NFC 없음). 지도/스테이션 목록에는 절대 노출하지
+    // 않음(isHidden) — station/[id] 상세 페이지 자체는 QR 스캔 후 정상 동작.
+    id: 'HIDDENLETTER',
+    keyword: '숨은글자찾기',
+    hall: '미정 (당일 공개)',
+    characterTitle: '숨은글자찾기',
+    description: '행사 당일 어딘가에 숨겨진 QR코드를 찾아보세요.',
+    lead: '김수',
+    color: '#FACC15',
+    emoji: '🔍',
+    letters: [9],
+    isHidden: true,
+    isQrOnly: true,
   },
 ];

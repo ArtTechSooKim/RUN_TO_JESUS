@@ -203,69 +203,6 @@ function GameRoom({
   );
 }
 
-/** Dashed-border room for a station whose game/location is still 미정. */
-function PendingGameRoom({
-  x,
-  y,
-  w,
-  h,
-  label,
-  sublabel,
-  sessionLabel,
-  color = '#9AB0D0',
-  rx = 4,
-}: {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-  label: string;
-  sublabel?: string;
-  sessionLabel?: string;
-  color?: string;
-  rx?: number;
-}) {
-  return (
-    <G>
-      <Rect x={x} y={y} width={w} height={h} rx={rx} fill={`${color}12`} stroke={color} strokeWidth={1.4} strokeDasharray="6,3" />
-      {sessionLabel && (
-        <SvgText
-          x={x + w / 2}
-          y={y + h / 2 - (sublabel ? 12 : 7)}
-          textAnchor="middle"
-          fill={color}
-          fontSize={9.5}
-          fontWeight="800"
-          fontFamily={FONT}>
-          {sessionLabel}
-        </SvgText>
-      )}
-      <SvgText
-        x={x + w / 2}
-        y={y + h / 2 + 4}
-        textAnchor="middle"
-        fill={color}
-        fontSize={9.5}
-        fontWeight="700"
-        fontFamily={FONT}>
-        {label}
-      </SvgText>
-      {sublabel && (
-        <SvgText
-          x={x + w / 2}
-          y={y + h / 2 + (sessionLabel ? 15 : 8)}
-          textAnchor="middle"
-          fill={color}
-          fontSize={7.5}
-          opacity={0.6}
-          fontFamily={FONT}>
-          {sublabel}
-        </SvgText>
-      )}
-    </G>
-  );
-}
-
 type FloorProps = {
   stations: Station[];
   clearedIds: Set<string>;
@@ -307,15 +244,21 @@ export function Floor10Young({ stations, clearedIds, selectedId, onSelect, activ
       <DimRoom x={371} y={135} w={58} h={115} label="겟세마네홀" sublabel="(침묵기도실)" />
       <DimRoom x={8} y={145} w={120} h={75} label="프레이즈홀" />
       {mystery && (
-        <PendingGameRoom
+        <GameRoom
           x={8}
           y={82}
           w={120}
           h={60}
+          station={mystery}
+          cleared={clearedIds.has(mystery.id)}
+          selected={selectedId === mystery.id}
+          onPress={() => onSelect(mystery.id)}
           label="여호수아홀"
           sublabel="(새로운극장·고등부)"
-          sessionLabel={mystery.keyword}
-          color={mystery.color}
+          sessionLabel="영화관"
+          activeCount={activeCounts[mystery.id]}
+          activeTeamIds={activeTeamIds[mystery.id]}
+          activePercent={activePercents[mystery.id]}
         />
       )}
       <DimRoom x={8} y={254} w={120} h={16} label="고등부교사실" />
@@ -349,8 +292,8 @@ export function Floor10Young({ stations, clearedIds, selectedId, onSelect, activ
         selected={selectedId === jacob.id}
         onPress={() => onSelect(jacob.id)}
         label="이삭홀 (영아부)"
-        sublabel="블러핑"
-        sessionLabel="블러핑"
+        sublabel="야곱방"
+        sessionLabel="야곱방"
         activeCount={activeCounts[jacob.id]}
         activeTeamIds={activeTeamIds[jacob.id]}
         activePercent={activePercents[jacob.id]}
@@ -366,7 +309,7 @@ export function Floor10Young({ stations, clearedIds, selectedId, onSelect, activ
         onPress={() => onSelect(abraham.id)}
         label="아가페홀 (새가족부)"
         sublabel="믿음의 가정"
-        sessionLabel="아브라함방"
+        sessionLabel="아브라함·사라방"
         activeCount={activeCounts[abraham.id]}
         activeTeamIds={activeTeamIds[abraham.id]}
         activePercent={activePercents[abraham.id]}
@@ -419,6 +362,7 @@ export function Floor10Young({ stations, clearedIds, selectedId, onSelect, activ
 
 export function Floor11Young({ stations, clearedIds, selectedId, onSelect, activeCounts = {}, activeTeamIds = {}, activePercents = {} }: FloorProps) {
   const joseph = byId(stations, 'JOSEPH');
+  const jonah = stations.find((s) => s.id === 'ABELROOM');
 
   return (
     <Svg viewBox="0 0 580 430" width="100%" height={undefined} style={{ aspectRatio: 580 / 430 }}>
@@ -434,7 +378,6 @@ export function Floor11Young({ stations, clearedIds, selectedId, onSelect, activ
       <DimRoom x={438} y={35} w={75} h={100} label="어노인팅홀" sublabel="(중보기도팀)" />
       <DimRoom x={374} y={140} w={60} h={110} label="겟세마네홀" sublabel="(침묵기도실)" />
       <DimRoom x={8} y={82} w={120} h={58} label="새로운극장" sublabel="(고등부)" />
-      <DimRoom x={8} y={145} w={120} h={60} label="다윗홀" sublabel="/ 마리아실" />
       <DimRoom x={8} y={208} w={120} h={68} label="음향조정실" />
       <DimRoom x={250} y={285} w={268} h={74} label="에스더홀" sublabel="(유치부 / 비활성)" />
       <DimRoom x={136} y={285} w={108} h={74} label="유아부" sublabel="교사실" />
@@ -464,6 +407,25 @@ export function Floor11Young({ stations, clearedIds, selectedId, onSelect, activ
         activeTeamIds={activeTeamIds[joseph.id]}
         activePercent={activePercents[joseph.id]}
       />
+
+      {jonah && (
+        <GameRoom
+          x={8}
+          y={145}
+          w={120}
+          h={60}
+          station={jonah}
+          cleared={clearedIds.has(jonah.id)}
+          selected={selectedId === jonah.id}
+          onPress={() => onSelect(jonah.id)}
+          label="다윗홀"
+          sublabel="마리아실 겸용"
+          sessionLabel="요나방"
+          activeCount={activeCounts[jonah.id]}
+          activeTeamIds={activeTeamIds[jonah.id]}
+          activePercent={activePercents[jonah.id]}
+        />
+      )}
 
       <SvgText x={10} y={16} fill="#2D4066" fontSize={10} fontFamily={FONT} fontWeight="600">
         11층 영관
@@ -512,8 +474,7 @@ export function Floor10Fashion({ stations, clearedIds, selectedId, onSelect, act
       </SvgText>
       {evStrip([240, 264, 288, 312], 20)}
 
-      {/* 아벨방(그레이스홀)은 장소 미확정 — 확정되면 GameRoom으로 교체 */}
-      <DimRoom x={200} y={285} w={130} h={88} label="그레이스홀?" sublabel="아벨방 (장소 미정)" />
+      <DimRoom x={200} y={285} w={130} h={88} label="그레이스홀" />
 
       <GameRoom
         x={360}

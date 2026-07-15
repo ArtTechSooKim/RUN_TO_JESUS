@@ -104,6 +104,24 @@ router.post('/tag-events', async (req, res) => {
         );
       }
 
+      // Mini-games (노아방/요나방/영화관) have no physical room to book, so
+      // there's no admin "세션 시작" step for them — the scan itself starts
+      // their timed session, same shape as an admin-started one, so the
+      // existing session-progress UI (floor map, admin dashboard) just works.
+      if (station.is_minigame) {
+        const [activeRows] = await conn.query(
+          `SELECT id FROM game_sessions WHERE team_id = ? AND station_id = ? AND status = 'in_progress'`,
+          [team_id, station_id],
+        );
+        if (!activeRows.length) {
+          await conn.query(
+            `INSERT INTO game_sessions (station_id, team_id, expected_end_at)
+             VALUES (?, ?, DATE_ADD(NOW(), INTERVAL ? MINUTE))`,
+            [station_id, team_id, station.duration_minutes],
+          );
+        }
+      }
+
       res.status(201).json({ station_id, letters: station.letters, newForTeam });
     } finally {
       await conn.query('SELECT RELEASE_LOCK(?)', [lockName]);

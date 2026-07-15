@@ -121,6 +121,8 @@ function StationCard({
   );
 }
 
+const visibleStations = stations.filter((s) => !s.isHidden);
+
 export default function MapScreen() {
   const theme = useTheme();
   const { clearedIds, collectedLetters, newlyCollected } = useStationProgress();
@@ -162,7 +164,7 @@ export default function MapScreen() {
           </ThemedText>
           <View style={styles.headingRow}>
             <ThemedText type="subtitle" style={styles.headingText}>
-              {stations.length}개 존을 만나보세요
+              {visibleStations.length}개 존을 만나보세요
             </ThemedText>
             <SoundPressable
               onPress={() => router.push('/floormap')}
@@ -175,7 +177,7 @@ export default function MapScreen() {
         </View>
 
         <View style={styles.cardList}>
-          {stations.map((station, index) => (
+          {visibleStations.map((station, index) => (
             <StationCard
               key={station.id}
               station={station}

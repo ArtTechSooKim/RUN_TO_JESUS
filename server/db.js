@@ -9,16 +9,21 @@ const pool = mysql.createPool({
 // Mirrors src/constants/stations.ts — kept here as plain data since the
 // server doesn't build/run the TS app. Update both places if a station's
 // letters/hall/name changes; see station_id for the physical QR/NFC value.
+// `is_minigame` stations skip the admin's manual "세션 시작" — POST /tag-events
+// auto-starts their timed session the moment a participant scans (see routes.js).
 const STATION_SEED = [
-  { station_id: 'RAHAB', name: '라합방', hall_name: '사무엘홀 · 다니엘홀', duration_minutes: 20, concurrent_capacity: 2, letters: [0, 1, 2] },
-  { station_id: 'JOSEPH', name: '요셉방', hall_name: '요셉홀', duration_minutes: 20, concurrent_capacity: 1, letters: [3] },
-  { station_id: 'JACOB', name: '블러핑', hall_name: '이삭홀', duration_minutes: 15, concurrent_capacity: 1, letters: [4] },
-  { station_id: 'ABRAHAM', name: '아브라함방', hall_name: '아가페홀', duration_minutes: 20, concurrent_capacity: 1, letters: [5] },
-  { station_id: 'SAMSON', name: '삼손방', hall_name: '디모데홀', duration_minutes: 15, concurrent_capacity: 1, letters: [6] },
-  { station_id: 'DAVID', name: '도미노', hall_name: '새로운홀', duration_minutes: 10, concurrent_capacity: 1, letters: [7, 8, 9] },
-  { station_id: 'NOAHROOM', name: '노아방', hall_name: '플레이그라운드', duration_minutes: 15, concurrent_capacity: 1, letters: [] },
-  { station_id: 'ABELROOM', name: '아벨방', hall_name: null, duration_minutes: 15, concurrent_capacity: 1, letters: [] },
-  { station_id: 'MYSTERYGAME', name: '미정게임', hall_name: '여호수아홀 (극장)', duration_minutes: 15, concurrent_capacity: 1, letters: [] },
+  { station_id: 'RAHAB', name: '라합방', hall_name: '사무엘홀 · 다니엘홀', duration_minutes: 25, concurrent_capacity: 2, letters: [0], is_hidden: false, is_minigame: false },
+  { station_id: 'NOAHROOM', name: '노아방', hall_name: '플레이그라운드', duration_minutes: 20, concurrent_capacity: 1, letters: [1], is_hidden: false, is_minigame: true },
+  { station_id: 'ABELROOM', name: '요나방', hall_name: '다윗홀', duration_minutes: 20, concurrent_capacity: 1, letters: [2], is_hidden: false, is_minigame: true },
+  { station_id: 'JOSEPH', name: '요셉방', hall_name: '요셉홀', duration_minutes: 20, concurrent_capacity: 1, letters: [3], is_hidden: false, is_minigame: false },
+  { station_id: 'JACOB', name: '야곱방', hall_name: '이삭홀', duration_minutes: 25, concurrent_capacity: 1, letters: [4], is_hidden: false, is_minigame: false },
+  { station_id: 'ABRAHAM', name: '아브라함·사라방', hall_name: '아가페홀', duration_minutes: 20, concurrent_capacity: 1, letters: [5], is_hidden: false, is_minigame: false },
+  { station_id: 'SAMSON', name: '삼손방', hall_name: '디모데홀', duration_minutes: 20, concurrent_capacity: 1, letters: [6], is_hidden: false, is_minigame: false },
+  { station_id: 'DAVID', name: '도미노', hall_name: '새로운홀', duration_minutes: 15, concurrent_capacity: 1, letters: [7], is_hidden: false, is_minigame: false },
+  { station_id: 'MYSTERYGAME', name: '영화관', hall_name: '여호수아홀', duration_minutes: 15, concurrent_capacity: 1, letters: [8], is_hidden: false, is_minigame: true },
+  // 장소 당일 결정, QR 전용(NFC 없음) — venue를 하드코딩하지 않음. 물리적 방/부스가
+  // 없어 세션(진행중 타이머) 개념 자체가 없음 — is_minigame도 false로 둠.
+  { station_id: 'HIDDENLETTER', name: '숨은글자찾기', hall_name: null, duration_minutes: 10, concurrent_capacity: 1, letters: [9], is_hidden: true, is_minigame: false },
 ];
 
 async function initSchema() {
@@ -110,17 +115,42 @@ async function initSchema() {
       if (err.code !== 'ER_DUP_KEYNAME') throw err;
     }
 
+    // 2026-07 재배치: 숨은글자찾기(지도/목록에서 숨김)와 노아방/요나방/영화관
+    // (태그 시 자동으로 세션을 시작하는 미니게임) 플래그. ADD COLUMN has no
+    // IF NOT EXISTS in this MySQL version, so swallow the "duplicate column" error.
+    for (const ddl of [
+      'ALTER TABLE stations ADD COLUMN is_hidden BOOLEAN NOT NULL DEFAULT FALSE',
+      'ALTER TABLE stations ADD COLUMN is_minigame BOOLEAN NOT NULL DEFAULT FALSE',
+    ]) {
+      try {
+        await conn.query(ddl);
+      } catch (err) {
+        if (err.code !== 'ER_DUP_FIELDNAME') throw err;
+      }
+    }
+
     for (const s of STATION_SEED) {
       await conn.query(
-        `INSERT INTO stations (station_id, name, hall_name, duration_minutes, concurrent_capacity, letters, is_active)
-         VALUES (?, ?, ?, ?, ?, ?, TRUE)
+        `INSERT INTO stations (station_id, name, hall_name, duration_minutes, concurrent_capacity, letters, is_active, is_hidden, is_minigame)
+         VALUES (?, ?, ?, ?, ?, ?, TRUE, ?, ?)
          ON DUPLICATE KEY UPDATE
            name = VALUES(name),
            hall_name = VALUES(hall_name),
            duration_minutes = VALUES(duration_minutes),
            concurrent_capacity = VALUES(concurrent_capacity),
-           letters = VALUES(letters)`,
-        [s.station_id, s.name, s.hall_name, s.duration_minutes, s.concurrent_capacity, JSON.stringify(s.letters)],
+           letters = VALUES(letters),
+           is_hidden = VALUES(is_hidden),
+           is_minigame = VALUES(is_minigame)`,
+        [
+          s.station_id,
+          s.name,
+          s.hall_name,
+          s.duration_minutes,
+          s.concurrent_capacity,
+          JSON.stringify(s.letters),
+          s.is_hidden,
+          s.is_minigame,
+        ],
       );
     }
   } finally {
