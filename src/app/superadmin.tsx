@@ -9,45 +9,11 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MASTER_STATION, QR_PREFIX, stations, type Station } from '@/constants/stations';
 import { Colors, Spacing } from '@/constants/theme';
-import { api, WEB_BASE_URL, type GameState } from '@/lib/api';
+import { api, type GameState } from '@/lib/api';
 
-const TEAM_COUNT = 24;
-
-function TeamQrTab() {
-  return (
-    <ScrollView contentContainerStyle={styles.teamQrScroll}>
-      <View style={styles.teamQrHeader}>
-        <ThemedText type="small" themeColor="textSecondary" style={{ flex: 1 }}>
-          QR을 스캔하면 해당 팀 번호가 미리 채워진 로그인 화면으로 바로 들어가요. 카드를 잘라서 각 팀에게 나눠주세요.
-        </ThemedText>
-        {Platform.OS === 'web' && (
-          <SoundPressable
-            onPress={() => window.print()}
-            style={({ pressed }) => [styles.printButton, pressed && styles.pressed]}>
-            <ThemedText type="small" style={{ color: Colors.dark.background }}>
-              🖨 인쇄하기
-            </ThemedText>
-          </SoundPressable>
-        )}
-      </View>
-
-      <View style={styles.teamQrGrid}>
-        {Array.from({ length: TEAM_COUNT }, (_, i) => i + 1).map((team) => (
-          <View key={team} style={styles.teamQrCard}>
-            <ThemedText type="smallBold" style={{ color: Colors.dark.gold }}>
-              {team}조
-            </ThemedText>
-            <QRCode value={`${WEB_BASE_URL}/login?team=${team}`} size={110} backgroundColor="#fff" />
-          </View>
-        ))}
-      </View>
-    </ScrollView>
-  );
-}
+const QR_STATIONS = [MASTER_STATION, ...stations];
 
 function TagRow({ station }: { station: Station }) {
-  const [showQr, setShowQr] = useState(false);
-
   return (
     <View
       style={[
@@ -66,15 +32,8 @@ function TagRow({ station }: { station: Station }) {
         </View>
       </View>
 
-      <View style={styles.tagRowActions}>
-        <SoundPressable
-          onPress={() => setShowQr((v) => !v)}
-          style={({ pressed }) => [styles.tagRowButton, pressed && styles.pressed]}>
-          <ThemedText type="small" themeColor="textSecondary">
-            {showQr ? 'QR 코드 닫기' : 'QR 코드 보기'}
-          </ThemedText>
-        </SoundPressable>
-        {!station.isQrOnly && (
+      {!station.isQrOnly && (
+        <View style={styles.tagRowActions}>
           <Link href={{ pathname: '/nfc-write', params: { id: station.id } }} asChild>
             <SoundPressable style={({ pressed }) => [styles.tagRowButton, pressed && styles.pressed]}>
               <ThemedText type="small" themeColor="textSecondary">
@@ -82,13 +41,7 @@ function TagRow({ station }: { station: Station }) {
               </ThemedText>
             </SoundPressable>
           </Link>
-        )}
-      </View>
-
-      {showQr && (
-        <Animated.View entering={FadeIn.duration(200)} exiting={FadeOut.duration(150)} style={styles.qrBox}>
-          <QRCode value={`${QR_PREFIX}${station.id}`} size={140} backgroundColor="#fff" />
-        </Animated.View>
+        </View>
       )}
     </View>
   );
@@ -97,12 +50,36 @@ function TagRow({ station }: { station: Station }) {
 function TagManagementTab() {
   return (
     <ScrollView contentContainerStyle={styles.tagList}>
-      <ThemedText type="small" themeColor="textSecondary">
-        방을 선택하면 그 방의 QR 코드를 보거나 NFC 태그를 쓸 수 있어요. 숨은글자찾기는 QR 전용이라 NFC 쓰기가 없어요.
-      </ThemedText>
+      <View style={styles.qrGridHeader}>
+        <ThemedText type="small" themeColor="textSecondary" style={{ flex: 1 }}>
+          모든 스테이션의 QR 코드를 한 장에 모았어요. 인쇄해서 각 방에 붙이거나 백업용으로 보관하세요.
+        </ThemedText>
+        {Platform.OS === 'web' && (
+          <SoundPressable
+            onPress={() => window.print()}
+            style={({ pressed }) => [styles.printButton, pressed && styles.pressed]}>
+            <ThemedText type="small" style={{ color: Colors.dark.background }}>
+              🖨 인쇄하기
+            </ThemedText>
+          </SoundPressable>
+        )}
+      </View>
 
-      <TagRow station={MASTER_STATION} />
-      {stations.map((station) => (
+      <View style={styles.qrGrid}>
+        {QR_STATIONS.map((station) => (
+          <View key={station.id} style={styles.qrGridCard}>
+            <ThemedText type="smallBold" style={station.isHidden ? { color: station.color } : undefined} numberOfLines={1}>
+              {station.emoji} {station.keyword}
+            </ThemedText>
+            <QRCode value={`${QR_PREFIX}${station.id}`} size={110} backgroundColor="#fff" />
+          </View>
+        ))}
+      </View>
+
+      <ThemedText type="small" themeColor="textSecondary" style={{ marginTop: Spacing.two }}>
+        아래에서 방을 선택하면 NFC 태그를 쓸 수 있어요. 숨은글자찾기는 QR 전용이라 NFC 쓰기가 없어요.
+      </ThemedText>
+      {QR_STATIONS.map((station) => (
         <TagRow key={station.id} station={station} />
       ))}
     </ScrollView>
@@ -239,7 +216,7 @@ function EndingConfirmModal({ onClose, onDone }: { onClose: () => void; onDone: 
 }
 
 export default function SuperAdminScreen() {
-  const [tab, setTab] = useState<'global' | 'tags' | 'teamqr'>('global');
+  const [tab, setTab] = useState<'global' | 'tags'>('global');
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [resetModalOpen, setResetModalOpen] = useState(false);
   const [resetDone, setResetDone] = useState(false);
@@ -288,19 +265,10 @@ export default function SuperAdminScreen() {
             🏷 태그 관리
           </ThemedText>
         </SoundPressable>
-        <SoundPressable
-          onPress={() => setTab('teamqr')}
-          style={[styles.tabButton, tab === 'teamqr' && styles.tabButtonActive]}>
-          <ThemedText type="smallBold" style={{ color: tab === 'teamqr' ? Colors.dark.gold : Colors.dark.textSecondary }}>
-            🎫 팀 QR
-          </ThemedText>
-        </SoundPressable>
       </View>
 
       {tab === 'tags' ? (
         <TagManagementTab />
-      ) : tab === 'teamqr' ? (
-        <TeamQrTab />
       ) : (
         <>
       <View
@@ -507,17 +475,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.1)',
   },
-  qrBox: {
-    alignItems: 'center',
-    padding: Spacing.three,
-    borderRadius: Spacing.three,
-    backgroundColor: '#fff',
-  },
-  teamQrScroll: {
-    gap: Spacing.three,
-    paddingBottom: Spacing.five,
-  },
-  teamQrHeader: {
+  qrGridHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.three,
@@ -528,12 +486,12 @@ const styles = StyleSheet.create({
     borderRadius: Spacing.two,
     backgroundColor: Colors.dark.gold,
   },
-  teamQrGrid: {
+  qrGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: Spacing.two,
   },
-  teamQrCard: {
+  qrGridCard: {
     width: 132,
     alignItems: 'center',
     gap: Spacing.one,
