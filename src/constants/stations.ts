@@ -204,9 +204,9 @@ export const stations: Station[] = [
     // 나오지만 층별 지도에는 절대 노출하지 않음(isHidden, floor 미지정과 함께 작동).
     id: 'HIDDENLETTER',
     keyword: '숨은글자찾기',
-    hall: '미정 (당일 공개)',
+    hall: '???',
     characterTitle: '숨은글자찾기',
-    description: '행사 당일 어딘가에 숨겨진 QR코드를 찾아보세요.',
+    description: '어딘가에 숨겨진 QR코드를 찾아보세요.',
     lead: '김수',
     color: '#FACC15',
     emoji: '🔍',
