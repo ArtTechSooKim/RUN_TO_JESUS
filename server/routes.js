@@ -317,6 +317,19 @@ router.post('/admin/reset-progress', async (req, res) => {
   }
 });
 
+// Wipes every test login (users table) accumulated from repeat testing
+// rounds — 최고관리자("김수") and 본당("본당") are special-cased in
+// use-auth.tsx and never touch this table, so there's nothing to preserve
+// here. Doesn't touch tag_events/game_sessions — pair with reset-progress
+// for a fully clean slate.
+router.post('/admin/reset-users', async (req, res) => {
+  if (req.body.password !== RESET_PASSWORD) {
+    return res.status(403).json({ error: 'invalid password' });
+  }
+  await pool.query('DELETE FROM users');
+  res.json({ ok: true });
+});
+
 // ── broadcast / ending stats ─────────────────────────────────────────────
 
 router.get('/stats/overall', async (req, res) => {

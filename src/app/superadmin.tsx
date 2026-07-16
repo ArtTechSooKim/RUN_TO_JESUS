@@ -109,7 +109,19 @@ function TagManagementTab() {
   );
 }
 
-function ResetConfirmModal({ onClose, onDone }: { onClose: () => void; onDone: () => void }) {
+function ResetConfirmModal({
+  title,
+  description,
+  onConfirm,
+  onClose,
+  onDone,
+}: {
+  title: string;
+  description: string;
+  onConfirm: (password: string) => Promise<unknown>;
+  onClose: () => void;
+  onDone: () => void;
+}) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -118,7 +130,7 @@ function ResetConfirmModal({ onClose, onDone }: { onClose: () => void; onDone: (
     setLoading(true);
     setError('');
     try {
-      await api.resetAllProgress(password);
+      await onConfirm(password);
       onDone();
     } catch {
       setError('비밀번호가 틀렸거나 요청이 실패했어요');
@@ -132,10 +144,10 @@ function ResetConfirmModal({ onClose, onDone }: { onClose: () => void; onDone: (
       <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
       <Animated.View entering={FadeInUp.duration(200)} style={styles.modalCard}>
         <ThemedText type="smallBold" style={{ color: '#F87171' }}>
-          ⚠ 모든 팀 진행도 리셋
+          ⚠ {title}
         </ThemedText>
         <ThemedText type="small" themeColor="textSecondary">
-          24개 팀 전체의 수집한 글자 조각과 진행중인 세션이 전부 삭제됩니다. 로그인 정보와 스테이션 설정은 유지돼요. 되돌릴 수 없으니 테스트 라운드 사이에만 사용하세요.
+          {description}
         </ThemedText>
         <TextInput
           value={password}
@@ -231,6 +243,8 @@ export default function SuperAdminScreen() {
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [resetModalOpen, setResetModalOpen] = useState(false);
   const [resetDone, setResetDone] = useState(false);
+  const [usersResetModalOpen, setUsersResetModalOpen] = useState(false);
+  const [usersResetDone, setUsersResetDone] = useState(false);
   const [endingModalOpen, setEndingModalOpen] = useState(false);
 
   useEffect(() => {
@@ -368,12 +382,44 @@ export default function SuperAdminScreen() {
         </ThemedText>
       )}
 
+      <SoundPressable
+        onPress={() => {
+          setUsersResetDone(false);
+          setUsersResetModalOpen(true);
+        }}
+        style={({ pressed }) => [styles.resetButton, pressed && styles.pressed]}>
+        <ThemedText type="smallBold" style={{ color: '#F87171' }}>
+          🗑 모든 유저 계정 초기화 (테스트용)
+        </ThemedText>
+      </SoundPressable>
+      {usersResetDone && (
+        <ThemedText type="small" style={{ color: Colors.dark.gold, textAlign: 'center' }}>
+          ✓ 모든 테스트 계정이 초기화됐어요
+        </ThemedText>
+      )}
+
       {resetModalOpen && (
         <ResetConfirmModal
+          title="모든 팀 진행도 리셋"
+          description="24개 팀 전체의 수집한 글자 조각과 진행중인 세션이 전부 삭제됩니다. 로그인 정보와 스테이션 설정은 유지돼요. 되돌릴 수 없으니 테스트 라운드 사이에만 사용하세요."
+          onConfirm={(password) => api.resetAllProgress(password)}
           onClose={() => setResetModalOpen(false)}
           onDone={() => {
             setResetModalOpen(false);
             setResetDone(true);
+          }}
+        />
+      )}
+
+      {usersResetModalOpen && (
+        <ResetConfirmModal
+          title="모든 유저 계정 초기화"
+          description="지금까지 로그인한 모든 참가자 계정이 삭제됩니다(최고관리자/본당은 계정이 따로 없어 영향 없어요). 팀 진행도는 그대로 남아요 — 같이 지우려면 위 '진행도 리셋'도 함께 눌러주세요. 되돌릴 수 없어요."
+          onConfirm={(password) => api.resetAllUsers(password)}
+          onClose={() => setUsersResetModalOpen(false)}
+          onDone={() => {
+            setUsersResetModalOpen(false);
+            setUsersResetDone(true);
           }}
         />
       )}

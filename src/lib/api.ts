@@ -103,5 +103,8 @@ export const api = {
   resetAllProgress: (password: string) =>
     request<{ ok: true }>('/admin/reset-progress', { method: 'POST', body: JSON.stringify({ password }) }),
 
+  resetAllUsers: (password: string) =>
+    request<{ ok: true }>('/admin/reset-users', { method: 'POST', body: JSON.stringify({ password }) }),
+
   startEnding: () => request<{ game_state: GameState }>('/admin/ending/start', { method: 'POST' }),
 };
