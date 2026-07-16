@@ -1,6 +1,6 @@
 import { Link, router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 import Animated, { FadeIn, FadeInUp, FadeOut } from 'react-native-reanimated';
 
@@ -9,7 +9,41 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MASTER_STATION, QR_PREFIX, stations, type Station } from '@/constants/stations';
 import { Colors, Spacing } from '@/constants/theme';
-import { api, type GameState } from '@/lib/api';
+import { api, WEB_BASE_URL, type GameState } from '@/lib/api';
+
+const TEAM_COUNT = 24;
+
+function TeamQrTab() {
+  return (
+    <ScrollView contentContainerStyle={styles.teamQrScroll}>
+      <View style={styles.teamQrHeader}>
+        <ThemedText type="small" themeColor="textSecondary" style={{ flex: 1 }}>
+          QR을 스캔하면 해당 팀 번호가 미리 채워진 로그인 화면으로 바로 들어가요. 카드를 잘라서 각 팀에게 나눠주세요.
+        </ThemedText>
+        {Platform.OS === 'web' && (
+          <SoundPressable
+            onPress={() => window.print()}
+            style={({ pressed }) => [styles.printButton, pressed && styles.pressed]}>
+            <ThemedText type="small" style={{ color: Colors.dark.background }}>
+              🖨 인쇄하기
+            </ThemedText>
+          </SoundPressable>
+        )}
+      </View>
+
+      <View style={styles.teamQrGrid}>
+        {Array.from({ length: TEAM_COUNT }, (_, i) => i + 1).map((team) => (
+          <View key={team} style={styles.teamQrCard}>
+            <ThemedText type="smallBold" style={{ color: Colors.dark.gold }}>
+              {team}조
+            </ThemedText>
+            <QRCode value={`${WEB_BASE_URL}/login?team=${team}`} size={110} backgroundColor="#fff" />
+          </View>
+        ))}
+      </View>
+    </ScrollView>
+  );
+}
 
 function TagRow({ station }: { station: Station }) {
   const [showQr, setShowQr] = useState(false);
@@ -193,7 +227,7 @@ function EndingConfirmModal({ onClose, onDone }: { onClose: () => void; onDone: 
 }
 
 export default function SuperAdminScreen() {
-  const [tab, setTab] = useState<'global' | 'tags'>('global');
+  const [tab, setTab] = useState<'global' | 'tags' | 'teamqr'>('global');
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [resetModalOpen, setResetModalOpen] = useState(false);
   const [resetDone, setResetDone] = useState(false);
@@ -240,10 +274,19 @@ export default function SuperAdminScreen() {
             🏷 태그 관리
           </ThemedText>
         </SoundPressable>
+        <SoundPressable
+          onPress={() => setTab('teamqr')}
+          style={[styles.tabButton, tab === 'teamqr' && styles.tabButtonActive]}>
+          <ThemedText type="smallBold" style={{ color: tab === 'teamqr' ? Colors.dark.gold : Colors.dark.textSecondary }}>
+            🎫 팀 QR
+          </ThemedText>
+        </SoundPressable>
       </View>
 
       {tab === 'tags' ? (
         <TagManagementTab />
+      ) : tab === 'teamqr' ? (
+        <TeamQrTab />
       ) : (
         <>
       <View
@@ -423,6 +466,36 @@ const styles = StyleSheet.create({
     padding: Spacing.three,
     borderRadius: Spacing.three,
     backgroundColor: '#fff',
+  },
+  teamQrScroll: {
+    gap: Spacing.three,
+    paddingBottom: Spacing.five,
+  },
+  teamQrHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.three,
+  },
+  printButton: {
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.two,
+    borderRadius: Spacing.two,
+    backgroundColor: Colors.dark.gold,
+  },
+  teamQrGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.two,
+  },
+  teamQrCard: {
+    width: 132,
+    alignItems: 'center',
+    gap: Spacing.one,
+    padding: Spacing.two,
+    borderRadius: Spacing.three,
+    backgroundColor: 'rgba(17,24,39,0.7)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.07)',
   },
   indicator: {
     alignSelf: 'center',

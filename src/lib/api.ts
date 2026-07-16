@@ -1,7 +1,8 @@
 // Thin fetch wrapper for the Express API in server/. Always hits the
 // deployed Railway URL (not a relative path) so it works the same from
 // native builds, web dev, and production — there's no local backend.
-const API_BASE_URL = 'https://run-to-jesus-production.up.railway.app/api';
+export const WEB_BASE_URL = 'https://run-to-jesus-production.up.railway.app';
+const API_BASE_URL = `${WEB_BASE_URL}/api`;
 
 export type ApiUser = {
   person_id: string;

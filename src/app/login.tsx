@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Platform, StyleSheet, TextInput, View } from 'react-native';
 
@@ -11,7 +11,10 @@ import { useAuth } from '@/hooks/use-auth';
 
 export default function LoginScreen() {
   const { login } = useAuth();
-  const [teamNumber, setTeamNumber] = useState('');
+  // Team QR codes (from 최고관리자 → 팀 QR) deep-link here as /login?team=N so
+  // scanning one at the general assembly pre-fills the team number.
+  const { team: teamParam } = useLocalSearchParams<{ team?: string }>();
+  const [teamNumber, setTeamNumber] = useState(teamParam ?? '');
   const [name, setName] = useState('');
   const [errors, setErrors] = useState<{ team?: string; name?: string }>({});
   const [loading, setLoading] = useState(false);
