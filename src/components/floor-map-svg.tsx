@@ -392,7 +392,7 @@ export function Floor10Young({ stations, clearedIds, selectedId, onSelect, activ
 
 export function Floor11Young({ stations, clearedIds, selectedId, onSelect, activeCounts = {}, activeTeamIds = {}, activePercents = {} }: FloorProps) {
   const abraham = byId(stations, 'ABRAHAM');
-  const jonah = stations.find((s) => s.id === 'ABELROOM');
+  const abel = stations.find((s) => s.id === 'ABELROOM');
 
   return (
     <Svg viewBox="0 0 580 460" width="100%" height={undefined} style={{ aspectRatio: 580 / 460 }}>
@@ -404,21 +404,21 @@ export function Floor11Young({ stations, clearedIds, selectedId, onSelect, activ
       <Rect x={2} y={358} width={402} height={92} rx={4} fill="#0C1628" stroke="#1E2A45" strokeWidth={1.5} />
 
       {/* top row */}
-      {jonah && (
+      {abel && (
         <GameRoom
-          station={jonah}
+          station={abel}
           x={10}
           y={20}
           w={118}
           h={82}
-          cleared={clearedIds.has(jonah.id)}
-          selected={selectedId === jonah.id}
-          onPress={() => onSelect(jonah.id)}
+          cleared={clearedIds.has(abel.id)}
+          selected={selectedId === abel.id}
+          onPress={() => onSelect(abel.id)}
           label="다윗홀"
-          sessionLabel="요나방"
-          activeCount={activeCounts[jonah.id]}
-          activeTeamIds={activeTeamIds[jonah.id]}
-          activePercent={activePercents[jonah.id]}
+          sessionLabel="아벨방"
+          activeCount={activeCounts[abel.id]}
+          activeTeamIds={activeTeamIds[abel.id]}
+          activePercent={activePercents[abel.id]}
         />
       )}
       <DimRoom x={196} y={20} w={88} h={36} label="회의실" />

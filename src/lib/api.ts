@@ -19,7 +19,7 @@ export type ApiStation = {
   is_active: 0 | 1;
   /** 숨은글자찾기 전용 — filtered out of admin's station list. */
   is_hidden: 0 | 1;
-  /** 노아방/요나방/영화관 — session auto-starts on tag instead of via admin. */
+  /** 노아방/아벨방/영화관 — session auto-starts on tag instead of via admin. */
   is_minigame: 0 | 1;
 };
 

@@ -14,7 +14,7 @@ const pool = mysql.createPool({
 const STATION_SEED = [
   { station_id: 'RAHAB', name: '라합방', hall_name: '사무엘홀 · 다니엘홀', duration_minutes: 25, concurrent_capacity: 2, letters: [0], is_hidden: false, is_minigame: false },
   { station_id: 'NOAHROOM', name: '노아방', hall_name: '플레이그라운드', duration_minutes: 20, concurrent_capacity: 1, letters: [1], is_hidden: false, is_minigame: true },
-  { station_id: 'ABELROOM', name: '요나방', hall_name: '다윗홀', duration_minutes: 20, concurrent_capacity: 1, letters: [2], is_hidden: false, is_minigame: true },
+  { station_id: 'ABELROOM', name: '아벨방', hall_name: '다윗홀', duration_minutes: 20, concurrent_capacity: 1, letters: [2], is_hidden: false, is_minigame: true },
   { station_id: 'JOSEPH', name: '요셉방', hall_name: '요셉홀', duration_minutes: 20, concurrent_capacity: 1, letters: [3], is_hidden: false, is_minigame: false },
   { station_id: 'JACOB', name: '야곱방', hall_name: '이삭홀', duration_minutes: 25, concurrent_capacity: 1, letters: [4], is_hidden: false, is_minigame: false },
   { station_id: 'ABRAHAM', name: '아브라함·사라방', hall_name: '아가페홀', duration_minutes: 20, concurrent_capacity: 1, letters: [5], is_hidden: false, is_minigame: false },
@@ -115,7 +115,7 @@ async function initSchema() {
       if (err.code !== 'ER_DUP_KEYNAME') throw err;
     }
 
-    // 2026-07 재배치: 숨은글자찾기(지도/목록에서 숨김)와 노아방/요나방/영화관
+    // 2026-07 재배치: 숨은글자찾기(지도/목록에서 숨김)와 노아방/아벨방/영화관
     // (태그 시 자동으로 세션을 시작하는 미니게임) 플래그. ADD COLUMN has no
     // IF NOT EXISTS in this MySQL version, so swallow the "duplicate column" error.
     for (const ddl of [

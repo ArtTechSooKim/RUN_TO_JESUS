@@ -30,7 +30,7 @@ export const MASTER_STATION: Station = {
 /**
  * 2026-07-05 회의로 라합방(구 방탈출)이 R,U,N 세 글자를 통째로 갖는 하나의
  * 스테이션으로 확정됨 — RAHAB을 대표 id로 삼음(2026-07 재배치로 라합방은 R 1개만
- * 남고 U/N은 노아방·요나방으로 분산됨, 아래 stations 참고). NOAH/ABEL은 그 전에
+ * 남고 U/N은 노아방·아벨방으로 분산됨, 아래 stations 참고). NOAH/ABEL은 그 전에
  * 이미 물리 QR/NFC 태그로 인쇄·기록됐을 수 있어 id는 없애지 않고 RAHAB으로 합쳐
  * 지도록 별칭 처리. (station id "NOAHROOM"/"ABELROOM"은 이름은 겹치지만 완전히
  * 다른, 별개의 스테이션이라 이 NOAH/ABEL 별칭과는 무관.)
@@ -73,7 +73,7 @@ export const floors: Floor[] = ['young-10f', 'young-11f', 'fashion-10f'];
 // 2026-07 재배치 확정 (STATION_REASSIGNMENT_GUIDE.md "최종 확정 배치") — 순서는
 // 그 가이드의 모자이크 칸 순서(=letters 인덱스 오름차순)를 그대로 따름. 미니게임도
 // 이제 전부 실제 글자를 하나씩 배정받아 "겸임 미니게임 = 글자 없음" 구분은 없어짐;
-// 대신 노아방/요나방/영화관은 세션 타이머를 관리자가 아니라 태그 시점에 자동으로
+// 대신 노아방/아벨방/영화관은 세션 타이머를 관리자가 아니라 태그 시점에 자동으로
 // 시작한다는 의미로 서버의 `is_minigame`이 따로 구분함(여긴 프론트 표시용 데이터라 무관).
 export const stations: Station[] = [
   {
@@ -102,18 +102,19 @@ export const stations: Station[] = [
     letters: [1],
   },
   {
-    // 구 "아벨방" — 장소가 다윗홀로 확정되며 요나방으로 개편. id는 물리 태그 호환을
-    // 위해 유지(가이드 §4.1 "기존 row 업데이트" 방식 채택, 별도 alias 불필요 —
-    // 이 코드베이스의 QR/NFC 페이로드는 항상 station.id를 쓰지 한글명을 쓰지 않음).
+    // 장소가 다윗홀로 확정되며 한 차례 "요나방"으로 개편됐다가 다시 아벨방으로
+    // 환원됨. id는 물리 태그 호환을 위해 유지(가이드 §4.1 "기존 row 업데이트"
+    // 방식 채택, 별도 alias 불필요 — QR/NFC 페이로드는 항상 station.id를 쓰지
+    // 한글명을 쓰지 않음).
     id: 'ABELROOM',
-    keyword: '요나방',
+    keyword: '아벨방',
     hall: '다윗홀',
-    characterTitle: '요나방',
+    characterTitle: '아벨방',
     description: '세부 내용은 아직 준비 중입니다.',
     lead: '혜선',
     floor: 'young-11f',
     color: '#FDBA74',
-    emoji: '🐳',
+    emoji: '🕯️',
     letters: [2],
   },
   {

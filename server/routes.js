@@ -104,7 +104,7 @@ router.post('/tag-events', async (req, res) => {
         );
       }
 
-      // Mini-games (노아방/요나방/영화관) have no physical room to book, so
+      // Mini-games (노아방/아벨방/영화관) have no physical room to book, so
       // there's no admin "세션 시작" step for them — the scan itself starts
       // their timed session, same shape as an admin-started one, so the
       // existing session-progress UI (floor map, admin dashboard) just works.
