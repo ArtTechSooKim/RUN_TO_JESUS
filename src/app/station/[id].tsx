@@ -249,7 +249,7 @@ export default function StationDetailScreen() {
           </View>
         ) : (
           <View style={styles.ctaBlock}>
-            <NfcCta color={station.color} />
+            {!station.isQrOnly && <NfcCta color={station.color} />}
             <ScanCta color={station.color} />
             <SoundPressable
               onPress={() => recordManualComplete(station.id)}

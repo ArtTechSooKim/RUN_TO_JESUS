@@ -56,9 +56,14 @@ export type Station = {
   emoji: string;
   /** indices into RUN_TO_JESUS collected on completing this station. 글자가 없는 미니게임은 빈 배열 */
   letters: number[];
-  /** 숨은글자찾기 전용 — 지도/스테이션 목록에서 제외 (당일 QR만 부착, 동선에 없음). */
+  /**
+   * 숨은글자찾기 전용 — 참가자 레이스 존 목록(/map)에는 나오지만(찾은 뒤 탭해서
+   * 들어갈 수 있어야 하니까), 층별 지도(floor-map-svg)와 관리자모드 스테이션
+   * 관리 목록에서는 제외 — 물리적 방/부스가 없어 위치 표시도, 세션 타이머도
+   * 의미가 없기 때문.
+   */
   isHidden?: boolean;
-  /** 숨은글자찾기 전용 — NFC 없이 QR만 사용 (관리자 태그 관리 화면에서 NFC 쓰기 링크를 숨기는 데 씀). */
+  /** 숨은글자찾기 전용 — NFC 없이 QR만 사용 (참가자 상세 화면의 NFC 스캔 버튼, 관리자 태그 관리 화면의 NFC 쓰기 링크를 숨기는 데 씀). */
   isQrOnly?: boolean;
 };
 
@@ -195,8 +200,8 @@ export const stations: Station[] = [
     letters: [8],
   },
   {
-    // 신규 — 장소 당일 결정, QR 전용(NFC 없음). 지도/스테이션 목록에는 절대 노출하지
-    // 않음(isHidden) — station/[id] 상세 페이지 자체는 QR 스캔 후 정상 동작.
+    // 신규 — 장소 당일 결정, QR 전용(NFC 없음). 참가자 레이스 존 목록(/map)에는
+    // 나오지만 층별 지도에는 절대 노출하지 않음(isHidden, floor 미지정과 함께 작동).
     id: 'HIDDENLETTER',
     keyword: '숨은글자찾기',
     hall: '미정 (당일 공개)',
