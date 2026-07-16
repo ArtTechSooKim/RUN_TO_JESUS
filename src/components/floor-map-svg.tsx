@@ -266,7 +266,6 @@ export function Floor10Young({ stations, clearedIds, selectedId, onSelect, activ
         selected={selectedId === joseph.id}
         onPress={() => onSelect(joseph.id)}
         label="요셉홀"
-        sublabel="유아부"
         sessionLabel="요셉방"
         activeCount={activeCounts[joseph.id]}
         activeTeamIds={activeTeamIds[joseph.id]}
@@ -282,12 +281,12 @@ export function Floor10Young({ stations, clearedIds, selectedId, onSelect, activ
           x={6}
           y={220}
           w={112}
-          h={156}
+          h={140}
           cleared={clearedIds.has(mystery.id)}
           selected={selectedId === mystery.id}
           onPress={() => onSelect(mystery.id)}
           label="여호수아홀"
-          sublabel="(새로운극장·고등부)"
+          sublabel="새로운극장·고등부"
           sessionLabel="영화관"
           activeCount={activeCounts[mystery.id]}
           activeTeamIds={activeTeamIds[mystery.id]}
@@ -304,7 +303,6 @@ export function Floor10Young({ stations, clearedIds, selectedId, onSelect, activ
         selected={selectedId === jacob.id}
         onPress={() => onSelect(jacob.id)}
         label="이삭홀"
-        sublabel="영아부"
         sessionLabel="야곱방"
         activeCount={activeCounts[jacob.id]}
         activeTeamIds={activeTeamIds[jacob.id]}
@@ -342,7 +340,6 @@ export function Floor10Young({ stations, clearedIds, selectedId, onSelect, activ
         selected={selectedId === rahab.id}
         onPress={() => onSelect(rahab.id)}
         label="사무엘홀"
-        sublabel="사무엘교사실"
         sessionLabel="라합방"
         activeCount={activeCounts[rahab.id]}
         activeTeamIds={activeTeamIds[rahab.id]}
@@ -358,7 +355,6 @@ export function Floor10Young({ stations, clearedIds, selectedId, onSelect, activ
         selected={selectedId === rahab.id}
         onPress={() => onSelect(rahab.id)}
         label="다니엘홀"
-        sublabel="유년부교사실"
         sessionLabel="라합방"
         activeCount={activeCounts[rahab.id]}
         activeTeamIds={activeTeamIds[rahab.id]}
@@ -457,7 +453,6 @@ export function Floor11Young({ stations, clearedIds, selectedId, onSelect, activ
         selected={selectedId === abraham.id}
         onPress={() => onSelect(abraham.id)}
         label="아가페홀"
-        sublabel="뉴젠 Kids"
         sessionLabel="아브라함·사라방"
         activeCount={activeCounts[abraham.id]}
         activeTeamIds={activeTeamIds[abraham.id]}
@@ -528,7 +523,6 @@ export function Floor10Fashion({ stations, clearedIds, selectedId, onSelect, act
         selected={selectedId === david.id}
         onPress={() => onSelect(david.id)}
         label="새로운홀"
-        sublabel="중등부·Jr.청년부·새가족부"
         sessionLabel="도미노"
         activeCount={activeCounts[david.id]}
         activeTeamIds={activeTeamIds[david.id]}

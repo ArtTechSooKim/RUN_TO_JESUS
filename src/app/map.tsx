@@ -56,7 +56,7 @@ function StationCard({
             <View style={styles.cardInfo}>
               <View style={styles.cardTitleRow}>
                 <ThemedText type="smallBold" numberOfLines={1} style={styles.cardHall}>
-                  {station.hall}
+                  {station.keyword}
                 </ThemedText>
                 <View
                   style={[
@@ -64,7 +64,7 @@ function StationCard({
                     { backgroundColor: `${station.color}18`, borderColor: `${station.color}35` },
                   ]}>
                   <ThemedText style={{ color: station.color, fontSize: 11, fontWeight: '600' }}>
-                    {station.keyword}
+                    {station.hall}
                   </ThemedText>
                 </View>
               </View>
