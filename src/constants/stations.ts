@@ -191,8 +191,9 @@ export const stations: Station[] = [
     id: 'MYSTERYGAME',
     keyword: '영화관',
     hall: '여호수아홀',
-    characterTitle: '영화관',
-    description: '세부 내용은 아직 준비 중입니다.',
+    characterTitle: '새로운 시네마',
+    description:
+      '히브리서 11장의 수많은 믿음의 사람들은 아직 눈앞에 보이지 않는 하나님의 약속을 믿으며 자신의 길을 걸어갔다.\n스크린에 펼쳐지는 이야기를 따라가며, 우리보다 먼저 믿음의 길을 걸었던 사람들을 생각해보자. 우리도 각자의 목표를 향해 끊임없이 달려가고 있지만, 지금 나의 시선은 어디를 향하고 있는가?',
     lead: '보람',
     floor: 'young-10f',
     color: '#94A3B8',
