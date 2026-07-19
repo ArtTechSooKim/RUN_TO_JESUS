@@ -28,6 +28,16 @@ const FLOOR_MAPS: Record<Floor, typeof Floor10Young> = {
 
 const EMPTY_CLEARED = new Set<string>();
 
+/** Parses "1,2,3" / "1 2 3" / mixed into deduped, valid (1-24) team ids. */
+function parseTeamIds(input: string): number[] {
+  const parsed = input
+    .split(/[,\s]+/)
+    .map((s) => s.trim())
+    .filter((s) => s !== '')
+    .map(Number);
+  return [...new Set(parsed)].filter((n) => Number.isInteger(n) && n >= 1 && n <= 24);
+}
+
 function StationCard({
   station,
   sessions,
@@ -36,10 +46,18 @@ function StationCard({
 }: {
   station: ApiStation;
   sessions: ApiSession[];
-  onStart: (teamId: number) => void;
+  onStart: (teamIds: number[]) => void;
   onEnd: (id: number, status: 'completed' | 'cancelled') => void;
 }) {
   const [teamInput, setTeamInput] = useState('');
+
+  function handleStartPress() {
+    const activeTeamIds = new Set(sessions.map((s) => s.team_id));
+    const teamIds = parseTeamIds(teamInput).filter((n) => !activeTeamIds.has(n));
+    if (!teamIds.length) return;
+    onStart(teamIds);
+    setTeamInput('');
+  }
 
   return (
     <View style={[styles.card, sessions.length > 0 && { borderColor: `${Colors.dark.gold}40` }]}>
@@ -70,19 +88,12 @@ function StationCard({
         <TextInput
           value={teamInput}
           onChangeText={setTeamInput}
-          placeholder="팀 번호"
+          placeholder="팀 번호 (예: 1,2,3)"
           placeholderTextColor={Colors.dark.textSecondary}
-          keyboardType="number-pad"
           style={styles.teamInput}
         />
         <SoundPressable
-          onPress={() => {
-            const n = Number(teamInput);
-            if (Number.isInteger(n) && n >= 1 && n <= 24 && !sessions.some((s) => s.team_id === n)) {
-              onStart(n);
-              setTeamInput('');
-            }
-          }}
+          onPress={handleStartPress}
           style={({ pressed }) => [styles.startButton, pressed && styles.pressed]}>
           <ThemedText type="small" style={{ color: Colors.dark.background }}>
             세션 시작
@@ -377,8 +388,8 @@ export default function AdminScreen() {
     return () => clearInterval(timer);
   }, [refreshStations]);
 
-  async function handleStart(stationId: string, teamId: number) {
-    await api.startSession({ station_id: stationId, team_id: teamId });
+  async function handleStart(stationId: string, teamIds: number[]) {
+    await Promise.all(teamIds.map((teamId) => api.startSession({ station_id: stationId, team_id: teamId })));
     refreshSessions();
   }
 
@@ -428,7 +439,7 @@ export default function AdminScreen() {
               key={station.station_id}
               station={station}
               sessions={sessions.filter((s) => s.station_id === station.station_id)}
-              onStart={(teamId) => handleStart(station.station_id, teamId)}
+              onStart={(teamIds) => handleStart(station.station_id, teamIds)}
               onEnd={handleEnd}
             />
           ))}
