@@ -40,6 +40,10 @@ export default function FloorMapScreen() {
     () => Object.fromEntries(prepStatuses.map((p) => [p.station_id, !!p.is_preparing])),
     [prepStatuses],
   );
+  const prepTips = useMemo(
+    () => Object.fromEntries(prepStatuses.filter((p) => p.tip).map((p) => [p.station_id, p.tip as string])),
+    [prepStatuses],
+  );
 
   const selectedSessions = selectedStation
     ? activeSessions.filter((s) => s.station_id === selectedStation.id)
@@ -85,6 +89,7 @@ export default function FloorMapScreen() {
             activeTeamIds={activeTeamIds}
             activePercents={activePercents}
             isPreparing={isPreparing}
+            prepTips={prepTips}
           />
         </Animated.View>
 

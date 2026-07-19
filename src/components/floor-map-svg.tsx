@@ -90,6 +90,8 @@ type GameRoomProps = {
   activePercent?: number;
   /** Staff-toggled "준비중🧹" flag — replaces the 진행중 display entirely while true. */
   isPreparing?: boolean;
+  /** Rough staff-written note shown under the 준비중 badge (e.g. "TIP) 대략 10분 준비합니다"). */
+  prepTip?: string;
   rx?: number;
 };
 
@@ -112,6 +114,7 @@ function GameRoom({
   activeTeamIds = [],
   activePercent,
   isPreparing = false,
+  prepTip,
   rx = 4,
 }: GameRoomProps) {
   const inProgress = !isPreparing && activeCount > 0;
@@ -119,14 +122,33 @@ function GameRoom({
   const badgeFontSize = 7;
   const badgeH = 13;
   const badgeW = Math.min(w - 8, Math.max(badgeH, badgeText.length * (badgeFontSize * 0.62) + 10));
-  // When the room is short, the badge eats into the vertically-centered session/label text —
-  // push everything down just enough to clear the badge, but leave taller rooms centered as before.
-  const centerSessionOffset = h / 2 - (sublabel ? 15 : 10);
-  const minSessionOffset = 3 + badgeH + 12;
-  const pushDown = inProgress ? Math.max(0, minSessionOffset - centerSessionOffset) : 0;
-  const sessionY = y + centerSessionOffset + pushDown;
-  const labelY = y + Math.min(h / 2 + 4 + pushDown, h - 14);
-  const sublabelY = y + Math.min(h / 2 + 15 + pushDown, h - 4);
+
+  const hasPrepTip = isPreparing && !!prepTip;
+  let sessionY: number;
+  let labelY: number;
+  let sublabelY: number;
+  let prepTipY = 0;
+
+  if (isPreparing) {
+    // Stack 준비중 / (tip) / hall label as one vertically-centered block instead
+    // of reusing the 진행중 badge's push-down math, which assumes no 3rd line.
+    const lineH = 13;
+    const lines = hasPrepTip ? 3 : 2;
+    const startY = y + h / 2 - ((lines - 1) * lineH) / 2 + 4;
+    sessionY = startY;
+    prepTipY = startY + lineH;
+    labelY = hasPrepTip ? startY + lineH * 2 : startY + lineH;
+    sublabelY = labelY + 11;
+  } else {
+    // When the room is short, the badge eats into the vertically-centered session/label text —
+    // push everything down just enough to clear the badge, but leave taller rooms centered as before.
+    const centerSessionOffset = h / 2 - (sublabel ? 15 : 10);
+    const minSessionOffset = 3 + badgeH + 12;
+    const pushDown = inProgress ? Math.max(0, minSessionOffset - centerSessionOffset) : 0;
+    sessionY = y + centerSessionOffset + pushDown;
+    labelY = y + Math.min(h / 2 + 4 + pushDown, h - 14);
+    sublabelY = y + Math.min(h / 2 + 15 + pushDown, h - 4);
+  }
 
   return (
     <G onPress={onPress}>
@@ -195,6 +217,11 @@ function GameRoom({
         fontWeight="800">
         {isPreparing ? '준비중 🧹' : inProgress ? `진행중 ${activePercent ?? 0}%` : sessionLabel}
       </SvgText>
+      {hasPrepTip && (
+        <SvgText x={x + w / 2} y={prepTipY} textAnchor="middle" fill={PREP_COLOR} fontSize={7} opacity={0.8} fontFamily={FONT}>
+          TIP) {prepTip}
+        </SvgText>
+      )}
       <SvgText x={x + w / 2} y={labelY} textAnchor="middle" fill={station.color} fontSize={8} opacity={0.65} fontFamily={FONT}>
         {label}
       </SvgText>
@@ -220,6 +247,8 @@ type FloorProps = {
   activePercents?: Record<string, number>;
   /** station_id -> whether that station's staff has flagged it 준비중🧹. */
   isPreparing?: Record<string, boolean>;
+  /** station_id -> that station's rough prep-time tip, shown under the 준비중 badge. */
+  prepTips?: Record<string, string>;
 };
 
 function byId(stations: Station[], id: string) {
@@ -228,7 +257,7 @@ function byId(stations: Station[], id: string) {
   return s;
 }
 
-export function Floor10Young({ stations, clearedIds, selectedId, onSelect, activeCounts = {}, activeTeamIds = {}, activePercents = {}, isPreparing = {} }: FloorProps) {
+export function Floor10Young({ stations, clearedIds, selectedId, onSelect, activeCounts = {}, activeTeamIds = {}, activePercents = {}, isPreparing = {}, prepTips = {} }: FloorProps) {
   const rahab = byId(stations, 'RAHAB');
   const jacob = byId(stations, 'JACOB');
   const joseph = byId(stations, 'JOSEPH');
@@ -277,6 +306,7 @@ export function Floor10Young({ stations, clearedIds, selectedId, onSelect, activ
         activeTeamIds={activeTeamIds[joseph.id]}
         activePercent={activePercents[joseph.id]}
         isPreparing={isPreparing[joseph.id]}
+        prepTip={prepTips[joseph.id]}
       />
       <DimRoom x={122} y={182} w={84} h={36} label="이삭교사실" />
       <DimRoom x={438} y={180} w={146} h={266} label="프라미스 라운지" />
@@ -299,6 +329,7 @@ export function Floor10Young({ stations, clearedIds, selectedId, onSelect, activ
           activeTeamIds={activeTeamIds[mystery.id]}
           activePercent={activePercents[mystery.id]}
           isPreparing={isPreparing[mystery.id]}
+          prepTip={prepTips[mystery.id]}
         />
       )}
       <GameRoom
@@ -316,6 +347,7 @@ export function Floor10Young({ stations, clearedIds, selectedId, onSelect, activ
         activeTeamIds={activeTeamIds[jacob.id]}
         activePercent={activePercents[jacob.id]}
         isPreparing={isPreparing[jacob.id]}
+        prepTip={prepTips[jacob.id]}
       />
       <DimRoom x={220} y={220} w={106} h={84} label="에스더홀" sublabel="(유치부)" />
       <DimRoom x={330} y={220} w={104} h={84} label="헤세드홀" />
@@ -336,6 +368,7 @@ export function Floor10Young({ stations, clearedIds, selectedId, onSelect, activ
           activeTeamIds={activeTeamIds[noah.id]}
           activePercent={activePercents[noah.id]}
           isPreparing={isPreparing[noah.id]}
+          prepTip={prepTips[noah.id]}
         />
       )}
 
@@ -355,6 +388,7 @@ export function Floor10Young({ stations, clearedIds, selectedId, onSelect, activ
         activeTeamIds={activeTeamIds[`${rahab.id}:사무엘홀`]}
         activePercent={activePercents[`${rahab.id}:사무엘홀`]}
         isPreparing={isPreparing[rahab.id]}
+        prepTip={prepTips[rahab.id]}
       />
       <GameRoom
         station={rahab}
@@ -371,6 +405,7 @@ export function Floor10Young({ stations, clearedIds, selectedId, onSelect, activ
         activeTeamIds={activeTeamIds[`${rahab.id}:다니엘홀`]}
         activePercent={activePercents[`${rahab.id}:다니엘홀`]}
         isPreparing={isPreparing[rahab.id]}
+        prepTip={prepTips[rahab.id]}
       />
       <DimRoom x={260} y={376} w={38} h={66} label="다니엘" sublabel="교사실" />
       <DimRoom x={302} y={376} w={42} h={66} label="디모데" sublabel="교사실" />
@@ -389,6 +424,7 @@ export function Floor10Young({ stations, clearedIds, selectedId, onSelect, activ
         activeTeamIds={activeTeamIds[samson.id]}
         activePercent={activePercents[samson.id]}
         isPreparing={isPreparing[samson.id]}
+        prepTip={prepTips[samson.id]}
       />
 
       <SvgText x={10} y={12} fill="#2D4066" fontSize={10} fontFamily={FONT} fontWeight="600">
@@ -398,7 +434,7 @@ export function Floor10Young({ stations, clearedIds, selectedId, onSelect, activ
   );
 }
 
-export function Floor11Young({ stations, clearedIds, selectedId, onSelect, activeCounts = {}, activeTeamIds = {}, activePercents = {}, isPreparing = {} }: FloorProps) {
+export function Floor11Young({ stations, clearedIds, selectedId, onSelect, activeCounts = {}, activeTeamIds = {}, activePercents = {}, isPreparing = {}, prepTips = {} }: FloorProps) {
   const abraham = byId(stations, 'ABRAHAM');
   const abel = stations.find((s) => s.id === 'ABELROOM');
 
@@ -428,6 +464,7 @@ export function Floor11Young({ stations, clearedIds, selectedId, onSelect, activ
           activeTeamIds={activeTeamIds[abel.id]}
           activePercent={activePercents[abel.id]}
           isPreparing={isPreparing[abel.id]}
+          prepTip={prepTips[abel.id]}
         />
       )}
       <DimRoom x={196} y={20} w={88} h={36} label="회의실" />
@@ -471,6 +508,7 @@ export function Floor11Young({ stations, clearedIds, selectedId, onSelect, activ
         activeTeamIds={activeTeamIds[abraham.id]}
         activePercent={activePercents[abraham.id]}
         isPreparing={isPreparing[abraham.id]}
+        prepTip={prepTips[abraham.id]}
       />
       <DimRoom x={162} y={362} w={66} h={84} label="아가페" sublabel="교사실" />
       <DimRoom x={232} y={362} w={168} h={32} label="프레이즈교사실" />
@@ -483,7 +521,7 @@ export function Floor11Young({ stations, clearedIds, selectedId, onSelect, activ
   );
 }
 
-export function Floor10Fashion({ stations, clearedIds, selectedId, onSelect, activeCounts = {}, activeTeamIds = {}, activePercents = {}, isPreparing = {} }: FloorProps) {
+export function Floor10Fashion({ stations, clearedIds, selectedId, onSelect, activeCounts = {}, activeTeamIds = {}, activePercents = {}, isPreparing = {}, prepTips = {} }: FloorProps) {
   const david = byId(stations, 'DAVID');
 
   return (
@@ -537,11 +575,12 @@ export function Floor10Fashion({ stations, clearedIds, selectedId, onSelect, act
         selected={selectedId === david.id}
         onPress={() => onSelect(david.id)}
         label="새로운홀"
-        sessionLabel="도미노"
+        sessionLabel="에녹방"
         activeCount={activeCounts[david.id]}
         activeTeamIds={activeTeamIds[david.id]}
         activePercent={activePercents[david.id]}
         isPreparing={isPreparing[david.id]}
+        prepTip={prepTips[david.id]}
       />
 
       <SvgText x={10} y={108} fill="#2D4066" fontSize={10} fontFamily={FONT} fontWeight="600">
