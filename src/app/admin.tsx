@@ -11,7 +11,7 @@ import { floorLabels, floors, stations as allStations, type Floor, type Station 
 import { Colors, Spacing } from '@/constants/theme';
 import { formatRemaining, sessionProgressPercent, useActiveSessions } from '@/hooks/use-active-sessions';
 import { useSoundEffects } from '@/hooks/use-sound-effects';
-import { api, type ApiSession, type ApiStation } from '@/lib/api';
+import { ApiError, api, type ApiSession, type ApiStation } from '@/lib/api';
 
 // tag_events.person_id for admin-initiated grants — there's no real logged-in
 // user behind the 관리자 login bypass (see use-auth.tsx), so this is a fixed,
@@ -19,6 +19,14 @@ import { api, type ApiSession, type ApiStation } from '@/lib/api';
 const ADMIN_GRANT_PERSON_ID = 'admin-grant';
 
 const POLL_MS = 5000;
+
+// 라합방은 사무엘홀/다니엘홀 두 곳에서 동일한 게임(같은 조각)을 동시에 운영해
+// 처리량을 늘리는 스테이션이라, 관리자 화면에서만 두 홀을 독립된 칸으로 나눠
+// 각자 다른 시간에 세션을 시작/관리할 수 있게 한다. 조각 획득 로직은 station_id
+// 하나로 그대로 공유되고, hall_label은 순전히 이 화면의 표시/구분용.
+const HALL_SPLITS: Record<string, string[]> = {
+  RAHAB: ['사무엘홀', '다니엘홀'],
+};
 
 const FLOOR_MAPS: Record<Floor, typeof Floor10Young> = {
   'young-10f': Floor10Young,
@@ -38,37 +46,47 @@ function parseTeamIds(input: string): number[] {
   return [...new Set(parsed)].filter((n) => Number.isInteger(n) && n >= 1 && n <= 24);
 }
 
-function StationCard({
-  station,
+function HallGroup({
+  label,
   sessions,
+  activeTeamIdsGlobal,
   onStart,
   onEnd,
 }: {
-  station: ApiStation;
+  /** Sub-location name (e.g. "사무엘홀") for split stations — omitted for ordinary single-hall stations. */
+  label?: string;
   sessions: ApiSession[];
-  onStart: (teamIds: number[]) => void;
+  /** Every team currently in-progress at ANY station, so we can block starting a team that's already elsewhere. */
+  activeTeamIdsGlobal: Set<number>;
+  onStart: (teamIds: number[]) => Promise<number[]>;
   onEnd: (id: number, status: 'completed' | 'cancelled') => void;
 }) {
   const [teamInput, setTeamInput] = useState('');
+  const [error, setError] = useState('');
 
-  function handleStartPress() {
-    const activeTeamIds = new Set(sessions.map((s) => s.team_id));
-    const teamIds = parseTeamIds(teamInput).filter((n) => !activeTeamIds.has(n));
-    if (!teamIds.length) return;
-    onStart(teamIds);
+  async function handleStartPress() {
+    const requested = parseTeamIds(teamInput);
+    const blocked = requested.filter((n) => activeTeamIdsGlobal.has(n));
+    const startable = requested.filter((n) => !activeTeamIdsGlobal.has(n));
+
+    if (!startable.length) {
+      if (blocked.length) setError(`${blocked.join(', ')}조는 이미 다른 방에서 진행 중이에요`);
+      return;
+    }
+
+    const rejected = await onStart(startable);
+    const skipped = [...blocked, ...rejected];
+    setError(skipped.length ? `${skipped.join(', ')}조는 이미 다른 방에서 진행 중이에요` : '');
     setTeamInput('');
   }
 
   return (
-    <View style={[styles.card, sessions.length > 0 && { borderColor: `${Colors.dark.gold}40` }]}>
-      <View>
-        <ThemedText type="smallBold">{station.name}</ThemedText>
-        {station.hall_name && (
-          <ThemedText type="small" themeColor="textSecondary">
-            {station.hall_name}
-          </ThemedText>
-        )}
-      </View>
+    <View style={[styles.hallGroupBase, label && styles.hallGroup]}>
+      {label && (
+        <ThemedText type="small" style={styles.hallLabel}>
+          {label}
+        </ThemedText>
+      )}
 
       {sessions.map((s) => (
         <View key={s.id} style={styles.sessionRow}>
@@ -87,7 +105,10 @@ function StationCard({
       <View style={styles.startRow}>
         <TextInput
           value={teamInput}
-          onChangeText={setTeamInput}
+          onChangeText={(v) => {
+            setTeamInput(v);
+            setError('');
+          }}
           placeholder="팀 번호 (예: 1,2,3)"
           placeholderTextColor={Colors.dark.textSecondary}
           style={styles.teamInput}
@@ -100,6 +121,71 @@ function StationCard({
           </ThemedText>
         </SoundPressable>
       </View>
+      {error !== '' && (
+        <ThemedText type="small" style={styles.errorText}>
+          {error}
+        </ThemedText>
+      )}
+    </View>
+  );
+}
+
+function StationCard({
+  station,
+  sessions,
+  activeTeamIdsGlobal,
+  onStart,
+  onEnd,
+}: {
+  station: ApiStation;
+  sessions: ApiSession[];
+  activeTeamIdsGlobal: Set<number>;
+  onStart: (teamIds: number[], hallLabel?: string) => Promise<number[]>;
+  onEnd: (id: number, status: 'completed' | 'cancelled') => void;
+}) {
+  const halls = HALL_SPLITS[station.station_id];
+  const unlabeled = halls ? sessions.filter((s) => !s.hall_label) : [];
+
+  return (
+    <View style={[styles.card, sessions.length > 0 && { borderColor: `${Colors.dark.gold}40` }]}>
+      <View>
+        <ThemedText type="smallBold">{station.name}</ThemedText>
+        {station.hall_name && (
+          <ThemedText type="small" themeColor="textSecondary">
+            {station.hall_name}
+          </ThemedText>
+        )}
+      </View>
+
+      {halls ? (
+        <>
+          {halls.map((hall) => (
+            <HallGroup
+              key={hall}
+              label={hall}
+              sessions={sessions.filter((s) => s.hall_label === hall)}
+              activeTeamIdsGlobal={activeTeamIdsGlobal}
+              onStart={(teamIds) => onStart(teamIds, hall)}
+              onEnd={onEnd}
+            />
+          ))}
+          {unlabeled.length > 0 && (
+            <HallGroup
+              sessions={unlabeled}
+              activeTeamIdsGlobal={activeTeamIdsGlobal}
+              onStart={(teamIds) => onStart(teamIds)}
+              onEnd={onEnd}
+            />
+          )}
+        </>
+      ) : (
+        <HallGroup
+          sessions={sessions}
+          activeTeamIdsGlobal={activeTeamIdsGlobal}
+          onStart={(teamIds) => onStart(teamIds)}
+          onEnd={onEnd}
+        />
+      )}
     </View>
   );
 }
@@ -388,9 +474,18 @@ export default function AdminScreen() {
     return () => clearInterval(timer);
   }, [refreshStations]);
 
-  async function handleStart(stationId: string, teamIds: number[]) {
-    await Promise.all(teamIds.map((teamId) => api.startSession({ station_id: stationId, team_id: teamId })));
+  const activeTeamIdsGlobal = useMemo(() => new Set(sessions.map((s) => s.team_id)), [sessions]);
+
+  /** Starts a session per team id; returns the subset rejected because that team was already active elsewhere (409). */
+  async function handleStart(stationId: string, teamIds: number[], hallLabel?: string): Promise<number[]> {
+    const results = await Promise.allSettled(
+      teamIds.map((teamId) => api.startSession({ station_id: stationId, team_id: teamId, hall_label: hallLabel })),
+    );
     refreshSessions();
+    return teamIds.filter((_, i) => {
+      const r = results[i];
+      return r.status === 'rejected' && r.reason instanceof ApiError && r.reason.status === 409;
+    });
   }
 
   async function handleEnd(id: number, status: 'completed' | 'cancelled') {
@@ -439,7 +534,8 @@ export default function AdminScreen() {
               key={station.station_id}
               station={station}
               sessions={sessions.filter((s) => s.station_id === station.station_id)}
-              onStart={(teamIds) => handleStart(station.station_id, teamIds)}
+              activeTeamIdsGlobal={activeTeamIdsGlobal}
+              onStart={(teamIds, hallLabel) => handleStart(station.station_id, teamIds, hallLabel)}
               onEnd={handleEnd}
             />
           ))}
@@ -523,6 +619,19 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(17,24,39,0.7)',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.07)',
+  },
+  hallGroupBase: {
+    gap: Spacing.two,
+  },
+  hallGroup: {
+    padding: Spacing.two,
+    borderRadius: Spacing.two,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
+  },
+  hallLabel: {
+    color: Colors.dark.gold,
   },
   sessionRow: {
     flexDirection: 'row',

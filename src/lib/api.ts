@@ -35,7 +35,18 @@ export type ApiSession = {
   ended_at: string | null;
   ended_by: 'auto' | 'admin' | null;
   started_by_name: string | null;
+  /** Which independently-operated hall this session belongs to (e.g. 라합방's 사무엘홀/다니엘홀) — null for every other station. */
+  hall_label: string | null;
 };
+
+/** Thrown by request() on a non-2xx response — status lets callers branch on e.g. 409 (conflict) vs other failures. */
+export class ApiError extends Error {
+  status: number;
+  constructor(message: string, status: number) {
+    super(message);
+    this.status = status;
+  }
+}
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE_URL}${path}`, {
@@ -44,7 +55,7 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   });
   if (!res.ok) {
     const body = await res.text().catch(() => '');
-    throw new Error(`API ${options?.method ?? 'GET'} ${path} failed: ${res.status} ${body}`);
+    throw new ApiError(`API ${options?.method ?? 'GET'} ${path} failed: ${res.status} ${body}`, res.status);
   }
   return res.json();
 }
@@ -86,7 +97,7 @@ export const api = {
   getSessions: (status?: ApiSession['status']) =>
     request<ApiSession[]>(`/sessions${status ? `?status=${status}` : ''}`),
 
-  startSession: (body: { station_id: string; team_id: number; started_by_name?: string }) =>
+  startSession: (body: { station_id: string; team_id: number; started_by_name?: string; hall_label?: string }) =>
     request<ApiSession>('/sessions', { method: 'POST', body: JSON.stringify(body) }),
 
   endSession: (id: number, body: { status: 'completed' | 'cancelled'; ended_by?: 'auto' | 'admin' }) =>

@@ -84,6 +84,7 @@ async function initSchema() {
         ended_at         DATETIME NULL,
         ended_by         ENUM('auto','admin') NULL,
         started_by_name  VARCHAR(50) NULL,
+        hall_label       VARCHAR(20) NULL,
         INDEX idx_status (status)
       )
     `);
@@ -121,6 +122,9 @@ async function initSchema() {
     for (const ddl of [
       'ALTER TABLE stations ADD COLUMN is_hidden BOOLEAN NOT NULL DEFAULT FALSE',
       'ALTER TABLE stations ADD COLUMN is_minigame BOOLEAN NOT NULL DEFAULT FALSE',
+      // 라합방(사무엘홀/다니엘홀)처럼 한 스테이션을 여러 홀에서 독립적으로 운영할
+      // 때, 세션이 어느 홀 소속인지 구분하기 위한 표시 — 그 외 스테이션은 항상 NULL.
+      'ALTER TABLE game_sessions ADD COLUMN hall_label VARCHAR(20) NULL',
     ]) {
       try {
         await conn.query(ddl);

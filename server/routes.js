@@ -240,19 +240,45 @@ router.get('/sessions', async (req, res) => {
 });
 
 router.post('/sessions', async (req, res) => {
-  const { station_id, team_id, started_by_name } = req.body;
+  const { station_id, team_id, started_by_name, hall_label } = req.body;
   if (!station_id || !team_id) return res.status(400).json({ error: 'station_id and team_id are required' });
 
-  const [stationRows] = await pool.query('SELECT duration_minutes FROM stations WHERE station_id = ?', [station_id]);
-  if (!stationRows.length) return res.status(404).json({ error: 'unknown station' });
+  // A team is one physical group of people — they can't be mid-session at two
+  // stations at once. Two admin devices starting the same team at different
+  // rooms within the same poll window is a real race, so this is locked
+  // per-team (not per-station+team) and checked globally, mirroring the
+  // tag_events named-lock pattern above.
+  const lockName = `game_sessions:team:${team_id}`;
+  const conn = await pool.getConnection();
+  try {
+    const [lockRows] = await conn.query('SELECT GET_LOCK(?, 5) AS acquired', [lockName]);
+    if (!lockRows[0].acquired) return res.status(503).json({ error: 'busy, try again' });
 
-  const [result] = await pool.query(
-    `INSERT INTO game_sessions (station_id, team_id, expected_end_at, started_by_name)
-     VALUES (?, ?, DATE_ADD(NOW(), INTERVAL ? MINUTE), ?)`,
-    [station_id, team_id, stationRows[0].duration_minutes, started_by_name ?? null],
-  );
-  const [rows] = await pool.query('SELECT * FROM game_sessions WHERE id = ?', [result.insertId]);
-  res.status(201).json(rows[0]);
+    try {
+      const [stationRows] = await conn.query('SELECT duration_minutes FROM stations WHERE station_id = ?', [station_id]);
+      if (!stationRows.length) return res.status(404).json({ error: 'unknown station' });
+
+      const [activeRows] = await conn.query(
+        `SELECT station_id FROM game_sessions WHERE team_id = ? AND status = 'in_progress'`,
+        [team_id],
+      );
+      if (activeRows.length) {
+        return res.status(409).json({ error: 'team already has an active session', station_id: activeRows[0].station_id });
+      }
+
+      const [result] = await conn.query(
+        `INSERT INTO game_sessions (station_id, team_id, expected_end_at, started_by_name, hall_label)
+         VALUES (?, ?, DATE_ADD(NOW(), INTERVAL ? MINUTE), ?, ?)`,
+        [station_id, team_id, stationRows[0].duration_minutes, started_by_name ?? null, hall_label ?? null],
+      );
+      const [rows] = await conn.query('SELECT * FROM game_sessions WHERE id = ?', [result.insertId]);
+      res.status(201).json(rows[0]);
+    } finally {
+      await conn.query('SELECT RELEASE_LOCK(?)', [lockName]);
+    }
+  } finally {
+    conn.release();
+  }
 });
 
 router.patch('/sessions/:id', async (req, res) => {
