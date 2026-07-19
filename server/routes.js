@@ -295,6 +295,34 @@ router.patch('/sessions/:id', async (req, res) => {
   res.json(rows[0]);
 });
 
+// ── station prep status ─────────────────────────────────────────────────
+// Manual "준비중🧹" indicator a station's staff flips between games instead
+// of a timer, since on-site setup time varies too much to predict — see
+// STATION_QUEUE_GUIDE.md hand-off chat for the confirmed design (the queue
+// system in that file's body was cancelled; only this simpler toggle shipped).
+
+router.get('/prep-status', async (req, res) => {
+  const [rows] = await pool.query(
+    'SELECT station_id, is_preparing, tip FROM station_prep_status WHERE is_preparing = TRUE',
+  );
+  res.json(rows);
+});
+
+router.put('/prep-status/:station_id', async (req, res) => {
+  const { is_preparing, tip } = req.body;
+  if (typeof is_preparing !== 'boolean') return res.status(400).json({ error: 'is_preparing (boolean) is required' });
+  await pool.query(
+    `INSERT INTO station_prep_status (station_id, is_preparing, tip) VALUES (?, ?, ?)
+     ON DUPLICATE KEY UPDATE is_preparing = VALUES(is_preparing), tip = VALUES(tip)`,
+    [req.params.station_id, is_preparing, tip ?? null],
+  );
+  const [rows] = await pool.query(
+    'SELECT station_id, is_preparing, tip FROM station_prep_status WHERE station_id = ?',
+    [req.params.station_id],
+  );
+  res.json(rows[0]);
+});
+
 // ── app state (super admin) ──────────────────────────────────────────────
 
 router.get('/app-state', async (req, res) => {

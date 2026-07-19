@@ -90,6 +90,15 @@ async function initSchema() {
     `);
 
     await conn.query(`
+      CREATE TABLE IF NOT EXISTS station_prep_status (
+        station_id   VARCHAR(20) PRIMARY KEY,
+        is_preparing BOOLEAN NOT NULL DEFAULT FALSE,
+        tip          VARCHAR(100) NULL,
+        updated_at   DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )
+    `);
+
+    await conn.query(`
       CREATE TABLE IF NOT EXISTS app_state (
         id         INT PRIMARY KEY DEFAULT 1,
         game_state ENUM('progress','ended') NOT NULL DEFAULT 'progress',

@@ -10,6 +10,7 @@ import { ThemedView } from '@/components/themed-view';
 import { floorLabels, floors, stations, type Floor } from '@/constants/stations';
 import { Colors, Spacing } from '@/constants/theme';
 import { formatRemaining, sessionProgressPercent, useActiveSessions, useMapAggregates } from '@/hooks/use-active-sessions';
+import { usePrepStatuses } from '@/hooks/use-prep-status';
 import { useSoundEffects } from '@/hooks/use-sound-effects';
 import { useStationProgress } from '@/hooks/use-station-progress';
 
@@ -22,6 +23,7 @@ const FLOOR_MAPS: Record<Floor, typeof Floor10Young> = {
 export default function FloorMapScreen() {
   const { clearedIds, cancelStation } = useStationProgress();
   const { sessions: activeSessions } = useActiveSessions();
+  const { statuses: prepStatuses } = usePrepStatuses();
   const { playButton } = useSoundEffects();
   const [activeFloor, setActiveFloor] = useState<Floor>('young-10f');
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -34,6 +36,10 @@ export default function FloorMapScreen() {
   const FloorMap = FLOOR_MAPS[activeFloor];
 
   const { activeCounts, activeTeamIds, activePercents } = useMapAggregates(activeSessions);
+  const isPreparing = useMemo(
+    () => Object.fromEntries(prepStatuses.map((p) => [p.station_id, !!p.is_preparing])),
+    [prepStatuses],
+  );
 
   const selectedSessions = selectedStation
     ? activeSessions.filter((s) => s.station_id === selectedStation.id)
@@ -78,6 +84,7 @@ export default function FloorMapScreen() {
             activeCounts={activeCounts}
             activeTeamIds={activeTeamIds}
             activePercents={activePercents}
+            isPreparing={isPreparing}
           />
         </Animated.View>
 

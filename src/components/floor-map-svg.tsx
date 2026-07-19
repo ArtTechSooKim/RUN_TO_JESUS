@@ -88,8 +88,12 @@ type GameRoomProps = {
   activeTeamIds?: number[];
   /** Average % through the expected duration, across active sessions here. */
   activePercent?: number;
+  /** Staff-toggled "준비중🧹" flag — replaces the 진행중 display entirely while true. */
+  isPreparing?: boolean;
   rx?: number;
 };
+
+const PREP_COLOR = '#FBBF24';
 
 /** A real, tappable station room — session name (game) on top, hall name below. */
 function GameRoom({
@@ -107,9 +111,10 @@ function GameRoom({
   activeCount = 0,
   activeTeamIds = [],
   activePercent,
+  isPreparing = false,
   rx = 4,
 }: GameRoomProps) {
-  const inProgress = activeCount > 0;
+  const inProgress = !isPreparing && activeCount > 0;
   const badgeText = activeTeamIds.length > 0 ? activeTeamIds.join(',') : String(activeCount);
   const badgeFontSize = 7;
   const badgeH = 13;
@@ -132,9 +137,9 @@ function GameRoom({
         height={h + 6}
         rx={rx + 2}
         fill="none"
-        stroke={station.color}
-        strokeWidth={selected || inProgress ? 2.5 : 1.5}
-        opacity={selected || inProgress ? 0.8 : 0.35}
+        stroke={isPreparing ? PREP_COLOR : station.color}
+        strokeWidth={selected || inProgress || isPreparing ? 2.5 : 1.5}
+        opacity={selected || inProgress || isPreparing ? 0.8 : 0.35}
       />
       <Rect
         x={x}
@@ -183,12 +188,12 @@ function GameRoom({
         x={x + w / 2}
         y={sessionY}
         textAnchor="middle"
-        fill={station.color}
+        fill={isPreparing ? PREP_COLOR : station.color}
         opacity={inProgress ? 0.75 : 1}
         fontSize={12}
         fontFamily={FONT}
         fontWeight="800">
-        {inProgress ? `진행중 ${activePercent ?? 0}%` : sessionLabel}
+        {isPreparing ? '준비중 🧹' : inProgress ? `진행중 ${activePercent ?? 0}%` : sessionLabel}
       </SvgText>
       <SvgText x={x + w / 2} y={labelY} textAnchor="middle" fill={station.color} fontSize={8} opacity={0.65} fontFamily={FONT}>
         {label}
@@ -213,6 +218,8 @@ type FloorProps = {
   activeTeamIds?: Record<string, number[]>;
   /** station_id -> average % through expected duration, across active sessions there. */
   activePercents?: Record<string, number>;
+  /** station_id -> whether that station's staff has flagged it 준비중🧹. */
+  isPreparing?: Record<string, boolean>;
 };
 
 function byId(stations: Station[], id: string) {
@@ -221,7 +228,7 @@ function byId(stations: Station[], id: string) {
   return s;
 }
 
-export function Floor10Young({ stations, clearedIds, selectedId, onSelect, activeCounts = {}, activeTeamIds = {}, activePercents = {} }: FloorProps) {
+export function Floor10Young({ stations, clearedIds, selectedId, onSelect, activeCounts = {}, activeTeamIds = {}, activePercents = {}, isPreparing = {} }: FloorProps) {
   const rahab = byId(stations, 'RAHAB');
   const jacob = byId(stations, 'JACOB');
   const joseph = byId(stations, 'JOSEPH');
@@ -269,6 +276,7 @@ export function Floor10Young({ stations, clearedIds, selectedId, onSelect, activ
         activeCount={activeCounts[joseph.id]}
         activeTeamIds={activeTeamIds[joseph.id]}
         activePercent={activePercents[joseph.id]}
+        isPreparing={isPreparing[joseph.id]}
       />
       <DimRoom x={122} y={182} w={84} h={36} label="이삭교사실" />
       <DimRoom x={438} y={180} w={146} h={266} label="프라미스 라운지" />
@@ -290,6 +298,7 @@ export function Floor10Young({ stations, clearedIds, selectedId, onSelect, activ
           activeCount={activeCounts[mystery.id]}
           activeTeamIds={activeTeamIds[mystery.id]}
           activePercent={activePercents[mystery.id]}
+          isPreparing={isPreparing[mystery.id]}
         />
       )}
       <GameRoom
@@ -306,6 +315,7 @@ export function Floor10Young({ stations, clearedIds, selectedId, onSelect, activ
         activeCount={activeCounts[jacob.id]}
         activeTeamIds={activeTeamIds[jacob.id]}
         activePercent={activePercents[jacob.id]}
+        isPreparing={isPreparing[jacob.id]}
       />
       <DimRoom x={220} y={220} w={106} h={84} label="에스더홀" sublabel="(유치부)" />
       <DimRoom x={330} y={220} w={104} h={84} label="헤세드홀" />
@@ -325,6 +335,7 @@ export function Floor10Young({ stations, clearedIds, selectedId, onSelect, activ
           activeCount={activeCounts[noah.id]}
           activeTeamIds={activeTeamIds[noah.id]}
           activePercent={activePercents[noah.id]}
+          isPreparing={isPreparing[noah.id]}
         />
       )}
 
@@ -343,6 +354,7 @@ export function Floor10Young({ stations, clearedIds, selectedId, onSelect, activ
         activeCount={activeCounts[`${rahab.id}:사무엘홀`]}
         activeTeamIds={activeTeamIds[`${rahab.id}:사무엘홀`]}
         activePercent={activePercents[`${rahab.id}:사무엘홀`]}
+        isPreparing={isPreparing[rahab.id]}
       />
       <GameRoom
         station={rahab}
@@ -358,6 +370,7 @@ export function Floor10Young({ stations, clearedIds, selectedId, onSelect, activ
         activeCount={activeCounts[`${rahab.id}:다니엘홀`]}
         activeTeamIds={activeTeamIds[`${rahab.id}:다니엘홀`]}
         activePercent={activePercents[`${rahab.id}:다니엘홀`]}
+        isPreparing={isPreparing[rahab.id]}
       />
       <DimRoom x={260} y={376} w={38} h={66} label="다니엘" sublabel="교사실" />
       <DimRoom x={302} y={376} w={42} h={66} label="디모데" sublabel="교사실" />
@@ -375,6 +388,7 @@ export function Floor10Young({ stations, clearedIds, selectedId, onSelect, activ
         activeCount={activeCounts[samson.id]}
         activeTeamIds={activeTeamIds[samson.id]}
         activePercent={activePercents[samson.id]}
+        isPreparing={isPreparing[samson.id]}
       />
 
       <SvgText x={10} y={12} fill="#2D4066" fontSize={10} fontFamily={FONT} fontWeight="600">
@@ -384,7 +398,7 @@ export function Floor10Young({ stations, clearedIds, selectedId, onSelect, activ
   );
 }
 
-export function Floor11Young({ stations, clearedIds, selectedId, onSelect, activeCounts = {}, activeTeamIds = {}, activePercents = {} }: FloorProps) {
+export function Floor11Young({ stations, clearedIds, selectedId, onSelect, activeCounts = {}, activeTeamIds = {}, activePercents = {}, isPreparing = {} }: FloorProps) {
   const abraham = byId(stations, 'ABRAHAM');
   const abel = stations.find((s) => s.id === 'ABELROOM');
 
@@ -413,6 +427,7 @@ export function Floor11Young({ stations, clearedIds, selectedId, onSelect, activ
           activeCount={activeCounts[abel.id]}
           activeTeamIds={activeTeamIds[abel.id]}
           activePercent={activePercents[abel.id]}
+          isPreparing={isPreparing[abel.id]}
         />
       )}
       <DimRoom x={196} y={20} w={88} h={36} label="회의실" />
@@ -455,6 +470,7 @@ export function Floor11Young({ stations, clearedIds, selectedId, onSelect, activ
         activeCount={activeCounts[abraham.id]}
         activeTeamIds={activeTeamIds[abraham.id]}
         activePercent={activePercents[abraham.id]}
+        isPreparing={isPreparing[abraham.id]}
       />
       <DimRoom x={162} y={362} w={66} h={84} label="아가페" sublabel="교사실" />
       <DimRoom x={232} y={362} w={168} h={32} label="프레이즈교사실" />
@@ -467,7 +483,7 @@ export function Floor11Young({ stations, clearedIds, selectedId, onSelect, activ
   );
 }
 
-export function Floor10Fashion({ stations, clearedIds, selectedId, onSelect, activeCounts = {}, activeTeamIds = {}, activePercents = {} }: FloorProps) {
+export function Floor10Fashion({ stations, clearedIds, selectedId, onSelect, activeCounts = {}, activeTeamIds = {}, activePercents = {}, isPreparing = {} }: FloorProps) {
   const david = byId(stations, 'DAVID');
 
   return (
@@ -525,6 +541,7 @@ export function Floor10Fashion({ stations, clearedIds, selectedId, onSelect, act
         activeCount={activeCounts[david.id]}
         activeTeamIds={activeTeamIds[david.id]}
         activePercent={activePercents[david.id]}
+        isPreparing={isPreparing[david.id]}
       />
 
       <SvgText x={10} y={108} fill="#2D4066" fontSize={10} fontFamily={FONT} fontWeight="600">

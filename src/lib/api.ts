@@ -25,6 +25,13 @@ export type ApiStation = {
 
 export type GameState = 'progress' | 'ended' | 'ending';
 
+/** A station's manual "준비중🧹" flag, toggled by its staff between games instead of a timer. */
+export type PrepStatus = {
+  station_id: string;
+  is_preparing: 0 | 1;
+  tip: string | null;
+};
+
 export type ApiSession = {
   id: number;
   station_id: string;
@@ -109,6 +116,11 @@ export const api = {
     request<{ game_state: GameState }>('/app-state', { method: 'PUT', body: JSON.stringify({ game_state }) }),
 
   getOverallStats: () => request<{ count: number; total: number; ratio: number }>('/stats/overall'),
+
+  getPrepStatuses: () => request<PrepStatus[]>('/prep-status'),
+
+  setPrepStatus: (stationId: string, body: { is_preparing: boolean; tip?: string }) =>
+    request<PrepStatus>(`/prep-status/${stationId}`, { method: 'PUT', body: JSON.stringify(body) }),
 
   resetAllProgress: (password: string) =>
     request<{ ok: true }>('/admin/reset-progress', { method: 'POST', body: JSON.stringify({ password }) }),

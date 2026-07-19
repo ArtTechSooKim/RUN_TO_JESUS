@@ -11,21 +11,24 @@ import { stations } from '@/constants/stations';
 import { Colors, Spacing } from '@/constants/theme';
 import { formatRemaining, sessionProgressPercent, useActiveSessions } from '@/hooks/use-active-sessions';
 import { useOverallStats } from '@/hooks/use-overall-stats';
+import { usePrepStatuses } from '@/hooks/use-prep-status';
 import { useStationProgress } from '@/hooks/use-station-progress';
 import { useTheme } from '@/hooks/use-theme';
-import type { ApiSession } from '@/lib/api';
+import type { ApiSession, PrepStatus } from '@/lib/api';
 
 function StationCard({
   station,
   done,
   collectedLetters,
   activeSessions,
+  prep,
   index,
 }: {
   station: (typeof stations)[number];
   done: boolean;
   collectedLetters: Set<number>;
   activeSessions: ApiSession[];
+  prep?: PrepStatus;
   index: number;
 }) {
   return (
@@ -68,7 +71,18 @@ function StationCard({
                   </ThemedText>
                 </View>
               </View>
-              {activeSessions.length > 0 ? (
+              {prep?.is_preparing ? (
+                <View>
+                  <ThemedText type="small" numberOfLines={1} style={{ color: '#FBBF24' }}>
+                    🧹 준비중
+                  </ThemedText>
+                  {prep.tip && (
+                    <ThemedText type="small" themeColor="textSecondary" numberOfLines={1}>
+                      TIP) {prep.tip}
+                    </ThemedText>
+                  )}
+                </View>
+              ) : activeSessions.length > 0 ? (
                 <ThemedText type="small" numberOfLines={1} style={{ color: '#FB923C' }}>
                   🔴{' '}
                   {activeSessions
@@ -125,6 +139,7 @@ export default function MapScreen() {
   const theme = useTheme();
   const { clearedIds, collectedLetters, newlyCollected } = useStationProgress();
   const { sessions: activeSessions } = useActiveSessions();
+  const { statuses: prepStatuses } = usePrepStatuses();
   const overallRatio = useOverallStats();
   const total = 10;
   const allDone = collectedLetters.size === total;
@@ -182,6 +197,7 @@ export default function MapScreen() {
               done={clearedIds.has(station.id)}
               collectedLetters={collectedLetters}
               activeSessions={activeSessions.filter((s) => s.station_id === station.id)}
+              prep={prepStatuses.find((p) => p.station_id === station.id)}
               index={index}
             />
           ))}

@@ -10,8 +10,11 @@ import { ThemedView } from '@/components/themed-view';
 import { floorLabels, floors, stations as allStations, type Floor, type Station } from '@/constants/stations';
 import { Colors, Spacing } from '@/constants/theme';
 import { formatRemaining, sessionProgressPercent, useActiveSessions, useMapAggregates } from '@/hooks/use-active-sessions';
+import { usePrepStatuses } from '@/hooks/use-prep-status';
 import { useSoundEffects } from '@/hooks/use-sound-effects';
-import { ApiError, api, type ApiSession, type ApiStation } from '@/lib/api';
+import { ApiError, api, type ApiSession, type ApiStation, type PrepStatus } from '@/lib/api';
+
+const DEFAULT_PREP_TIP = '대략 10분 준비합니다';
 
 // tag_events.person_id for admin-initiated grants — there's no real logged-in
 // user behind the 관리자 login bypass (see use-auth.tsx), so this is a fixed,
@@ -130,16 +133,71 @@ function HallGroup({
   );
 }
 
+function PrepToggle({
+  stationId,
+  prep,
+  onChanged,
+}: {
+  stationId: string;
+  prep?: PrepStatus;
+  onChanged: () => void;
+}) {
+  const isPreparing = !!prep?.is_preparing;
+  const [tip, setTip] = useState(prep?.tip || DEFAULT_PREP_TIP);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (prep?.tip) setTip(prep.tip);
+  }, [prep?.tip]);
+
+  async function toggle() {
+    setSaving(true);
+    try {
+      await api.setPrepStatus(stationId, { is_preparing: !isPreparing, tip: tip || DEFAULT_PREP_TIP });
+      onChanged();
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <View style={styles.prepRow}>
+      <SoundPressable
+        onPress={toggle}
+        disabled={saving}
+        style={({ pressed }) => [styles.prepToggle, isPreparing && styles.prepToggleActive, pressed && styles.pressed]}>
+        <ThemedText type="small" style={{ color: isPreparing ? '#78350F' : Colors.dark.textSecondary }}>
+          🧹 준비중{isPreparing ? ' · ON' : ''}
+        </ThemedText>
+      </SoundPressable>
+      {isPreparing && (
+        <TextInput
+          value={tip}
+          onChangeText={setTip}
+          onBlur={() => api.setPrepStatus(stationId, { is_preparing: true, tip: tip || DEFAULT_PREP_TIP }).then(onChanged)}
+          placeholder="예: 대략 10분 준비합니다"
+          placeholderTextColor={Colors.dark.textSecondary}
+          style={styles.prepTipInput}
+        />
+      )}
+    </View>
+  );
+}
+
 function StationCard({
   station,
   sessions,
   activeTeamIdsGlobal,
+  prep,
+  onPrepChanged,
   onStart,
   onEnd,
 }: {
   station: ApiStation;
   sessions: ApiSession[];
   activeTeamIdsGlobal: Set<number>;
+  prep?: PrepStatus;
+  onPrepChanged: () => void;
   onStart: (teamIds: number[], hallLabel?: string) => Promise<number[]>;
   onEnd: (id: number, status: 'completed' | 'cancelled') => void;
 }) {
@@ -156,6 +214,8 @@ function StationCard({
           </ThemedText>
         )}
       </View>
+
+      <PrepToggle stationId={station.station_id} prep={prep} onChanged={onPrepChanged} />
 
       {halls ? (
         <>
@@ -190,7 +250,7 @@ function StationCard({
   );
 }
 
-function MapTab({ activeSessions }: { activeSessions: ApiSession[] }) {
+function MapTab({ activeSessions, prepStatuses }: { activeSessions: ApiSession[]; prepStatuses: PrepStatus[] }) {
   const { playButton } = useSoundEffects();
   const [activeFloor, setActiveFloor] = useState<Floor>('young-10f');
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -200,6 +260,10 @@ function MapTab({ activeSessions }: { activeSessions: ApiSession[] }) {
   const FloorMap = FLOOR_MAPS[activeFloor];
 
   const { activeCounts, activeTeamIds, activePercents } = useMapAggregates(activeSessions);
+  const isPreparing = useMemo(
+    () => Object.fromEntries(prepStatuses.map((p) => [p.station_id, !!p.is_preparing])),
+    [prepStatuses],
+  );
 
   const selectedSessions = selectedStation ? activeSessions.filter((s) => s.station_id === selectedStation.id) : [];
 
@@ -236,6 +300,7 @@ function MapTab({ activeSessions }: { activeSessions: ApiSession[] }) {
           activeCounts={activeCounts}
           activeTeamIds={activeTeamIds}
           activePercents={activePercents}
+          isPreparing={isPreparing}
         />
       </Animated.View>
 
@@ -440,6 +505,11 @@ export default function AdminScreen() {
   const [tab, setTab] = useState<'stations' | 'map' | 'grant'>('stations');
   const [stations, setStations] = useState<ApiStation[]>([]);
   const { sessions, refresh: refreshSessions } = useActiveSessions();
+  const { statuses: prepStatuses, refresh: refreshPrep } = usePrepStatuses();
+  const prepByStation = useMemo(
+    () => new Map(prepStatuses.map((p) => [p.station_id, p])),
+    [prepStatuses],
+  );
 
   const refreshStations = useCallback(async () => {
     // 숨은글자찾기는 물리적 방/세션 개념이 없는 QR 전용 스테이션이라 관리 목록에서 제외.
@@ -513,6 +583,8 @@ export default function AdminScreen() {
               station={station}
               sessions={sessions.filter((s) => s.station_id === station.station_id)}
               activeTeamIdsGlobal={activeTeamIdsGlobal}
+              prep={prepByStation.get(station.station_id)}
+              onPrepChanged={refreshPrep}
               onStart={(teamIds, hallLabel) => handleStart(station.station_id, teamIds, hallLabel)}
               onEnd={handleEnd}
             />
@@ -521,7 +593,7 @@ export default function AdminScreen() {
       ) : tab === 'grant' ? (
         <GrantFragmentTab />
       ) : (
-        <MapTab activeSessions={sessions} />
+        <MapTab activeSessions={sessions} prepStatuses={prepStatuses} />
       )}
     </ThemedView>
   );
@@ -597,6 +669,34 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(17,24,39,0.7)',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.07)',
+  },
+  prepRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+  },
+  prepToggle: {
+    paddingHorizontal: Spacing.two,
+    paddingVertical: Spacing.one,
+    borderRadius: Spacing.five,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+  },
+  prepToggleActive: {
+    backgroundColor: '#FBBF24',
+    borderColor: '#FBBF24',
+  },
+  prepTipInput: {
+    flex: 1,
+    paddingHorizontal: Spacing.two,
+    paddingVertical: Spacing.one,
+    borderRadius: Spacing.two,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    color: Colors.dark.text,
+    fontSize: 12,
   },
   hallGroupBase: {
     gap: Spacing.two,
