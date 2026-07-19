@@ -157,7 +157,7 @@ function GameRoom({
         </G>
       )}
       {inProgress && (
-        <G>
+        <G opacity={0.75}>
           <Rect
             x={x + 4}
             y={y + 3}
@@ -184,6 +184,7 @@ function GameRoom({
         y={sessionY}
         textAnchor="middle"
         fill={station.color}
+        opacity={inProgress ? 0.75 : 1}
         fontSize={12}
         fontFamily={FONT}
         fontWeight="800">
