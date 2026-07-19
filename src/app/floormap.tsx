@@ -9,7 +9,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { floorLabels, floors, stations, type Floor } from '@/constants/stations';
 import { Colors, Spacing } from '@/constants/theme';
-import { formatRemaining, sessionProgressPercent, useActiveSessions } from '@/hooks/use-active-sessions';
+import { formatRemaining, sessionProgressPercent, useActiveSessions, useMapAggregates } from '@/hooks/use-active-sessions';
 import { useSoundEffects } from '@/hooks/use-sound-effects';
 import { useStationProgress } from '@/hooks/use-station-progress';
 
@@ -33,29 +33,7 @@ export default function FloorMapScreen() {
   const selectedStation = stations.find((s) => s.id === selectedId) ?? null;
   const FloorMap = FLOOR_MAPS[activeFloor];
 
-  const activeCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
-    for (const s of activeSessions) counts[s.station_id] = (counts[s.station_id] ?? 0) + 1;
-    return counts;
-  }, [activeSessions]);
-
-  const activeTeamIds = useMemo(() => {
-    const ids: Record<string, number[]> = {};
-    for (const s of activeSessions) (ids[s.station_id] ??= []).push(s.team_id);
-    return ids;
-  }, [activeSessions]);
-
-  const activePercents = useMemo(() => {
-    const sums: Record<string, number> = {};
-    const counts: Record<string, number> = {};
-    for (const s of activeSessions) {
-      sums[s.station_id] = (sums[s.station_id] ?? 0) + sessionProgressPercent(s);
-      counts[s.station_id] = (counts[s.station_id] ?? 0) + 1;
-    }
-    const percents: Record<string, number> = {};
-    for (const id of Object.keys(sums)) percents[id] = Math.round(sums[id] / counts[id]);
-    return percents;
-  }, [activeSessions]);
+  const { activeCounts, activeTeamIds, activePercents } = useMapAggregates(activeSessions);
 
   const selectedSessions = selectedStation
     ? activeSessions.filter((s) => s.station_id === selectedStation.id)

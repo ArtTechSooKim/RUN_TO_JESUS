@@ -1,8 +1,33 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { api, type ApiSession } from '@/lib/api';
 
 const POLL_MS = 5000;
+
+/** Groups a session under its station, or "station:hall" for a session that belongs to an independently-run hall (e.g. 라합방's 사무엘홀/다니엘홀) — keeps the floor map from merging two halls' progress into one badge. */
+function sessionMapKey(s: ApiSession) {
+  return s.hall_label ? `${s.station_id}:${s.hall_label}` : s.station_id;
+}
+
+/** Aggregates active sessions into the per-tile maps the floor map SVGs need — shared by the participant floormap and admin MAP tab so both group split-hall stations the same way. */
+export function useMapAggregates(sessions: ApiSession[]) {
+  return useMemo(() => {
+    const activeCounts: Record<string, number> = {};
+    const activeTeamIds: Record<string, number[]> = {};
+    const sums: Record<string, number> = {};
+    const sessionCounts: Record<string, number> = {};
+    for (const s of sessions) {
+      const key = sessionMapKey(s);
+      activeCounts[key] = (activeCounts[key] ?? 0) + 1;
+      (activeTeamIds[key] ??= []).push(s.team_id);
+      sums[key] = (sums[key] ?? 0) + sessionProgressPercent(s);
+      sessionCounts[key] = (sessionCounts[key] ?? 0) + 1;
+    }
+    const activePercents: Record<string, number> = {};
+    for (const key of Object.keys(sums)) activePercents[key] = Math.round(sums[key] / sessionCounts[key]);
+    return { activeCounts, activeTeamIds, activePercents };
+  }, [sessions]);
+}
 
 /** Polls in-progress game_sessions so participant screens can show "N조 진행중" live, per 기능정리 §4. */
 export function useActiveSessions() {
