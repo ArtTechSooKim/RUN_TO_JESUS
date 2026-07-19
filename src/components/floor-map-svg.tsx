@@ -91,8 +91,6 @@ type GameRoomProps = {
   rx?: number;
 };
 
-const IN_PROGRESS_COLOR = '#FB923C';
-
 /** A real, tappable station room — session name (game) on top, hall name below. */
 function GameRoom({
   x,
@@ -134,7 +132,7 @@ function GameRoom({
         height={h + 6}
         rx={rx + 2}
         fill="none"
-        stroke={inProgress ? IN_PROGRESS_COLOR : station.color}
+        stroke={station.color}
         strokeWidth={selected || inProgress ? 2.5 : 1.5}
         opacity={selected || inProgress ? 0.8 : 0.35}
       />
@@ -145,7 +143,7 @@ function GameRoom({
         height={h}
         rx={rx}
         fill={`${station.color}${selected ? '30' : '1A'}`}
-        stroke={inProgress ? IN_PROGRESS_COLOR : station.color}
+        stroke={station.color}
         strokeWidth={selected ? 1.8 : 1.2}
         opacity={selected ? 1 : 0.85}
       />
@@ -166,15 +164,15 @@ function GameRoom({
             width={badgeW}
             height={badgeH}
             rx={badgeH / 2}
-            fill={`${IN_PROGRESS_COLOR}40`}
-            stroke={IN_PROGRESS_COLOR}
+            fill={`${station.color}40`}
+            stroke={station.color}
             strokeWidth={1}
           />
           <SvgText
             x={x + 4 + badgeW / 2}
             y={y + 3 + badgeH / 2 + 2.5}
             textAnchor="middle"
-            fill={IN_PROGRESS_COLOR}
+            fill={station.color}
             fontSize={badgeFontSize}
             fontWeight="bold">
             {badgeText}
@@ -185,7 +183,7 @@ function GameRoom({
         x={x + w / 2}
         y={sessionY}
         textAnchor="middle"
-        fill={inProgress ? IN_PROGRESS_COLOR : station.color}
+        fill={station.color}
         fontSize={12}
         fontFamily={FONT}
         fontWeight="800">
