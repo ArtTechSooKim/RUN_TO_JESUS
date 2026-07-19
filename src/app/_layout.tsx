@@ -30,9 +30,11 @@ const navigationTheme = {
 // Always reachable regardless of game_state — /superadmin is the control
 // screen itself, /login must stay open or a locked-out admin (or anyone
 // who logs out while the game is ended/ending) has no way back in at all,
-// and /nfc-write is now driven from 최고관리자's 태그 관리 tab, which admins
-// need before doors open (game_state is 'ended' at that point).
-const LOCK_EXEMPT_ROUTES = new Set(['/superadmin', '/login', '/nfc-write']);
+// /nfc-write is driven from 최고관리자's 태그 관리 tab, and /admin (station
+// management, reached via the name="관리자"+team="관리자" login bypass) is
+// exactly what station leads need to prep before doors open — game_state is
+// 'ended' at that point.
+const LOCK_EXEMPT_ROUTES = new Set(['/superadmin', '/login', '/nfc-write', '/admin']);
 
 function GlobalGameLock() {
   const gameState = useGameState();

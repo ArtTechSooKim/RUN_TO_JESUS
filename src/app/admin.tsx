@@ -55,14 +55,7 @@ function StationCard({
           </ThemedText>
           <SoundPressable onPress={() => onEnd(s.id, 'cancelled')} style={({ pressed }) => [styles.smallButton, pressed && styles.pressed]}>
             <ThemedText type="small" style={{ color: '#F87171' }}>
-              해지
-            </ThemedText>
-          </SoundPressable>
-          <SoundPressable
-            onPress={() => onEnd(s.id, 'completed')}
-            style={({ pressed }) => [styles.smallButton, styles.smallButtonGold, pressed && styles.pressed]}>
-            <ThemedText type="small" style={{ color: '#34D399' }}>
-              완료
+              취소
             </ThemedText>
           </SoundPressable>
         </View>
@@ -349,9 +342,6 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.one,
     borderRadius: Spacing.two,
     backgroundColor: 'rgba(248,113,113,0.12)',
-  },
-  smallButtonGold: {
-    backgroundColor: 'rgba(52,211,153,0.12)',
   },
   startRow: {
     flexDirection: 'row',

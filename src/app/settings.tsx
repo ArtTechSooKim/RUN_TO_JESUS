@@ -9,8 +9,6 @@ import { ThemedView } from '@/components/themed-view';
 import { Colors, Spacing } from '@/constants/theme';
 import { useAuth } from '@/hooks/use-auth';
 
-const ADMIN_PASSWORD = 'saeroun0906';
-
 function EditModal({
   title,
   initialValue,
@@ -107,70 +105,9 @@ function EditModal({
   );
 }
 
-function AdminPasswordModal({ onSuccess, onClose }: { onSuccess: () => void; onClose: () => void }) {
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-
-  function handleSubmit() {
-    if (password === ADMIN_PASSWORD) {
-      onSuccess();
-    } else {
-      setError('비밀번호가 틀렸습니다');
-      setPassword('');
-    }
-  }
-
-  return (
-    <Animated.View entering={FadeIn.duration(150)} exiting={FadeOut.duration(150)} style={styles.modalBackdrop}>
-      <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
-      <Animated.View entering={FadeInUp.duration(200)} style={styles.modalCard}>
-        <View style={styles.modalIconWrap}>
-          <ThemedText style={styles.modalIcon}>🛡️</ThemedText>
-        </View>
-        <ThemedText type="smallBold" style={styles.centerText}>
-          관리자 모드
-        </ThemedText>
-        <ThemedText type="small" themeColor="textSecondary" style={styles.centerText}>
-          비밀번호를 입력하세요
-        </ThemedText>
-        <TextInput
-          value={password}
-          onChangeText={(v) => {
-            setPassword(v);
-            setError('');
-          }}
-          placeholder="••••••••••"
-          placeholderTextColor={Colors.dark.textSecondary}
-          secureTextEntry
-          autoFocus
-          style={[styles.input, styles.centerText, error && styles.inputError]}
-        />
-        {error !== '' && (
-          <ThemedText type="small" style={[styles.errorText, styles.centerText]}>
-            {error}
-          </ThemedText>
-        )}
-        <View style={styles.modalActions}>
-          <SoundPressable onPress={onClose} style={({ pressed }) => [styles.modalButtonGhost, pressed && styles.pressed]}>
-            <ThemedText type="small" themeColor="textSecondary">
-              취소
-            </ThemedText>
-          </SoundPressable>
-          <SoundPressable onPress={handleSubmit} style={({ pressed }) => [styles.modalButtonGold, pressed && styles.pressed]}>
-            <ThemedText type="smallBold" style={{ color: Colors.dark.background }}>
-              확인
-            </ThemedText>
-          </SoundPressable>
-        </View>
-      </Animated.View>
-    </Animated.View>
-  );
-}
-
 export default function SettingsScreen() {
   const { user, updateUser, logout } = useAuth();
   const [editModal, setEditModal] = useState<'name' | 'team' | null>(null);
-  const [adminModalOpen, setAdminModalOpen] = useState(false);
 
   if (!user) {
     return (
@@ -216,14 +153,6 @@ export default function SettingsScreen() {
         </SoundPressable>
       </View>
 
-      <SoundPressable
-        onPress={() => setAdminModalOpen(true)}
-        style={({ pressed }) => [styles.row, styles.adminRow, pressed && styles.pressed]}>
-        <ThemedText type="small" style={{ color: Colors.dark.gold }}>
-          🛡️ 관리자 모드
-        </ThemedText>
-      </SoundPressable>
-
       <SoundPressable onPress={handleLogout} style={({ pressed }) => [styles.row, styles.logoutRow, pressed && styles.pressed]}>
         <ThemedText type="small" style={styles.logoutText}>
           앱 종료 / 로그아웃
@@ -254,15 +183,6 @@ export default function SettingsScreen() {
             setEditModal(null);
           }}
           onClose={() => setEditModal(null)}
-        />
-      )}
-      {adminModalOpen && (
-        <AdminPasswordModal
-          onSuccess={() => {
-            setAdminModalOpen(false);
-            router.push('/admin');
-          }}
-          onClose={() => setAdminModalOpen(false)}
         />
       )}
     </ThemedView>
@@ -319,11 +239,6 @@ const styles = StyleSheet.create({
   rowLabel: {
     flex: 1,
   },
-  adminRow: {
-    borderRadius: Spacing.four,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.07)',
-  },
   logoutRow: {
     borderRadius: Spacing.four,
     borderWidth: 1,
@@ -357,23 +272,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#111827',
     borderWidth: 1,
     borderColor: 'rgba(255,215,0,0.2)',
-  },
-  modalIconWrap: {
-    alignSelf: 'center',
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(255,215,0,0.12)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,215,0,0.3)',
-  },
-  modalIcon: {
-    fontSize: 20,
-  },
-  centerText: {
-    textAlign: 'center',
   },
   input: {
     paddingHorizontal: Spacing.three,

@@ -30,8 +30,11 @@ export default function LoginScreen() {
 
   async function handleSubmit() {
     // Super admin ("김수") and 본당 relay-screen ("본당") bypasses both use
-    // team=100 and skip the 1~24 range check entirely.
-    const isBypassAttempt = (name.trim() === '김수' || name.trim() === '본당') && teamNumber === '100';
+    // team=100; the station-admin bypass uses team="관리자". All three skip
+    // the normal 1~24 validation entirely.
+    const isBypassAttempt =
+      ((name.trim() === '김수' || name.trim() === '본당') && teamNumber === '100') ||
+      (name.trim() === '관리자' && teamNumber.trim() === '관리자');
     const e = isBypassAttempt ? {} : validate();
     if (Object.keys(e).length) {
       setErrors(e);
@@ -42,9 +45,11 @@ export default function LoginScreen() {
     setServerError('');
     setDedupNotice('');
     try {
-      const result = await login(name, Number(teamNumber));
+      const result = await login(name, teamNumber);
       if (result === 'superadmin') {
         router.replace('/superadmin');
+      } else if (result === 'admin') {
+        router.replace('/admin');
       } else if (result === 'broadcast') {
         // Static page outside expo-router — full navigation, web only.
         if (Platform.OS === 'web') {
@@ -93,7 +98,6 @@ export default function LoginScreen() {
                 setTeamNumber(v);
                 setErrors((prev) => ({ ...prev, team: undefined }));
               }}
-              keyboardType="number-pad"
               placeholder="예: 7"
               placeholderTextColor={Colors.dark.textSecondary}
               maxLength={3}

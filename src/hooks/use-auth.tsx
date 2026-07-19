@@ -13,12 +13,19 @@ const SUPER_ADMIN_TEAM = 100;
 // name="본당" + team=100 is the 본당 relay-screen kiosk device — routes to
 // the standalone broadcast.html instead of /superadmin, same bypass pattern.
 const BROADCAST_NAME = '본당';
+// name="관리자" + team="관리자" routes straight to /admin (station management),
+// same bypass shape as above — no real signup, so this identity never gets a
+// team_id and never subscribes to any team's fragment-reveal polling (that
+// was the whole point: logging in as a real team just to reach admin mode
+// used to trigger that team's "믿음의 조각 획득" popups for the admin too).
+const ADMIN_NAME = '관리자';
+const ADMIN_TEAM_INPUT = '관리자';
 
 type AuthValue = {
   user: ApiUser | null;
   loading: boolean;
-  /** Returns 'superadmin'/'broadcast' for the special-case credentials without touching the users table. */
-  login: (name: string, teamId: number) => Promise<ApiUser | 'superadmin' | 'broadcast'>;
+  /** Returns 'superadmin'/'broadcast'/'admin' for the special-case credentials without touching the users table. */
+  login: (name: string, teamId: number | string) => Promise<ApiUser | 'superadmin' | 'broadcast' | 'admin'>;
   updateUser: (patch: { name?: string; team_id?: number }) => Promise<void>;
   logout: () => Promise<void>;
 };
@@ -47,14 +54,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })();
   }, []);
 
-  const login = async (name: string, teamId: number) => {
-    if (name.trim() === SUPER_ADMIN_NAME && teamId === SUPER_ADMIN_TEAM) {
+  const login = async (name: string, teamId: number | string) => {
+    if (name.trim() === SUPER_ADMIN_NAME && Number(teamId) === SUPER_ADMIN_TEAM) {
       return 'superadmin' as const;
     }
-    if (name.trim() === BROADCAST_NAME && teamId === SUPER_ADMIN_TEAM) {
+    if (name.trim() === BROADCAST_NAME && Number(teamId) === SUPER_ADMIN_TEAM) {
       return 'broadcast' as const;
     }
-    const fresh = await api.login({ name: name.trim(), team_id: teamId });
+    if (name.trim() === ADMIN_NAME && String(teamId).trim() === ADMIN_TEAM_INPUT) {
+      return 'admin' as const;
+    }
+    const fresh = await api.login({ name: name.trim(), team_id: Number(teamId) });
     setUser(fresh);
     await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(fresh));
     return fresh;
