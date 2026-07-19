@@ -143,7 +143,7 @@ export default function StationDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const resolvedId = id ? (STATION_ALIASES[id] ?? id) : id;
   const station = stations.find((s) => s.id === resolvedId);
-  const { clearedIds, recordManualComplete, cancelStation } = useStationProgress();
+  const { clearedIds, cancelStation } = useStationProgress();
 
   if (!station) {
     return (
@@ -251,13 +251,9 @@ export default function StationDetailScreen() {
           <View style={styles.ctaBlock}>
             {!station.isQrOnly && <NfcCta color={station.color} />}
             <ScanCta color={station.color} />
-            <SoundPressable
-              onPress={() => recordManualComplete(station.id)}
-              style={({ pressed }) => [styles.ghostButton, pressed && styles.pressed]}>
-              <ThemedText type="small" themeColor="textSecondary">
-                스캔이 안 될 때: 직접 완료 처리 (수동 백업)
-              </ThemedText>
-            </SoundPressable>
+            <ThemedText type="small" themeColor="textSecondary" style={styles.scanHint}>
+              스캔이 안 되면 방 스태프에게 알려주세요
+            </ThemedText>
           </View>
         )}
       </ScrollView>
@@ -367,13 +363,9 @@ const styles = StyleSheet.create({
     borderRadius: Spacing.four,
     alignItems: 'center',
   },
-  ghostButton: {
-    alignSelf: 'center',
-    paddingHorizontal: Spacing.four,
-    paddingVertical: Spacing.two,
-    borderRadius: Spacing.five,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.16)',
+  scanHint: {
+    textAlign: 'center',
+    marginTop: Spacing.one,
   },
   doneBlock: {
     alignItems: 'center',

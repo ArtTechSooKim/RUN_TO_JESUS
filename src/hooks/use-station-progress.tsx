@@ -29,8 +29,6 @@ type StationProgressValue = {
    * (once from the scan screen's own burst, once from the team-sync reveal on the next refresh).
    */
   suppressReveal: (stationId: string) => Promise<void>;
-  /** Fallback for when scanning doesn't work — records a real tag event same as a scan would. */
-  recordManualComplete: (stationId: string) => Promise<void>;
   /** Admin-only master tag — records a tag event for every station this team hasn't cleared yet. */
   recordMasterComplete: () => Promise<void>;
   /** Undo a mistaken tag. Team-wide, since progress is team truth — every teammate's device picks it up on the next poll. */
@@ -137,15 +135,6 @@ export function StationProgressProvider({ children }: { children: ReactNode }) {
     return () => clearInterval(timer);
   }, [refresh]);
 
-  const recordManualComplete = useCallback(
-    async (stationId: string) => {
-      if (!user) return;
-      await api.postTagEvent({ person_id: user.person_id, team_id: user.team_id, station_id: stationId });
-      await refresh();
-    },
-    [user, refresh],
-  );
-
   const recordMasterComplete = useCallback(async () => {
     if (!user) return;
     const remaining = stations.filter((s) => !clearedIds.has(s.id));
@@ -183,7 +172,6 @@ export function StationProgressProvider({ children }: { children: ReactNode }) {
         skipReveal,
         refresh,
         suppressReveal,
-        recordManualComplete,
         recordMasterComplete,
         cancelStation,
       }}>
