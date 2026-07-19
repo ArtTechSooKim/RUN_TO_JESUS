@@ -377,7 +377,6 @@ export function Floor10Young({ stations, clearedIds, selectedId, onSelect, activ
         activeTeamIds={activeTeamIds[samson.id]}
         activePercent={activePercents[samson.id]}
       />
-      <EvBox x={352} y={380} />
 
       <SvgText x={10} y={12} fill="#2D4066" fontSize={10} fontFamily={FONT} fontWeight="600">
         10층 영관
