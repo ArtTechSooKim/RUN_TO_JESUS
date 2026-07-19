@@ -15,6 +15,14 @@ import { useSoundEffects } from '@/hooks/use-sound-effects';
 import { ApiError, api, type ApiSession, type ApiStation, type PrepStatus } from '@/lib/api';
 
 const DEFAULT_PREP_TIP = '대략 10분 준비합니다';
+// 삼손방은 12명 릴레이 3레인 구조라 세팅이 다른 방보다 훨씬 빨리 끝남 —
+// 처음 준비중을 켤 때 채워지는 기본 문구만 다르고, 그 외 로직은 동일.
+const STATION_PREP_TIP_OVERRIDES: Record<string, string> = {
+  SAMSON: '대략 5분 준비합니다',
+};
+function defaultPrepTip(stationId: string) {
+  return STATION_PREP_TIP_OVERRIDES[stationId] ?? DEFAULT_PREP_TIP;
+}
 
 // tag_events.person_id for admin-initiated grants — there's no real logged-in
 // user behind the 관리자 login bypass (see use-auth.tsx), so this is a fixed,
@@ -143,7 +151,7 @@ function PrepToggle({
   onChanged: () => void;
 }) {
   const isPreparing = !!prep?.is_preparing;
-  const [tip, setTip] = useState(prep?.tip || DEFAULT_PREP_TIP);
+  const [tip, setTip] = useState(prep?.tip || defaultPrepTip(stationId));
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -153,7 +161,7 @@ function PrepToggle({
   async function toggle() {
     setSaving(true);
     try {
-      await api.setPrepStatus(stationId, { is_preparing: !isPreparing, tip: tip || DEFAULT_PREP_TIP });
+      await api.setPrepStatus(stationId, { is_preparing: !isPreparing, tip: tip || defaultPrepTip(stationId) });
       onChanged();
     } finally {
       setSaving(false);
@@ -174,8 +182,8 @@ function PrepToggle({
         <TextInput
           value={tip}
           onChangeText={setTip}
-          onBlur={() => api.setPrepStatus(stationId, { is_preparing: true, tip: tip || DEFAULT_PREP_TIP }).then(onChanged)}
-          placeholder="예: 대략 10분 준비합니다"
+          onBlur={() => api.setPrepStatus(stationId, { is_preparing: true, tip: tip || defaultPrepTip(stationId) }).then(onChanged)}
+          placeholder={`예: ${defaultPrepTip(stationId)}`}
           placeholderTextColor={Colors.dark.textSecondary}
           style={styles.prepTipInput}
         />
