@@ -171,7 +171,7 @@ function StationCard({
 
 export default function MapScreen() {
   const theme = useTheme();
-  const { clearedIds, collectedLetters, newlyCollected } = useStationProgress();
+  const { clearedIds, collectedLetters, wildcardCount, newlyCollected } = useStationProgress();
   const { sessions: activeSessions } = useActiveSessions();
   const { statuses: prepStatuses } = usePrepStatuses();
   const overallRatio = useOverallStats();
@@ -201,7 +201,7 @@ export default function MapScreen() {
 
         <Link href="/collection" asChild>
           <SoundPressable style={({ pressed }) => pressed && styles.pressed}>
-            <CollectionBar collectedIndices={collectedLetters} newlyCollected={newlyCollected} />
+            <CollectionBar collectedIndices={collectedLetters} newlyCollected={newlyCollected} wildcardCount={wildcardCount} />
           </SoundPressable>
         </Link>
 

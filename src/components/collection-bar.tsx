@@ -5,6 +5,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-na
 import { LetterPiece } from '@/components/letter-piece';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { WildcardPiece } from '@/components/wildcard-piece';
 import { RUN_TO_JESUS } from '@/constants/stations';
 import { Colors, Spacing } from '@/constants/theme';
 
@@ -13,9 +14,11 @@ const SEPARATOR_AFTER = new Set([2, 4]); // RUN | TO | JESUS
 type CollectionBarProps = {
   collectedIndices: Set<number>;
   newlyCollected?: number | null;
+  /** 새로운시네마 2번째/3번째 방문 보너스 — 포지션이 없어 collectedIndices/진행률에는 안 섞이고 글자 줄 끝에 따로만 붙는다. */
+  wildcardCount?: number;
 };
 
-export function CollectionBar({ collectedIndices, newlyCollected = null }: CollectionBarProps) {
+export function CollectionBar({ collectedIndices, newlyCollected = null, wildcardCount = 0 }: CollectionBarProps) {
   const total = RUN_TO_JESUS.length;
   const collected = collectedIndices.size;
   const progress = useSharedValue(collected / total);
@@ -57,6 +60,16 @@ export function CollectionBar({ collectedIndices, newlyCollected = null }: Colle
             )}
           </View>
         ))}
+        {wildcardCount > 0 && (
+          <View style={styles.letterSlot}>
+            <ThemedText themeColor="textSecondary" style={styles.separator}>
+              ✨
+            </ThemedText>
+            {Array.from({ length: wildcardCount }, (_, i) => (
+              <WildcardPiece key={i} index={i} size={24} />
+            ))}
+          </View>
+        )}
       </View>
 
       <View style={styles.progressTrack}>
