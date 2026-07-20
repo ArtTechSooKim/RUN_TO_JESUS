@@ -16,6 +16,8 @@ type StationProgressValue = {
   /** Station ids the current TEAM has tagged, per the server — shared truth across every device on the team. */
   clearedIds: Set<string>;
   collectedLetters: Set<number>;
+  /** 새로운시네마 영화를 2번째/3번째로 본 것 — 포지션이 없어 collectedLetters에는 절대 섞이지 않는 보너스 조각 개수(0~2). */
+  wildcardCount: number;
   /** True until the first fetch (success or failure) resolves — lets screens avoid showing "0 collected" as if it were real. */
   loading: boolean;
   /** Letter index currently pinging, for one-shot "ping" animations (own scan or team-sync reveal). */
@@ -40,6 +42,7 @@ const StationProgressContext = createContext<StationProgressValue | null>(null);
 export function StationProgressProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const [clearedIds, setClearedIds] = useState<Set<string>>(new Set());
+  const [wildcardCount, setWildcardCount] = useState(0);
   const [hasLoaded, setHasLoaded] = useState(false);
   const [newlyCollected, setNewlyCollected] = useState<number | null>(null);
   const revealTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -69,13 +72,15 @@ export function StationProgressProvider({ children }: { children: ReactNode }) {
   const refresh = useCallback(async () => {
     if (!user) {
       setClearedIds(new Set());
+      setWildcardCount(0);
       setHasLoaded(true);
       return;
     }
 
     try {
-      const { stationIds } = await api.getTeamFragments(user.team_id);
+      const { stationIds, wildcardCount: nextWildcardCount } = await api.getTeamFragments(user.team_id);
       setClearedIds(new Set(stationIds));
+      setWildcardCount(nextWildcardCount);
 
       // Reconcile against what THIS device has already shown a reveal for — a
       // teammate tagging a station should still ping the letter here once,
@@ -137,10 +142,17 @@ export function StationProgressProvider({ children }: { children: ReactNode }) {
 
   const recordMasterComplete = useCallback(async () => {
     if (!user) return;
-    const remaining = stations.filter((s) => !clearedIds.has(s.id));
+    // MYSTERYGAME is soft-disabled server-side (see CINEMA_STATION_IDS in
+    // routes.js) — posting to it directly always 404s now. Its fragment can
+    // only come through one of the CINEMA1~3 ids, so grant via CINEMA1
+    // instead when the team doesn't have it yet.
+    const remaining = stations.filter((s) => !clearedIds.has(s.id) && s.id !== 'MYSTERYGAME');
     await Promise.all(
       remaining.map((s) => api.postTagEvent({ person_id: user.person_id, team_id: user.team_id, station_id: s.id })),
     );
+    if (!clearedIds.has('MYSTERYGAME')) {
+      await api.postTagEvent({ person_id: user.person_id, team_id: user.team_id, station_id: 'CINEMA1' });
+    }
     await refresh();
   }, [user, clearedIds, refresh]);
 
@@ -167,6 +179,7 @@ export function StationProgressProvider({ children }: { children: ReactNode }) {
       value={{
         clearedIds,
         collectedLetters,
+        wildcardCount,
         loading: !hasLoaded,
         newlyCollected,
         skipReveal,

@@ -12,18 +12,31 @@ const pool = mysql.createPool({
 // `is_minigame` stations skip the admin's manual "세션 시작" — POST /tag-events
 // auto-starts their timed session the moment a participant scans (see routes.js).
 const STATION_SEED = [
-  { station_id: 'RAHAB', name: '라합방', hall_name: '사무엘홀 · 다니엘홀', duration_minutes: 25, concurrent_capacity: 2, letters: [0], is_hidden: false, is_minigame: false },
-  { station_id: 'NOAHROOM', name: '노아방', hall_name: '플레이그라운드', duration_minutes: 20, concurrent_capacity: 1, letters: [1], is_hidden: false, is_minigame: true },
-  { station_id: 'ABELROOM', name: '아벨방', hall_name: '다윗홀', duration_minutes: 20, concurrent_capacity: 1, letters: [2], is_hidden: false, is_minigame: true },
-  { station_id: 'JOSEPH', name: '요셉방', hall_name: '요셉홀', duration_minutes: 20, concurrent_capacity: 1, letters: [3], is_hidden: false, is_minigame: false },
-  { station_id: 'JACOB', name: '야곱방', hall_name: '이삭홀', duration_minutes: 25, concurrent_capacity: 1, letters: [4], is_hidden: false, is_minigame: false },
-  { station_id: 'ABRAHAM', name: '아브라함·사라방', hall_name: '아가페홀', duration_minutes: 20, concurrent_capacity: 1, letters: [5], is_hidden: false, is_minigame: false },
-  { station_id: 'SAMSON', name: '삼손방', hall_name: '디모데홀', duration_minutes: 20, concurrent_capacity: 1, letters: [6], is_hidden: false, is_minigame: false },
-  { station_id: 'DAVID', name: '에녹방', hall_name: '새로운홀', duration_minutes: 15, concurrent_capacity: 1, letters: [7], is_hidden: false, is_minigame: false },
-  { station_id: 'MYSTERYGAME', name: '새로운 시네마', hall_name: '여호수아홀', duration_minutes: 15, concurrent_capacity: 1, letters: [8], is_hidden: false, is_minigame: true },
+  { station_id: 'RAHAB', name: '라합방', hall_name: '사무엘홀 · 다니엘홀', duration_minutes: 25, concurrent_capacity: 2, letters: [0], is_hidden: false, is_minigame: false, is_active: true },
+  { station_id: 'NOAHROOM', name: '노아방', hall_name: '플레이그라운드', duration_minutes: 20, concurrent_capacity: 1, letters: [1], is_hidden: false, is_minigame: true, is_active: true },
+  { station_id: 'ABELROOM', name: '아벨방', hall_name: '다윗홀', duration_minutes: 20, concurrent_capacity: 1, letters: [2], is_hidden: false, is_minigame: true, is_active: true },
+  { station_id: 'JOSEPH', name: '요셉방', hall_name: '요셉홀', duration_minutes: 20, concurrent_capacity: 1, letters: [3], is_hidden: false, is_minigame: false, is_active: true },
+  { station_id: 'JACOB', name: '야곱방', hall_name: '이삭홀', duration_minutes: 25, concurrent_capacity: 1, letters: [4], is_hidden: false, is_minigame: false, is_active: true },
+  { station_id: 'ABRAHAM', name: '아브라함·사라방', hall_name: '아가페홀', duration_minutes: 20, concurrent_capacity: 1, letters: [5], is_hidden: false, is_minigame: false, is_active: true },
+  { station_id: 'SAMSON', name: '삼손방', hall_name: '디모데홀', duration_minutes: 20, concurrent_capacity: 1, letters: [6], is_hidden: false, is_minigame: false, is_active: true },
+  { station_id: 'DAVID', name: '에녹방', hall_name: '새로운홀', duration_minutes: 15, concurrent_capacity: 1, letters: [7], is_hidden: false, is_minigame: false, is_active: true },
+  // 2026-07-20 CINEMA1~3로 3분리 배포 후 soft-disable — 삭제 대신 is_active만
+  // 끔(운영/기록 보존, 재활성화 가능). POST /tag-events가 is_active=TRUE만
+  // 받으므로 이 id로의 신규 스캔/부여는 이제 전부 거부됨. 참가자 지도에는
+  // 여전히 "새로운 시네마" 카드/타일로 1개만 노출(letters:[8] 유지 — 팀이
+  // CINEMA1~3 중 하나로 U를 획득하면 서버가 이 id를 합성 부여해 카드가 켜짐).
+  { station_id: 'MYSTERYGAME', name: '새로운 시네마', hall_name: '여호수아홀', duration_minutes: 15, concurrent_capacity: 1, letters: [8], is_hidden: false, is_minigame: true, is_active: false },
+  // 새로운시네마 영화 1/2/3 — 팀당 각 1회 스캔 가능, letters는 조건부라 빈
+  // 배열([]): 그 팀의 첫 방문이면 U(fragment_letter='U', position 9), 이후
+  // 방문은 와일드카드('*', 포지션 없음). 세션/준비중 개념 없음(is_minigame
+  // false), 관리자 스테이션 목록에서도 숨김(is_hidden true) — 조각 부여 탭
+  // 에서만 선택 가능. 자세한 로직은 routes.js CINEMA_STATION_IDS 참고.
+  { station_id: 'CINEMA1', name: '새로운 시네마 · 영화 1', hall_name: '여호수아홀', duration_minutes: 15, concurrent_capacity: 1, letters: [], is_hidden: true, is_minigame: false, is_active: true },
+  { station_id: 'CINEMA2', name: '새로운 시네마 · 영화 2', hall_name: '여호수아홀', duration_minutes: 15, concurrent_capacity: 1, letters: [], is_hidden: true, is_minigame: false, is_active: true },
+  { station_id: 'CINEMA3', name: '새로운 시네마 · 영화 3', hall_name: '여호수아홀', duration_minutes: 15, concurrent_capacity: 1, letters: [], is_hidden: true, is_minigame: false, is_active: true },
   // 장소 당일 결정, QR 전용(NFC 없음) — venue를 하드코딩하지 않음. 물리적 방/부스가
   // 없어 세션(진행중 타이머) 개념 자체가 없음 — is_minigame도 false로 둠.
-  { station_id: 'HIDDENLETTER', name: '숨은글자찾기', hall_name: null, duration_minutes: 10, concurrent_capacity: 1, letters: [9], is_hidden: true, is_minigame: false },
+  { station_id: 'HIDDENLETTER', name: '숨은글자찾기', hall_name: null, duration_minutes: 10, concurrent_capacity: 1, letters: [9], is_hidden: true, is_minigame: false, is_active: true },
 ];
 
 async function initSchema() {
@@ -164,13 +177,14 @@ async function initSchema() {
     for (const s of STATION_SEED) {
       await conn.query(
         `INSERT INTO stations (station_id, name, hall_name, duration_minutes, concurrent_capacity, letters, is_active, is_hidden, is_minigame)
-         VALUES (?, ?, ?, ?, ?, ?, TRUE, ?, ?)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
          ON DUPLICATE KEY UPDATE
            name = VALUES(name),
            hall_name = VALUES(hall_name),
            duration_minutes = VALUES(duration_minutes),
            concurrent_capacity = VALUES(concurrent_capacity),
            letters = VALUES(letters),
+           is_active = VALUES(is_active),
            is_hidden = VALUES(is_hidden),
            is_minigame = VALUES(is_minigame)`,
         [
@@ -180,6 +194,7 @@ async function initSchema() {
           s.duration_minutes,
           s.concurrent_capacity,
           JSON.stringify(s.letters),
+          s.is_active,
           s.is_hidden,
           s.is_minigame,
         ],

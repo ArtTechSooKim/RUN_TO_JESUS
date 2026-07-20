@@ -79,13 +79,13 @@ export const api = {
     request<ApiUser>(`/users/${personId}`, { method: 'PATCH', body: JSON.stringify(body) }),
 
   postTagEvent: (body: { person_id: string; team_id: number; station_id: string }) =>
-    request<{ station_id: string; letters: number[]; newForTeam: boolean }>('/tag-events', {
-      method: 'POST',
-      body: JSON.stringify(body),
-    }),
+    request<{ station_id: string; letters: number[]; newForTeam: boolean; fragmentLetter: string | null }>(
+      '/tag-events',
+      { method: 'POST', body: JSON.stringify(body) },
+    ),
 
   getTeamFragments: (teamId: number) =>
-    request<{ stationIds: string[]; letters: number[] }>(`/teams/${teamId}/fragments`),
+    request<{ stationIds: string[]; letters: number[]; wildcardCount: number }>(`/teams/${teamId}/fragments`),
 
   cancelTagEvent: (teamId: number, stationId: string) =>
     request<{ ok: true }>(`/tag-events/${teamId}/${stationId}`, { method: 'DELETE' }),

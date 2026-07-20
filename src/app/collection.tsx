@@ -11,6 +11,34 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
+/** 새로운시네마를 2번째/3번째로 방문했을 때 받는 보너스 조각 — 특정 글자로 확정되지 않으므로 물음표/글자 없이 은은하게 반짝이기만 한다. */
+function WildcardPiece({ index }: { index: number }) {
+  const shimmer = useSharedValue(0.4);
+
+  useEffect(() => {
+    shimmer.value = withDelay(
+      index * 220,
+      withRepeat(
+        withSequence(
+          withTiming(1, { duration: 1100, easing: Easing.inOut(Easing.sin) }),
+          withTiming(0.4, { duration: 1100, easing: Easing.inOut(Easing.sin) }),
+        ),
+        -1,
+      ),
+    );
+  }, [shimmer, index]);
+
+  const style = useAnimatedStyle(() => ({
+    opacity: shimmer.value,
+    shadowOpacity: shimmer.value * 0.7,
+    shadowRadius: 6 + shimmer.value * 14,
+  }));
+
+  return (
+    <Animated.View style={[styles.wildcardTile, style, { shadowColor: Colors.dark.gold }]} />
+  );
+}
+
 import { GoldParticles } from '@/components/gold-particles';
 import { StarField } from '@/components/star-field';
 import { ThemedText } from '@/components/themed-text';
@@ -107,7 +135,7 @@ function EndingLetterTile({
 }
 
 export default function CollectionScreen() {
-  const { collectedLetters, loading } = useStationProgress();
+  const { collectedLetters, wildcardCount, loading } = useStationProgress();
   const total = RUN_TO_JESUS.length;
   const collected = collectedLetters.size;
   const allCollected = collected === total;
@@ -198,6 +226,19 @@ export default function CollectionScreen() {
           </View>
         </View>
 
+        {wildcardCount > 0 && (
+          <View style={styles.wildcardRow}>
+            <ThemedText type="small" themeColor="textSecondary" style={styles.wildcardLabel}>
+              ✨ 보너스 조각
+            </ThemedText>
+            <View style={styles.wildcardTiles}>
+              {Array.from({ length: wildcardCount }, (_, i) => (
+                <WildcardPiece key={i} index={i} />
+              ))}
+            </View>
+          </View>
+        )}
+
         {allCollected ? (
           showVerse && (
             <View style={styles.finalBlock}>
@@ -278,6 +319,27 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    shadowOffset: { width: 0, height: 0 },
+  },
+  wildcardRow: {
+    gap: Spacing.two,
+    alignItems: 'center',
+  },
+  wildcardLabel: {
+    textTransform: 'uppercase',
+    letterSpacing: 2,
+  },
+  wildcardTiles: {
+    flexDirection: 'row',
+    gap: Spacing.two,
+  },
+  wildcardTile: {
+    width: 32,
+    height: 37,
+    borderRadius: Spacing.two,
+    borderWidth: 1,
+    borderColor: 'rgba(255,215,0,0.55)',
+    backgroundColor: 'rgba(255,215,0,0.14)',
     shadowOffset: { width: 0, height: 0 },
   },
   bloomFlash: {

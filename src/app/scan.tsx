@@ -5,13 +5,12 @@ import { CollectBurst } from '@/components/collect-burst';
 import { SoundPressable } from '@/components/sound-pressable';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { RUN_TO_JESUS } from '@/constants/stations';
 import { Colors, Spacing } from '@/constants/theme';
 import { useTagScanHandler } from '@/hooks/use-tag-scan-handler';
 
 export default function ScanScreen() {
   const [permission, requestPermission] = useCameraPermissions();
-  const { handleScan, errorText, collectedStation } = useTagScanHandler();
+  const { handleScan, errorText, collectedStation, grantedLetter } = useTagScanHandler();
 
   if (Platform.OS === 'web' && typeof navigator !== 'undefined' && !navigator.mediaDevices) {
     return (
@@ -72,7 +71,7 @@ export default function ScanScreen() {
 
       {collectedStation && (
         <CollectBurst
-          letter={collectedStation.letters.length ? RUN_TO_JESUS[collectedStation.letters[0]] : undefined}
+          letter={grantedLetter ?? undefined}
           color={collectedStation.color}
           label={`${collectedStation.hall} · ${collectedStation.keyword}`}
         />

@@ -10,6 +10,14 @@ const RUN_TO_JESUS = 'RUNTOJESUS';
 // unlike the per-user edit endpoints), see settings.tsx ADMIN_PASSWORD.
 const RESET_PASSWORD = 'saeroun0906';
 
+// 새로운시네마의 영화 1/2/3 — 팀당 한 곳당 1회씩, 최대 3회 스캔 가능하지만
+// 글자 배정은 조건부: 그 팀의 첫 방문(어느 영화든)만 진짜 U(position 9)를
+// 받고, 이후 방문은 전부 와일드카드('*', 포지션 없음). 2026-07-20 진장
+// 스펙 확정 — station.letters에 의존하는 일반 스테이션 로직과 분리해서
+// 이 3개 id만 별도 분기로 처리한다.
+const CINEMA_STATION_IDS = ['CINEMA1', 'CINEMA2', 'CINEMA3'];
+const CINEMA_U_LETTER_INDEX = 8; // RUN_TO_JESUS[8] === 'U', 다른 방(노아방)의 U(index 1)와 별개.
+
 function parseLetters(row) {
   if (!row) return row;
   return { ...row, letters: typeof row.letters === 'string' ? JSON.parse(row.letters) : row.letters };
@@ -63,10 +71,73 @@ router.patch('/users/:person_id', async (req, res) => {
 
 // ── tag events ───────────────────────────────────────────────────────────
 
+// 새로운시네마 전용 분기 — station.letters가 없는(조건부) 3개 station_id만
+// 여기서 처리하고 나머지는 손대지 않은 기존 경로를 그대로 탄다. 잠금은
+// station_id별이 아니라 team_id 전체 CINEMA 범위로 걸어야 한다: 팀이
+// CINEMA1/CINEMA2를 거의 동시에 스캔하면 "누가 첫 U인지" 판정 자체가
+// 레이스에 걸리기 때문(같은 station_id 재스캔 레이스와는 다른 문제).
+async function handleCinemaTagEvent(conn, { person_id, team_id, station_id }) {
+  const lockName = `tag_events:cinema:${team_id}`;
+  const [lockRows] = await conn.query('SELECT GET_LOCK(?, 5) AS acquired', [lockName]);
+  if (!lockRows[0].acquired) return { status: 503, body: { error: 'busy, try again' } };
+
+  try {
+    const [stationRows] = await conn.query(
+      'SELECT 1 FROM stations WHERE station_id = ? AND is_active = TRUE',
+      [station_id],
+    );
+    if (!stationRows.length) return { status: 404, body: { error: 'unknown or inactive station' } };
+
+    // 이 영화(정확히 이 station_id)를 이미 태그했으면 재스캔은 그냥 무시 —
+    // 일반 스테이션과 달리 여기선 중복 삽입이 와일드카드 개수를 틀어지게
+    // 만들기 때문에 반드시 막아야 함.
+    const [priorThisMovie] = await conn.query(
+      'SELECT COUNT(*) AS count FROM tag_events WHERE team_id = ? AND station_id = ?',
+      [team_id, station_id],
+    );
+    if (priorThisMovie[0].count > 0) {
+      return { status: 201, body: { station_id, letters: [], newForTeam: false, fragmentLetter: null } };
+    }
+
+    const [priorU] = await conn.query(
+      `SELECT COUNT(*) AS count FROM tag_events WHERE team_id = ? AND station_id IN (?) AND fragment_letter = 'U'`,
+      [team_id, CINEMA_STATION_IDS],
+    );
+    const fragmentLetter = priorU[0].count === 0 ? 'U' : '*';
+
+    await conn.query(
+      'INSERT INTO tag_events (person_id, team_id, station_id, fragment_letter) VALUES (?, ?, ?, ?)',
+      [person_id, team_id, station_id, fragmentLetter],
+    );
+
+    return {
+      status: 201,
+      body: {
+        station_id,
+        letters: fragmentLetter === 'U' ? [CINEMA_U_LETTER_INDEX] : [],
+        newForTeam: true,
+        fragmentLetter,
+      },
+    };
+  } finally {
+    await conn.query('SELECT RELEASE_LOCK(?)', [lockName]);
+  }
+}
+
 router.post('/tag-events', async (req, res) => {
   const { person_id, team_id, station_id } = req.body;
   if (!person_id || !team_id || !station_id) {
     return res.status(400).json({ error: 'person_id, team_id, station_id are required' });
+  }
+
+  if (CINEMA_STATION_IDS.includes(station_id)) {
+    const conn = await pool.getConnection();
+    try {
+      const result = await handleCinemaTagEvent(conn, { person_id, team_id, station_id });
+      return res.status(result.status).json(result.body);
+    } finally {
+      conn.release();
+    }
   }
 
   // Two teammates can tag the same station within milliseconds of each
@@ -104,10 +175,10 @@ router.post('/tag-events', async (req, res) => {
         );
       }
 
-      // Mini-games (노아방/아벨방/영화관) have no physical room to book, so
-      // there's no admin "세션 시작" step for them — the scan itself starts
-      // their timed session, same shape as an admin-started one, so the
-      // existing session-progress UI (floor map, admin dashboard) just works.
+      // Mini-games (노아방/아벨방) have no physical room to book, so there's
+      // no admin "세션 시작" step for them — the scan itself starts their
+      // timed session, same shape as an admin-started one, so the existing
+      // session-progress UI (floor map, admin dashboard) just works.
       if (station.is_minigame) {
         const [activeRows] = await conn.query(
           `SELECT id FROM game_sessions WHERE team_id = ? AND station_id = ? AND status = 'in_progress'`,
@@ -122,7 +193,7 @@ router.post('/tag-events', async (req, res) => {
         }
       }
 
-      res.status(201).json({ station_id, letters: station.letters, newForTeam });
+      res.status(201).json({ station_id, letters: station.letters, newForTeam, fragmentLetter: station.letters.length ? RUN_TO_JESUS[station.letters[0]] : null });
     } finally {
       await conn.query('SELECT RELEASE_LOCK(?)', [lockName]);
     }
@@ -147,15 +218,32 @@ router.get('/teams/:team_id/fragments', async (req, res) => {
     'SELECT DISTINCT station_id FROM tag_events WHERE team_id = ?',
     [req.params.team_id],
   );
-  const stationIds = stationIdRows.map((r) => r.station_id);
-  if (!stationIds.length) return res.json({ stationIds: [], letters: [] });
+  let stationIds = stationIdRows.map((r) => r.station_id);
+
+  // CINEMA1~3는 station.letters가 비어 있어(조건부 배정) 일반 union 로직이
+  // 아무것도 못 얻는다 — 실제 U(position 9) 보유 여부를 tag_events에서 직접
+  // 확인하고, 있으면 참가자 화면이 이미 이해하는 "MYSTERYGAME" id를 합성으로
+  // 끼워 넣어 기존 클라이언트 로직(모자이크 점등, 카드 완료 표시)이 그대로
+  // 먹히게 한다. 와일드카드('*')는 개수만 별도로 반환 — letters/stationIds
+  // 어디에도 절대 섞이지 않음(포지션 없는 보너스 조각이라 10칸 집계 제외).
+  let wildcardCount = 0;
+  if (stationIds.some((id) => CINEMA_STATION_IDS.includes(id))) {
+    const [cinemaRows] = await pool.query(
+      `SELECT fragment_letter FROM tag_events WHERE team_id = ? AND station_id IN (?)`,
+      [req.params.team_id, CINEMA_STATION_IDS],
+    );
+    wildcardCount = cinemaRows.filter((r) => r.fragment_letter === '*').length;
+    if (cinemaRows.some((r) => r.fragment_letter === 'U')) stationIds = [...stationIds, 'MYSTERYGAME'];
+  }
+
+  if (!stationIds.length) return res.json({ stationIds: [], letters: [], wildcardCount });
 
   const [stationRows] = await pool.query(
     `SELECT letters FROM stations WHERE station_id IN (${stationIds.map(() => '?').join(',')})`,
     stationIds,
   );
   const letters = [...new Set(stationRows.flatMap((r) => parseLetters(r).letters))].sort((a, b) => a - b);
-  res.json({ stationIds, letters });
+  res.json({ stationIds, letters, wildcardCount });
 });
 
 router.post('/fragment-reveal-log', async (req, res) => {
@@ -414,16 +502,24 @@ router.post('/admin/reset-users', async (req, res) => {
 // ── broadcast / ending stats ─────────────────────────────────────────────
 
 router.get('/stats/overall', async (req, res) => {
-  const [teamsAndStations] = await pool.query(
+  // 새로운시네마가 CINEMA1~3 세 station_id로 나뉘면서 "활성 스테이션 수"가
+  // 더 이상 "필요한 조각 슬롯 수(10)"와 같지 않게 됐다 — 그대로 두면 영화를
+  // 2~3개 다 봐야 진행률이 채워지는 것처럼 분모가 부풀려짐. CINEMA는 팀당
+  // 딱 1칸(U 확보 여부)만 세고, 나머지 스테이션은 기존 방식 그대로 센다.
+  const [nonCinemaRows] = await pool.query(
     `SELECT COUNT(DISTINCT team_id, te.station_id) AS filled
      FROM tag_events te
      JOIN stations s ON s.station_id = te.station_id
-     WHERE s.is_active = TRUE`,
+     WHERE s.is_active = TRUE AND te.station_id NOT IN (?)`,
+    [CINEMA_STATION_IDS],
   );
-  const [activeStations] = await pool.query('SELECT COUNT(*) AS count FROM stations WHERE is_active = TRUE');
+  const [cinemaRows] = await pool.query(
+    `SELECT COUNT(DISTINCT team_id) AS filled FROM tag_events WHERE station_id IN (?) AND fragment_letter = 'U'`,
+    [CINEMA_STATION_IDS],
+  );
 
-  const filled = teamsAndStations[0].filled;
-  const total = 24 * activeStations[0].count;
+  const filled = nonCinemaRows[0].filled + cinemaRows[0].filled;
+  const total = 24 * RUN_TO_JESUS.length;
   res.json({ count: filled, total, ratio: total > 0 ? filled / total : 0 });
 });
 

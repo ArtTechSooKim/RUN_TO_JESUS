@@ -7,7 +7,15 @@ import { Floor10Fashion, Floor10Young, Floor11Young } from '@/components/floor-m
 import { SoundPressable } from '@/components/sound-pressable';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { floorLabels, floors, HALL_SPLITS, stations as allStations, type Floor, type Station } from '@/constants/stations';
+import {
+  CINEMA_STATIONS,
+  floorLabels,
+  floors,
+  HALL_SPLITS,
+  stations as allStations,
+  type Floor,
+  type Station,
+} from '@/constants/stations';
 import { Colors, Spacing } from '@/constants/theme';
 import { formatRemaining, sessionProgressPercent, useActiveSessions, useMapAggregates } from '@/hooks/use-active-sessions';
 import { useMapPrepAggregates, usePrepStatuses } from '@/hooks/use-prep-status';
@@ -407,7 +415,7 @@ function GrantConfirmModal({
   teamId: number;
   station: Station;
   onClose: () => void;
-  onDone: () => void;
+  onDone: (fragmentLetter: string | null) => void;
 }) {
   const [granting, setGranting] = useState(false);
   const [error, setError] = useState('');
@@ -416,8 +424,8 @@ function GrantConfirmModal({
     setGranting(true);
     setError('');
     try {
-      await api.postTagEvent({ person_id: ADMIN_GRANT_PERSON_ID, team_id: teamId, station_id: station.id });
-      onDone();
+      const result = await api.postTagEvent({ person_id: ADMIN_GRANT_PERSON_ID, team_id: teamId, station_id: station.id });
+      onDone(result.fragmentLetter);
     } catch {
       setError('부여에 실패했어요. 다시 시도해주세요.');
       setGranting(false);
@@ -462,6 +470,11 @@ function GrantConfirmModal({
   );
 }
 
+// 새로운시네마는 서버에서 MYSTERYGAME을 비활성화하고 영화 1/2/3(CINEMA1~3)
+// 으로 나눴으니, 여기서 고를 수 있는 스테이션도 그에 맞춰 교체 — MYSTERYGAME
+// 그대로 뒀다간 골라도 항상 "unknown or inactive station"으로 실패한다.
+const GRANTABLE_STATIONS = [...allStations.filter((s) => s.id !== 'MYSTERYGAME'), ...CINEMA_STATIONS];
+
 function GrantFragmentTab() {
   const [selectedStationId, setSelectedStationId] = useState<string | null>(null);
   const [teamInput, setTeamInput] = useState('');
@@ -469,7 +482,7 @@ function GrantFragmentTab() {
   const [confirmTeamId, setConfirmTeamId] = useState<number | null>(null);
   const [successMsg, setSuccessMsg] = useState('');
 
-  const selectedStation = allStations.find((s) => s.id === selectedStationId) ?? null;
+  const selectedStation = GRANTABLE_STATIONS.find((s) => s.id === selectedStationId) ?? null;
 
   function handleGrantPress() {
     setSuccessMsg('');
@@ -493,7 +506,7 @@ function GrantFragmentTab() {
         게임 선택
       </ThemedText>
       <View style={styles.grantStationGrid}>
-        {allStations.map((station) => {
+        {GRANTABLE_STATIONS.map((station) => {
           const selected = station.id === selectedStationId;
           return (
             <SoundPressable
@@ -559,8 +572,19 @@ function GrantFragmentTab() {
           teamId={confirmTeamId}
           station={selectedStation}
           onClose={() => setConfirmTeamId(null)}
-          onDone={() => {
-            setSuccessMsg(`${confirmTeamId}조에게 "${selectedStation.keyword}" 조각을 부여했어요.`);
+          onDone={(fragmentLetter) => {
+            // 새로운시네마(CINEMA1~3)는 팀 상태에 따라 실제로 뭘 받았는지가
+            // 갈리므로(U vs 와일드카드) 그 결과를 그대로 알려준다. 이미 그
+            // 영화를 태그한 팀에게 재부여를 시도한 경우도 여기서 드러남.
+            const outcome =
+              fragmentLetter === 'U'
+                ? ' (U 조각 획득!)'
+                : fragmentLetter === '*'
+                  ? ' (이미 U를 받은 팀 — 보너스 조각을 부여했어요)'
+                  : fragmentLetter === null && CINEMA_STATIONS.some((s) => s.id === selectedStation.id)
+                    ? ' (이미 이 영화를 태그한 팀이라 새로 부여되지 않았어요)'
+                    : '';
+            setSuccessMsg(`${confirmTeamId}조에게 "${selectedStation.keyword}" 조각을 부여했어요.${outcome}`);
             setConfirmTeamId(null);
             setTeamInput('');
           }}

@@ -14,7 +14,6 @@ import { CollectBurst } from '@/components/collect-burst';
 import { SoundPressable } from '@/components/sound-pressable';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { RUN_TO_JESUS } from '@/constants/stations';
 import { Colors, Spacing } from '@/constants/theme';
 import { useTagScanHandler } from '@/hooks/use-tag-scan-handler';
 
@@ -47,7 +46,7 @@ function PulsingRing() {
 }
 
 export default function NfcScanScreen() {
-  const { handleScan, errorText, collectedStation } = useTagScanHandler();
+  const { handleScan, errorText, collectedStation, grantedLetter } = useTagScanHandler();
   const [nfcError, setNfcError] = useState('');
   const [attempt, setAttempt] = useState(0);
 
@@ -93,7 +92,7 @@ export default function NfcScanScreen() {
     return (
       <View style={styles.container}>
         <CollectBurst
-          letter={collectedStation.letters.length ? RUN_TO_JESUS[collectedStation.letters[0]] : undefined}
+          letter={grantedLetter ?? undefined}
           color={collectedStation.color}
           label={`${collectedStation.hall} · ${collectedStation.keyword}`}
         />
