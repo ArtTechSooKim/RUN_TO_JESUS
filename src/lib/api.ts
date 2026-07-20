@@ -25,11 +25,13 @@ export type ApiStation = {
 
 export type GameState = 'progress' | 'ended' | 'ending';
 
-/** A station's manual "준비중🧹" flag, toggled by its staff between games instead of a timer. */
+/** A station's two manual staff-toggled flags: "준비중🧹" between games, and "도전자 모집중" for versus-format stations waiting on an opponent team. */
 export type PrepStatus = {
   station_id: string;
   is_preparing: 0 | 1;
   tip: string | null;
+  is_recruiting: 0 | 1;
+  recruit_tip: string | null;
 };
 
 export type ApiSession = {
@@ -119,7 +121,10 @@ export const api = {
 
   getPrepStatuses: () => request<PrepStatus[]>('/prep-status'),
 
-  setPrepStatus: (stationId: string, body: { is_preparing: boolean; tip?: string }) =>
+  setPrepStatus: (
+    stationId: string,
+    body: { is_preparing?: boolean; tip?: string; is_recruiting?: boolean; recruit_tip?: string },
+  ) =>
     request<PrepStatus>(`/prep-status/${stationId}`, { method: 'PUT', body: JSON.stringify(body) }),
 
   resetAllProgress: (password: string) =>

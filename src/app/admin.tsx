@@ -15,14 +15,22 @@ import { useSoundEffects } from '@/hooks/use-sound-effects';
 import { ApiError, api, type ApiSession, type ApiStation, type PrepStatus } from '@/lib/api';
 
 const DEFAULT_PREP_TIP = '대략 10분 준비합니다';
-// 삼손방은 12명 릴레이 3레인 구조라 세팅이 다른 방보다 훨씬 빨리 끝남 —
-// 처음 준비중을 켤 때 채워지는 기본 문구만 다르고, 그 외 로직은 동일.
+// 세팅이 다른 방보다 훨씬 빨리 끝나는 방들 — 처음 준비중을 켤 때 채워지는
+// 기본 문구만 다르고, 그 외 로직은 동일.
 const STATION_PREP_TIP_OVERRIDES: Record<string, string> = {
   SAMSON: '대략 5분 준비합니다',
+  JACOB: '대략 5분 준비합니다',
 };
 function defaultPrepTip(stationId: string) {
   return STATION_PREP_TIP_OVERRIDES[stationId] ?? DEFAULT_PREP_TIP;
 }
+
+// 반드시 상대 팀이 있어야 시작되는 대결 구도 스테이션 — 혼자 먼저 도착한 팀이
+// 상대 없이 무한 대기하는 걸 막기 위해, 스태프가 "도전자 모집중"을 켜서
+// "아직 상대를 기다리는 중"임을 참가자에게 보여줄 수 있다. 이 목록에 없는
+// 방은 (삼손방처럼) 대결 구도가 아니라서 이 토글 자체가 필요 없음.
+const VERSUS_STATIONS = new Set(['JACOB']);
+const DEFAULT_RECRUIT_TIP = '도전자 모집 중 — 현재 1팀 대기';
 
 // tag_events.person_id for admin-initiated grants — there's no real logged-in
 // user behind the 관리자 login bypass (see use-auth.tsx), so this is a fixed,
@@ -141,27 +149,39 @@ function HallGroup({
   );
 }
 
-function PrepToggle({
-  stationId,
-  prep,
+/** A staff-toggled on/off flag with an editable free-text tip shown while on — 준비중 and 도전자 모집중 are both instances of this. */
+function StatusToggle({
+  emoji,
+  label,
+  colorStyle,
+  textColor,
+  isOn,
+  currentTip,
+  defaultTip,
+  onSave,
   onChanged,
 }: {
-  stationId: string;
-  prep?: PrepStatus;
+  emoji: string;
+  label: string;
+  colorStyle: object;
+  textColor: string;
+  isOn: boolean;
+  currentTip: string | null;
+  defaultTip: string;
+  onSave: (nextOn: boolean, tip: string) => Promise<unknown>;
   onChanged: () => void;
 }) {
-  const isPreparing = !!prep?.is_preparing;
-  const [tip, setTip] = useState(prep?.tip || defaultPrepTip(stationId));
+  const [tip, setTip] = useState(currentTip || defaultTip);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (prep?.tip) setTip(prep.tip);
-  }, [prep?.tip]);
+    if (currentTip) setTip(currentTip);
+  }, [currentTip]);
 
   async function toggle() {
     setSaving(true);
     try {
-      await api.setPrepStatus(stationId, { is_preparing: !isPreparing, tip: tip || defaultPrepTip(stationId) });
+      await onSave(!isOn, tip || defaultTip);
       onChanged();
     } finally {
       setSaving(false);
@@ -173,17 +193,18 @@ function PrepToggle({
       <SoundPressable
         onPress={toggle}
         disabled={saving}
-        style={({ pressed }) => [styles.prepToggle, isPreparing && styles.prepToggleActive, pressed && styles.pressed]}>
-        <ThemedText type="small" style={{ color: isPreparing ? '#78350F' : Colors.dark.textSecondary }}>
-          🧹 준비중{isPreparing ? ' · ON' : ''}
+        style={({ pressed }) => [styles.prepToggle, isOn && colorStyle, pressed && styles.pressed]}>
+        <ThemedText type="small" style={{ color: isOn ? textColor : Colors.dark.textSecondary }}>
+          {emoji} {label}
+          {isOn ? ' · ON' : ''}
         </ThemedText>
       </SoundPressable>
-      {isPreparing && (
+      {isOn && (
         <TextInput
           value={tip}
           onChangeText={setTip}
-          onBlur={() => api.setPrepStatus(stationId, { is_preparing: true, tip: tip || defaultPrepTip(stationId) }).then(onChanged)}
-          placeholder={`예: ${defaultPrepTip(stationId)}`}
+          onBlur={() => onSave(true, tip || defaultTip).then(onChanged)}
+          placeholder={`예: ${defaultTip}`}
           placeholderTextColor={Colors.dark.textSecondary}
           style={styles.prepTipInput}
         />
@@ -223,7 +244,31 @@ function StationCard({
         )}
       </View>
 
-      <PrepToggle stationId={station.station_id} prep={prep} onChanged={onPrepChanged} />
+      <StatusToggle
+        emoji="🧹"
+        label="준비중"
+        colorStyle={styles.prepToggleActive}
+        textColor="#78350F"
+        isOn={!!prep?.is_preparing}
+        currentTip={prep?.tip ?? null}
+        defaultTip={defaultPrepTip(station.station_id)}
+        onSave={(nextOn, tip) => api.setPrepStatus(station.station_id, { is_preparing: nextOn, tip })}
+        onChanged={onPrepChanged}
+      />
+
+      {VERSUS_STATIONS.has(station.station_id) && (
+        <StatusToggle
+          emoji="🙋"
+          label="도전자 모집중"
+          colorStyle={styles.recruitToggleActive}
+          textColor="#075985"
+          isOn={!!prep?.is_recruiting}
+          currentTip={prep?.recruit_tip ?? null}
+          defaultTip={DEFAULT_RECRUIT_TIP}
+          onSave={(nextOn, recruit_tip) => api.setPrepStatus(station.station_id, { is_recruiting: nextOn, recruit_tip })}
+          onChanged={onPrepChanged}
+        />
+      )}
 
       {halls ? (
         <>
@@ -276,6 +321,17 @@ function MapTab({ activeSessions, prepStatuses }: { activeSessions: ApiSession[]
     () => Object.fromEntries(prepStatuses.filter((p) => p.tip).map((p) => [p.station_id, p.tip as string])),
     [prepStatuses],
   );
+  const isRecruiting = useMemo(
+    () => Object.fromEntries(prepStatuses.map((p) => [p.station_id, !!p.is_recruiting])),
+    [prepStatuses],
+  );
+  const recruitTips = useMemo(
+    () =>
+      Object.fromEntries(
+        prepStatuses.filter((p) => p.recruit_tip).map((p) => [p.station_id, p.recruit_tip as string]),
+      ),
+    [prepStatuses],
+  );
 
   const selectedSessions = selectedStation ? activeSessions.filter((s) => s.station_id === selectedStation.id) : [];
 
@@ -314,6 +370,8 @@ function MapTab({ activeSessions, prepStatuses }: { activeSessions: ApiSession[]
           activePercents={activePercents}
           isPreparing={isPreparing}
           prepTips={prepTips}
+          isRecruiting={isRecruiting}
+          recruitTips={recruitTips}
         />
       </Animated.View>
 
@@ -699,6 +757,10 @@ const styles = StyleSheet.create({
   prepToggleActive: {
     backgroundColor: '#FBBF24',
     borderColor: '#FBBF24',
+  },
+  recruitToggleActive: {
+    backgroundColor: '#38BDF8',
+    borderColor: '#38BDF8',
   },
   prepTipInput: {
     flex: 1,

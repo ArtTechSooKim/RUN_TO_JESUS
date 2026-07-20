@@ -91,10 +91,12 @@ async function initSchema() {
 
     await conn.query(`
       CREATE TABLE IF NOT EXISTS station_prep_status (
-        station_id   VARCHAR(20) PRIMARY KEY,
-        is_preparing BOOLEAN NOT NULL DEFAULT FALSE,
-        tip          VARCHAR(100) NULL,
-        updated_at   DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        station_id    VARCHAR(20) PRIMARY KEY,
+        is_preparing  BOOLEAN NOT NULL DEFAULT FALSE,
+        tip           VARCHAR(100) NULL,
+        is_recruiting BOOLEAN NOT NULL DEFAULT FALSE,
+        recruit_tip   VARCHAR(100) NULL,
+        updated_at    DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       )
     `);
 
@@ -134,6 +136,10 @@ async function initSchema() {
       // 라합방(사무엘홀/다니엘홀)처럼 한 스테이션을 여러 홀에서 독립적으로 운영할
       // 때, 세션이 어느 홀 소속인지 구분하기 위한 표시 — 그 외 스테이션은 항상 NULL.
       'ALTER TABLE game_sessions ADD COLUMN hall_label VARCHAR(20) NULL',
+      // 대결 구도 스테이션에서 상대 팀을 기다리는 중임을 표시하는 두 번째
+      // 수동 플래그 — station_prep_status에 준비중과 나란히 저장.
+      'ALTER TABLE station_prep_status ADD COLUMN is_recruiting BOOLEAN NOT NULL DEFAULT FALSE',
+      'ALTER TABLE station_prep_status ADD COLUMN recruit_tip VARCHAR(100) NULL',
     ]) {
       try {
         await conn.query(ddl);

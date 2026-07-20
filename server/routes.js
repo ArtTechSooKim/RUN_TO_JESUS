@@ -296,28 +296,49 @@ router.patch('/sessions/:id', async (req, res) => {
 });
 
 // ── station prep status ─────────────────────────────────────────────────
-// Manual "준비중🧹" indicator a station's staff flips between games instead
-// of a timer, since on-site setup time varies too much to predict — see
-// STATION_QUEUE_GUIDE.md hand-off chat for the confirmed design (the queue
-// system in that file's body was cancelled; only this simpler toggle shipped).
+// Two independent manual flags a station's staff flips in /admin instead of
+// a timer or queue — see STATION_QUEUE_GUIDE.md hand-off chat for why (the
+// full queue system in that file's body was cancelled; only these simpler
+// toggles shipped):
+//   - is_preparing/tip: "준비중🧹" between games (setup time varies too much
+//     on-site to time).
+//   - is_recruiting/recruit_tip: "도전자 모집중" for versus-format stations,
+//     so a team that arrives before an opponent doesn't look like dead air.
 
 router.get('/prep-status', async (req, res) => {
   const [rows] = await pool.query(
-    'SELECT station_id, is_preparing, tip FROM station_prep_status WHERE is_preparing = TRUE',
+    `SELECT station_id, is_preparing, tip, is_recruiting, recruit_tip
+     FROM station_prep_status WHERE is_preparing = TRUE OR is_recruiting = TRUE`,
   );
   res.json(rows);
 });
 
 router.put('/prep-status/:station_id', async (req, res) => {
-  const { is_preparing, tip } = req.body;
-  if (typeof is_preparing !== 'boolean') return res.status(400).json({ error: 'is_preparing (boolean) is required' });
+  const { is_preparing, tip, is_recruiting, recruit_tip } = req.body;
+  if (is_preparing === undefined && is_recruiting === undefined) {
+    return res.status(400).json({ error: 'is_preparing or is_recruiting is required' });
+  }
+
+  // Each toggle only ever sends its own fields — merge onto the existing row
+  // so updating one flag never clobbers the other's current value.
+  const [existingRows] = await pool.query('SELECT * FROM station_prep_status WHERE station_id = ?', [req.params.station_id]);
+  const existing = existingRows[0];
+  const next = {
+    is_preparing: is_preparing !== undefined ? is_preparing : (existing?.is_preparing ?? false),
+    tip: tip !== undefined ? tip : (existing?.tip ?? null),
+    is_recruiting: is_recruiting !== undefined ? is_recruiting : (existing?.is_recruiting ?? false),
+    recruit_tip: recruit_tip !== undefined ? recruit_tip : (existing?.recruit_tip ?? null),
+  };
+
   await pool.query(
-    `INSERT INTO station_prep_status (station_id, is_preparing, tip) VALUES (?, ?, ?)
-     ON DUPLICATE KEY UPDATE is_preparing = VALUES(is_preparing), tip = VALUES(tip)`,
-    [req.params.station_id, is_preparing, tip ?? null],
+    `INSERT INTO station_prep_status (station_id, is_preparing, tip, is_recruiting, recruit_tip) VALUES (?, ?, ?, ?, ?)
+     ON DUPLICATE KEY UPDATE
+       is_preparing = VALUES(is_preparing), tip = VALUES(tip),
+       is_recruiting = VALUES(is_recruiting), recruit_tip = VALUES(recruit_tip)`,
+    [req.params.station_id, next.is_preparing, next.tip, next.is_recruiting, next.recruit_tip],
   );
   const [rows] = await pool.query(
-    'SELECT station_id, is_preparing, tip FROM station_prep_status WHERE station_id = ?',
+    'SELECT station_id, is_preparing, tip, is_recruiting, recruit_tip FROM station_prep_status WHERE station_id = ?',
     [req.params.station_id],
   );
   res.json(rows[0]);

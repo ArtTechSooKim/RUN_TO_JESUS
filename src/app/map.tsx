@@ -82,6 +82,10 @@ function StationCard({
                     </ThemedText>
                   )}
                 </View>
+              ) : prep?.is_recruiting ? (
+                <ThemedText type="small" numberOfLines={1} style={{ color: '#38BDF8' }}>
+                  🙋 {prep.recruit_tip}
+                </ThemedText>
               ) : activeSessions.length > 0 ? (
                 <ThemedText type="small" numberOfLines={1} style={{ color: '#FB923C' }}>
                   🔴{' '}

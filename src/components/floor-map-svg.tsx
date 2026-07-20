@@ -92,10 +92,15 @@ type GameRoomProps = {
   isPreparing?: boolean;
   /** Rough staff-written note shown under the 준비중 badge (e.g. "TIP) 대략 10분 준비합니다"). */
   prepTip?: string;
+  /** Staff-toggled "도전자 모집중" flag for versus-format stations — same precedence tier as isPreparing, but only relevant while no one's actually mid-session. */
+  isRecruiting?: boolean;
+  /** Full status line shown under the 모집중 badge (e.g. "도전자 모집 중 — 현재 1팀 대기"), already self-descriptive so shown as-is (no TIP) prefix). */
+  recruitTip?: string;
   rx?: number;
 };
 
 const PREP_COLOR = '#FBBF24';
+const RECRUIT_COLOR = '#38BDF8';
 
 /** A real, tappable station room — session name (game) on top, hall name below. */
 function GameRoom({
@@ -115,29 +120,38 @@ function GameRoom({
   activePercent,
   isPreparing = false,
   prepTip,
+  isRecruiting = false,
+  recruitTip,
   rx = 4,
 }: GameRoomProps) {
-  const inProgress = !isPreparing && activeCount > 0;
+  // 준비중 wins if somehow both are set — a room being cleaned can't also be
+  // waiting on a challenger. Neither state cares about live session data.
+  const overlay = isPreparing
+    ? { mainText: '준비중 🧹', subText: prepTip, subPrefix: 'TIP) ', color: PREP_COLOR }
+    : isRecruiting
+      ? { mainText: '모집중 🙋', subText: recruitTip, subPrefix: '', color: RECRUIT_COLOR }
+      : null;
+  const inProgress = !overlay && activeCount > 0;
   const badgeText = activeTeamIds.length > 0 ? activeTeamIds.join(',') : String(activeCount);
   const badgeFontSize = 7;
   const badgeH = 13;
   const badgeW = Math.min(w - 8, Math.max(badgeH, badgeText.length * (badgeFontSize * 0.62) + 10));
 
-  const hasPrepTip = isPreparing && !!prepTip;
+  const hasSubText = !!overlay?.subText;
   let sessionY: number;
   let labelY: number;
   let sublabelY: number;
-  let prepTipY = 0;
+  let overlaySubY = 0;
 
-  if (isPreparing) {
-    // Stack 준비중 / (tip) / hall label as one vertically-centered block instead
+  if (overlay) {
+    // Stack main / (sub) / hall label as one vertically-centered block instead
     // of reusing the 진행중 badge's push-down math, which assumes no 3rd line.
     const lineH = 13;
-    const lines = hasPrepTip ? 3 : 2;
+    const lines = hasSubText ? 3 : 2;
     const startY = y + h / 2 - ((lines - 1) * lineH) / 2 + 4;
     sessionY = startY;
-    prepTipY = startY + lineH;
-    labelY = hasPrepTip ? startY + lineH * 2 : startY + lineH;
+    overlaySubY = startY + lineH;
+    labelY = hasSubText ? startY + lineH * 2 : startY + lineH;
     sublabelY = labelY + 11;
   } else {
     // When the room is short, the badge eats into the vertically-centered session/label text —
@@ -159,9 +173,9 @@ function GameRoom({
         height={h + 6}
         rx={rx + 2}
         fill="none"
-        stroke={isPreparing ? PREP_COLOR : station.color}
-        strokeWidth={selected || inProgress || isPreparing ? 2.5 : 1.5}
-        opacity={selected || inProgress || isPreparing ? 0.8 : 0.35}
+        stroke={overlay ? overlay.color : station.color}
+        strokeWidth={selected || inProgress || overlay ? 2.5 : 1.5}
+        opacity={selected || inProgress || overlay ? 0.8 : 0.35}
       />
       <Rect
         x={x}
@@ -210,16 +224,17 @@ function GameRoom({
         x={x + w / 2}
         y={sessionY}
         textAnchor="middle"
-        fill={isPreparing ? PREP_COLOR : station.color}
+        fill={overlay ? overlay.color : station.color}
         opacity={inProgress ? 0.75 : 1}
         fontSize={12}
         fontFamily={FONT}
         fontWeight="800">
-        {isPreparing ? '준비중 🧹' : inProgress ? `진행중 ${activePercent ?? 0}%` : sessionLabel}
+        {overlay ? overlay.mainText : inProgress ? `진행중 ${activePercent ?? 0}%` : sessionLabel}
       </SvgText>
-      {hasPrepTip && (
-        <SvgText x={x + w / 2} y={prepTipY} textAnchor="middle" fill={PREP_COLOR} fontSize={7} opacity={0.8} fontFamily={FONT}>
-          TIP) {prepTip}
+      {hasSubText && (
+        <SvgText x={x + w / 2} y={overlaySubY} textAnchor="middle" fill={overlay!.color} fontSize={7} opacity={0.8} fontFamily={FONT}>
+          {overlay!.subPrefix}
+          {overlay!.subText}
         </SvgText>
       )}
       <SvgText x={x + w / 2} y={labelY} textAnchor="middle" fill={station.color} fontSize={8} opacity={0.65} fontFamily={FONT}>
@@ -249,6 +264,10 @@ type FloorProps = {
   isPreparing?: Record<string, boolean>;
   /** station_id -> that station's rough prep-time tip, shown under the 준비중 badge. */
   prepTips?: Record<string, string>;
+  /** station_id -> whether that station's staff has flagged it 도전자 모집중. */
+  isRecruiting?: Record<string, boolean>;
+  /** station_id -> that station's full 모집중 status line, shown under the badge. */
+  recruitTips?: Record<string, string>;
 };
 
 function byId(stations: Station[], id: string) {
@@ -257,7 +276,19 @@ function byId(stations: Station[], id: string) {
   return s;
 }
 
-export function Floor10Young({ stations, clearedIds, selectedId, onSelect, activeCounts = {}, activeTeamIds = {}, activePercents = {}, isPreparing = {}, prepTips = {} }: FloorProps) {
+export function Floor10Young({
+  stations,
+  clearedIds,
+  selectedId,
+  onSelect,
+  activeCounts = {},
+  activeTeamIds = {},
+  activePercents = {},
+  isPreparing = {},
+  prepTips = {},
+  isRecruiting = {},
+  recruitTips = {},
+}: FloorProps) {
   const rahab = byId(stations, 'RAHAB');
   const jacob = byId(stations, 'JACOB');
   const joseph = byId(stations, 'JOSEPH');
@@ -348,6 +379,8 @@ export function Floor10Young({ stations, clearedIds, selectedId, onSelect, activ
         activePercent={activePercents[jacob.id]}
         isPreparing={isPreparing[jacob.id]}
         prepTip={prepTips[jacob.id]}
+        isRecruiting={isRecruiting[jacob.id]}
+        recruitTip={recruitTips[jacob.id]}
       />
       <DimRoom x={220} y={220} w={106} h={84} label="에스더홀" sublabel="(유치부)" />
       <DimRoom x={330} y={220} w={104} h={84} label="헤세드홀" />
