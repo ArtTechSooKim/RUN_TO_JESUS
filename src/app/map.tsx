@@ -225,15 +225,25 @@ export default function MapScreen() {
 
         <View style={styles.cardList}>
           {stations.map((station, index) => (
-            <StationCard
-              key={station.id}
-              station={station}
-              done={clearedIds.has(station.id)}
-              collectedLetters={collectedLetters}
-              activeSessions={activeSessions.filter((s) => s.station_id === station.id)}
-              prep={summarizePrep(station.id, prepStatuses)}
-              index={index}
-            />
+            <View key={station.id} style={styles.cardGroup}>
+              <StationCard
+                station={station}
+                done={clearedIds.has(station.id)}
+                collectedLetters={collectedLetters}
+                activeSessions={activeSessions.filter((s) => s.station_id === station.id)}
+                prep={summarizePrep(station.id, prepStatuses)}
+                index={index}
+              />
+              {station.id === 'MYSTERYGAME' && (
+                <Link href="/cinema-schedule" asChild>
+                  <SoundPressable style={({ pressed }) => [styles.scheduleButton, pressed && styles.pressed]}>
+                    <ThemedText type="small" style={{ color: Colors.dark.gold }}>
+                      🎬 상영시간표 보기
+                    </ThemedText>
+                  </SoundPressable>
+                </Link>
+              )}
+            </View>
           ))}
         </View>
 
@@ -307,6 +317,17 @@ const styles = StyleSheet.create({
   },
   cardList: {
     gap: Spacing.three,
+  },
+  cardGroup: {
+    gap: Spacing.two,
+  },
+  scheduleButton: {
+    alignItems: 'center',
+    paddingVertical: Spacing.two + 2,
+    borderRadius: Spacing.three,
+    backgroundColor: 'rgba(255,215,0,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,215,0,0.25)',
   },
   card: {
     flexDirection: 'row',

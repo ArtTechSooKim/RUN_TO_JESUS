@@ -97,6 +97,10 @@ export default function RootLayout() {
                 options={{ headerShown: true, title: '수집 현황', animation: 'slide_from_bottom' }}
               />
               <Stack.Screen
+                name="cinema-schedule"
+                options={{ headerShown: false, animation: 'slide_from_bottom' }}
+              />
+              <Stack.Screen
                 name="scan"
                 options={{ headerShown: true, title: 'QR 스캔', animation: 'slide_from_bottom' }}
               />

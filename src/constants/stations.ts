@@ -244,12 +244,21 @@ export const stations: Station[] = [
  * 용도로만 쓰인다 — 해당 세 곳에서 `[...stations, ...CINEMA_STATIONS]`로
  * 합쳐서 찾는다. letters는 항상 빈 배열: 실제 배정(U vs 와일드카드)은
  * 스캔 시점의 팀 상태에 달려 있어 서버가 결정한다(routes.js 참고).
+ *
+ * 제목은 2026-07-20 상영시간표(여호수아홀) 순서를 그대로 따름 — CINEMA1=
+ * 믿음의 경주, CINEMA2=가타카, CINEMA3=브루스 올마이티. QR 자체는 station_id
+ * (RTJ:CINEMA1~3)만 인코딩하니 실제로 어느 영화 QR이 어느 자리에 붙는지는
+ * 진장 재량이지만, 이 순서로 인쇄됐다고 가정함(cinema-schedule.tsx 참고).
  */
-export const CINEMA_STATIONS: Station[] = [1, 2, 3].map((n) => ({
+export const CINEMA_STATIONS: Station[] = [
+  { n: 1, title: '믿음의 경주' },
+  { n: 2, title: '가타카' },
+  { n: 3, title: '브루스 올마이티' },
+].map(({ n, title }) => ({
   id: `CINEMA${n}`,
-  keyword: `새로운 시네마 · 영화 ${n}`,
+  keyword: `새로운 시네마 · ${title}`,
   hall: '여호수아홀',
-  characterTitle: '영화관',
+  characterTitle: title,
   description:
     '히브리서 11장의 수많은 믿음의 사람들은 아직 눈앞에 보이지 않는 하나님의 약속을 믿으며 자신의 길을 걸어갔다.\n스크린에 펼쳐지는 이야기를 따라가며, 우리보다 먼저 믿음의 길을 걸었던 사람들을 생각해보자. 우리도 각자의 목표를 향해 끊임없이 달려가고 있지만, 지금 나의 시선은 어디를 향하고 있는가?',
   lead: '보람',

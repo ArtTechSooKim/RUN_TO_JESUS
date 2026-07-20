@@ -33,9 +33,9 @@ const STATION_SEED = [
   // 방문은 와일드카드('*', 포지션 없음). 세션/준비중 개념 없음(is_minigame
   // false), 관리자 스테이션 목록에서도 숨김(is_hidden true) — 조각 부여 탭
   // 에서만 선택 가능. 자세한 로직은 routes.js CINEMA_STATION_IDS 참고.
-  { station_id: 'CINEMA1', name: '새로운 시네마 · 영화 1', hall_name: '여호수아홀', duration_minutes: 15, concurrent_capacity: 1, letters: [], is_hidden: true, is_minigame: false, is_active: true },
-  { station_id: 'CINEMA2', name: '새로운 시네마 · 영화 2', hall_name: '여호수아홀', duration_minutes: 15, concurrent_capacity: 1, letters: [], is_hidden: true, is_minigame: false, is_active: true },
-  { station_id: 'CINEMA3', name: '새로운 시네마 · 영화 3', hall_name: '여호수아홀', duration_minutes: 15, concurrent_capacity: 1, letters: [], is_hidden: true, is_minigame: false, is_active: true },
+  { station_id: 'CINEMA1', name: '새로운 시네마 · 믿음의 경주', hall_name: '여호수아홀', duration_minutes: 15, concurrent_capacity: 1, letters: [], is_hidden: true, is_minigame: false, is_active: true },
+  { station_id: 'CINEMA2', name: '새로운 시네마 · 가타카', hall_name: '여호수아홀', duration_minutes: 15, concurrent_capacity: 1, letters: [], is_hidden: true, is_minigame: false, is_active: true },
+  { station_id: 'CINEMA3', name: '새로운 시네마 · 브루스 올마이티', hall_name: '여호수아홀', duration_minutes: 15, concurrent_capacity: 1, letters: [], is_hidden: true, is_minigame: false, is_active: true },
   // 장소 당일 결정, QR 전용(NFC 없음) — venue를 하드코딩하지 않음. 물리적 방/부스가
   // 없어 세션(진행중 타이머) 개념 자체가 없음 — is_minigame도 false로 둠.
   { station_id: 'HIDDENLETTER', name: '숨은글자찾기', hall_name: null, duration_minutes: 10, concurrent_capacity: 1, letters: [9], is_hidden: true, is_minigame: false, is_active: true },
