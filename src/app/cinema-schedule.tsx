@@ -13,16 +13,17 @@ type Showtime = {
   full?: boolean;
 };
 
-// 2026-07-20 진장 확정 상영표 — 믿음의 경주/가타카/브루스 올마이티가 20분씩
-// 두 바퀴 돌고, 마지막에 놓친 사람들을 위한 30분 전편 상영으로 마무리.
+// 2026-07-20 진장 확정 상영표(10분 앞당김, 13:50 시작~16:20 종료) — 믿음의
+// 경주/가타카/브루스 올마이티가 20분씩 두 바퀴 돌고, 마지막에 놓친 사람들을
+// 위한 30분 전편 상영으로 마무리.
 const SCHEDULE: Showtime[] = [
-  { time: '14:00 ~ 14:20', title: '믿음의 경주', emoji: '🏃' },
-  { time: '14:20 ~ 14:40', title: '가타카', emoji: '🎞️' },
-  { time: '14:40 ~ 15:00', title: '브루스 올마이티', emoji: '✨' },
-  { time: '15:00 ~ 15:20', title: '믿음의 경주', emoji: '🏃' },
-  { time: '15:20 ~ 15:40', title: '가타카', emoji: '🎞️' },
-  { time: '15:40 ~ 16:00', title: '브루스 올마이티', emoji: '✨' },
-  { time: '16:00 ~ 16:30', title: '전편 상영', emoji: '🎬', full: true },
+  { time: '13:50 ~ 14:10', title: '믿음의 경주', emoji: '🏃' },
+  { time: '14:10 ~ 14:30', title: '가타카', emoji: '🎞️' },
+  { time: '14:30 ~ 14:50', title: '브루스 올마이티', emoji: '✨' },
+  { time: '14:50 ~ 15:10', title: '믿음의 경주', emoji: '🏃' },
+  { time: '15:10 ~ 15:30', title: '가타카', emoji: '🎞️' },
+  { time: '15:30 ~ 15:50', title: '브루스 올마이티', emoji: '✨' },
+  { time: '15:50 ~ 16:20', title: '전편 상영', emoji: '🎬', full: true },
 ];
 
 export default function CinemaScheduleScreen() {
