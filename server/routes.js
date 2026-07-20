@@ -487,6 +487,36 @@ router.post('/admin/reset-users', async (req, res) => {
   res.json({ ok: true });
 });
 
+// 스태프가 방마다 어느 팀이 완료했는지 한눈에 보는 용도(관리자 "참여 현황"
+// 탭) — 라합방은 사무엘홀/다니엘홀 둘 다 QR/부여 페이로드가 station_id
+// 하나(RAHAB)라 어느 홀에서 완료했는지는 저장돼 있지 않다(둘 중 하나만
+// 해도 완료라 그 자체로는 문제 없지만, 홀별로 나눠 보여줄 수는 없음).
+router.get('/admin/participation', async (req, res) => {
+  const [rows] = await pool.query(
+    'SELECT DISTINCT station_id, team_id FROM tag_events WHERE station_id NOT IN (?)',
+    [CINEMA_STATION_IDS],
+  );
+  const byStation = {};
+  for (const r of rows) {
+    (byStation[r.station_id] ??= []).push(r.team_id);
+  }
+
+  // 새로운시네마는 CINEMA1~3 중 어느 것이든 U(진짜 조각)를 받은 팀만 "완료"로 친다.
+  const [cinemaRows] = await pool.query(
+    `SELECT DISTINCT team_id FROM tag_events WHERE station_id IN (?) AND fragment_letter = 'U'`,
+    [CINEMA_STATION_IDS],
+  );
+  if (cinemaRows.length) {
+    byStation.MYSTERYGAME = cinemaRows.map((r) => r.team_id);
+  }
+
+  const result = Object.entries(byStation).map(([station_id, teamIds]) => ({
+    station_id,
+    teamIds: teamIds.sort((a, b) => a - b),
+  }));
+  res.json(result);
+});
+
 // ── broadcast / ending stats ─────────────────────────────────────────────
 
 router.get('/stats/overall', async (req, res) => {

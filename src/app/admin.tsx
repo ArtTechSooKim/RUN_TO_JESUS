@@ -594,8 +594,66 @@ function GrantFragmentTab() {
   );
 }
 
+function ParticipationTab() {
+  const [rows, setRows] = useState<{ station_id: string; teamIds: number[] }[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const refresh = useCallback(async () => {
+    try {
+      setRows(await api.getParticipation());
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    refresh();
+    const timer = setInterval(refresh, POLL_MS);
+    return () => clearInterval(timer);
+  }, [refresh]);
+
+  const byStation = useMemo(() => new Map(rows.map((r) => [r.station_id, r.teamIds])), [rows]);
+
+  if (loading) {
+    return (
+      <ThemedText type="small" themeColor="textSecondary" style={{ padding: Spacing.four }}>
+        불러오는 중...
+      </ThemedText>
+    );
+  }
+
+  return (
+    <ScrollView contentContainerStyle={styles.list}>
+      {/* allStations는 글자 인덱스 순서(모자이크 순서)라 그대로 씀 — 새로운
+          시네마는 CINEMA1~3이 아니라 MYSTERYGAME 하나로 이미 합쳐져 있음. */}
+      {allStations.map((station) => {
+        const teamIds = byStation.get(station.id) ?? [];
+        return (
+          <View key={station.id} style={styles.card}>
+            <View style={styles.participationHeader}>
+              <ThemedText type="smallBold" style={{ color: station.color }}>
+                {station.emoji} {station.keyword} 완료
+              </ThemedText>
+              <ThemedText type="small" style={{ color: Colors.dark.gold }}>
+                {teamIds.length}팀
+              </ThemedText>
+            </View>
+            <ThemedText type="small" themeColor="textSecondary">
+              {teamIds.length ? teamIds.map((t) => `${t}조`).join(', ') : '아직 없음'}
+            </ThemedText>
+          </View>
+        );
+      })}
+      <ThemedText type="small" themeColor="textSecondary" style={{ marginTop: Spacing.one }}>
+        ⚠️ 라합방은 사무엘홀·다니엘홀 구분 없이 완료 여부만 표시돼요 — QR이
+        두 홀에서 동일해서 어느 홀에서 완료했는지는 기록되지 않아요.
+      </ThemedText>
+    </ScrollView>
+  );
+}
+
 export default function AdminScreen() {
-  const [tab, setTab] = useState<'stations' | 'map' | 'grant'>('stations');
+  const [tab, setTab] = useState<'stations' | 'map' | 'grant' | 'participation'>('stations');
   const [stations, setStations] = useState<ApiStation[]>([]);
   const { sessions, refresh: refreshSessions } = useActiveSessions();
   const { statuses: prepStatuses, refresh: refreshPrep } = usePrepStatuses();
@@ -662,6 +720,13 @@ export default function AdminScreen() {
             ✨ 조각 부여
           </ThemedText>
         </SoundPressable>
+        <SoundPressable
+          onPress={() => setTab('participation')}
+          style={[styles.tabButton, tab === 'participation' && styles.tabButtonActive]}>
+          <ThemedText type="smallBold" style={{ color: tab === 'participation' ? Colors.dark.gold : Colors.dark.textSecondary }}>
+            📊 참여 현황
+          </ThemedText>
+        </SoundPressable>
       </View>
 
       {tab === 'stations' ? (
@@ -681,6 +746,8 @@ export default function AdminScreen() {
         </ScrollView>
       ) : tab === 'grant' ? (
         <GrantFragmentTab />
+      ) : tab === 'participation' ? (
+        <ParticipationTab />
       ) : (
         <MapTab activeSessions={sessions} prepStatuses={prepStatuses} />
       )}
@@ -847,6 +914,11 @@ const styles = StyleSheet.create({
   },
   grantLabel: {
     marginTop: Spacing.one,
+  },
+  participationHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   grantStationGrid: {
     flexDirection: 'row',

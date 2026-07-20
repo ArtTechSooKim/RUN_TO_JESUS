@@ -121,6 +121,9 @@ export const api = {
 
   getOverallStats: () => request<{ count: number; total: number; ratio: number }>('/stats/overall'),
 
+  /** station_id -> team_ids that have completed it — 새로운시네마's 3 movie ids collapse into one 'MYSTERYGAME' entry. */
+  getParticipation: () => request<{ station_id: string; teamIds: number[] }[]>('/admin/participation'),
+
   getPrepStatuses: () => request<PrepStatus[]>('/prep-status'),
 
   setPrepStatus: (
