@@ -175,23 +175,11 @@ router.post('/tag-events', async (req, res) => {
         );
       }
 
-      // Mini-games (노아방/아벨방) have no physical room to book, so there's
-      // no admin "세션 시작" step for them — the scan itself starts their
-      // timed session, same shape as an admin-started one, so the existing
-      // session-progress UI (floor map, admin dashboard) just works.
-      if (station.is_minigame) {
-        const [activeRows] = await conn.query(
-          `SELECT id FROM game_sessions WHERE team_id = ? AND station_id = ? AND status = 'in_progress'`,
-          [team_id, station_id],
-        );
-        if (!activeRows.length) {
-          await conn.query(
-            `INSERT INTO game_sessions (station_id, team_id, expected_end_at)
-             VALUES (?, ?, DATE_ADD(NOW(), INTERVAL ? MINUTE))`,
-            [station_id, team_id, station.duration_minutes],
-          );
-        }
-      }
+      // 진행중(game_sessions)은 무조건 관리자의 수동 "세션 시작"으로만 켜진다
+      // — QR/NFC 태그는 조각(글자) 지급에만 관여하고 세션 상태에는 절대
+      // 손대지 않는다. (예전엔 노아방/아벨방이 태그 시점에 자동으로 세션을
+      // 시작했지만, 참가자가 QR을 찍자마자 진행중으로 바뀌는 게 의도와
+      // 달라 폐지 — is_minigame 컬럼은 남아있지만 이제 아무 데서도 안 읽음.)
 
       res.status(201).json({ station_id, letters: station.letters, newForTeam, fragmentLetter: station.letters.length ? RUN_TO_JESUS[station.letters[0]] : null });
     } finally {
