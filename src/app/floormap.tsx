@@ -10,7 +10,7 @@ import { ThemedView } from '@/components/themed-view';
 import { floorLabels, floors, stations, type Floor } from '@/constants/stations';
 import { Colors, Spacing } from '@/constants/theme';
 import { formatRemaining, sessionProgressPercent, useActiveSessions, useMapAggregates } from '@/hooks/use-active-sessions';
-import { usePrepStatuses } from '@/hooks/use-prep-status';
+import { useMapPrepAggregates, usePrepStatuses } from '@/hooks/use-prep-status';
 import { useSoundEffects } from '@/hooks/use-sound-effects';
 import { useStationProgress } from '@/hooks/use-station-progress';
 
@@ -36,25 +36,7 @@ export default function FloorMapScreen() {
   const FloorMap = FLOOR_MAPS[activeFloor];
 
   const { activeCounts, activeTeamIds, activePercents } = useMapAggregates(activeSessions);
-  const isPreparing = useMemo(
-    () => Object.fromEntries(prepStatuses.map((p) => [p.station_id, !!p.is_preparing])),
-    [prepStatuses],
-  );
-  const prepTips = useMemo(
-    () => Object.fromEntries(prepStatuses.filter((p) => p.tip).map((p) => [p.station_id, p.tip as string])),
-    [prepStatuses],
-  );
-  const isRecruiting = useMemo(
-    () => Object.fromEntries(prepStatuses.map((p) => [p.station_id, !!p.is_recruiting])),
-    [prepStatuses],
-  );
-  const recruitTips = useMemo(
-    () =>
-      Object.fromEntries(
-        prepStatuses.filter((p) => p.recruit_tip).map((p) => [p.station_id, p.recruit_tip as string]),
-      ),
-    [prepStatuses],
-  );
+  const { isPreparing, prepTips, isRecruiting, recruitTips } = useMapPrepAggregates(prepStatuses);
 
   const selectedSessions = selectedStation
     ? activeSessions.filter((s) => s.station_id === selectedStation.id)

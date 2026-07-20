@@ -7,19 +7,24 @@ import { Floor10Fashion, Floor10Young, Floor11Young } from '@/components/floor-m
 import { SoundPressable } from '@/components/sound-pressable';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { floorLabels, floors, stations as allStations, type Floor, type Station } from '@/constants/stations';
+import { floorLabels, floors, HALL_SPLITS, stations as allStations, type Floor, type Station } from '@/constants/stations';
 import { Colors, Spacing } from '@/constants/theme';
 import { formatRemaining, sessionProgressPercent, useActiveSessions, useMapAggregates } from '@/hooks/use-active-sessions';
-import { usePrepStatuses } from '@/hooks/use-prep-status';
+import { useMapPrepAggregates, usePrepStatuses } from '@/hooks/use-prep-status';
 import { useSoundEffects } from '@/hooks/use-sound-effects';
 import { ApiError, api, type ApiSession, type ApiStation, type PrepStatus } from '@/lib/api';
 
 const DEFAULT_PREP_TIP = '대략 10분 준비합니다';
 // 세팅이 다른 방보다 훨씬 빨리 끝나는 방들 — 처음 준비중을 켤 때 채워지는
-// 기본 문구만 다르고, 그 외 로직은 동일.
+// 기본 문구만 다르고, 그 외 로직은 동일. (2026-07-20 각 방 진장 취합)
 const STATION_PREP_TIP_OVERRIDES: Record<string, string> = {
   SAMSON: '대략 5분 준비합니다',
   JACOB: '대략 5분 준비합니다',
+  ABRAHAM: '대략 5분 준비합니다',
+  JOSEPH: '대략 5분 준비합니다',
+  RAHAB: '대략 5분 준비합니다',
+  NOAHROOM: '대략 3분 준비합니다',
+  ABELROOM: '대략 3분 준비합니다',
 };
 function defaultPrepTip(stationId: string) {
   return STATION_PREP_TIP_OVERRIDES[stationId] ?? DEFAULT_PREP_TIP;
@@ -29,7 +34,7 @@ function defaultPrepTip(stationId: string) {
 // 상대 없이 무한 대기하는 걸 막기 위해, 스태프가 "도전자 모집중"을 켜서
 // "아직 상대를 기다리는 중"임을 참가자에게 보여줄 수 있다. 이 목록에 없는
 // 방은 (삼손방처럼) 대결 구도가 아니라서 이 토글 자체가 필요 없음.
-const VERSUS_STATIONS = new Set(['JACOB']);
+const VERSUS_STATIONS = new Set(['JACOB', 'ABRAHAM', 'JOSEPH']);
 const DEFAULT_RECRUIT_TIP = '도전자 모집 중 — 현재 1팀 대기';
 
 // tag_events.person_id for admin-initiated grants — there's no real logged-in
@@ -38,14 +43,6 @@ const DEFAULT_RECRUIT_TIP = '도전자 모집 중 — 현재 1팀 대기';
 const ADMIN_GRANT_PERSON_ID = 'admin-grant';
 
 const POLL_MS = 5000;
-
-// 라합방은 사무엘홀/다니엘홀 두 곳에서 동일한 게임(같은 조각)을 동시에 운영해
-// 처리량을 늘리는 스테이션이라, 관리자 화면에서만 두 홀을 독립된 칸으로 나눠
-// 각자 다른 시간에 세션을 시작/관리할 수 있게 한다. 조각 획득 로직은 station_id
-// 하나로 그대로 공유되고, hall_label은 순전히 이 화면의 표시/구분용.
-const HALL_SPLITS: Record<string, string[]> = {
-  RAHAB: ['사무엘홀', '다니엘홀'],
-};
 
 const FLOOR_MAPS: Record<Floor, typeof Floor10Young> = {
   'young-10f': Floor10Young,
@@ -217,7 +214,7 @@ function StationCard({
   station,
   sessions,
   activeTeamIdsGlobal,
-  prep,
+  stationPreps,
   onPrepChanged,
   onStart,
   onEnd,
@@ -225,13 +222,15 @@ function StationCard({
   station: ApiStation;
   sessions: ApiSession[];
   activeTeamIdsGlobal: Set<number>;
-  prep?: PrepStatus;
+  /** Every prep-status row for this station — usually one ('' hall_label), but 라합방 can have one per hall. */
+  stationPreps: PrepStatus[];
   onPrepChanged: () => void;
   onStart: (teamIds: number[], hallLabel?: string) => Promise<number[]>;
   onEnd: (id: number, status: 'completed' | 'cancelled') => void;
 }) {
   const halls = HALL_SPLITS[station.station_id];
   const unlabeled = halls ? sessions.filter((s) => !s.hall_label) : [];
+  const prepFor = (hall: string) => stationPreps.find((p) => p.hall_label === hall);
 
   return (
     <View style={[styles.card, sessions.length > 0 && { borderColor: `${Colors.dark.gold}40` }]}>
@@ -244,17 +243,34 @@ function StationCard({
         )}
       </View>
 
-      <StatusToggle
-        emoji="🧹"
-        label="준비중"
-        colorStyle={styles.prepToggleActive}
-        textColor="#78350F"
-        isOn={!!prep?.is_preparing}
-        currentTip={prep?.tip ?? null}
-        defaultTip={defaultPrepTip(station.station_id)}
-        onSave={(nextOn, tip) => api.setPrepStatus(station.station_id, { is_preparing: nextOn, tip })}
-        onChanged={onPrepChanged}
-      />
+      {halls ? (
+        halls.map((hall) => (
+          <StatusToggle
+            key={hall}
+            emoji="🧹"
+            label={`${hall} 준비중`}
+            colorStyle={styles.prepToggleActive}
+            textColor="#78350F"
+            isOn={!!prepFor(hall)?.is_preparing}
+            currentTip={prepFor(hall)?.tip ?? null}
+            defaultTip={defaultPrepTip(station.station_id)}
+            onSave={(nextOn, tip) => api.setPrepStatus(station.station_id, { is_preparing: nextOn, tip, hall_label: hall })}
+            onChanged={onPrepChanged}
+          />
+        ))
+      ) : (
+        <StatusToggle
+          emoji="🧹"
+          label="준비중"
+          colorStyle={styles.prepToggleActive}
+          textColor="#78350F"
+          isOn={!!prepFor('')?.is_preparing}
+          currentTip={prepFor('')?.tip ?? null}
+          defaultTip={defaultPrepTip(station.station_id)}
+          onSave={(nextOn, tip) => api.setPrepStatus(station.station_id, { is_preparing: nextOn, tip })}
+          onChanged={onPrepChanged}
+        />
+      )}
 
       {VERSUS_STATIONS.has(station.station_id) && (
         <StatusToggle
@@ -262,8 +278,8 @@ function StationCard({
           label="도전자 모집중"
           colorStyle={styles.recruitToggleActive}
           textColor="#075985"
-          isOn={!!prep?.is_recruiting}
-          currentTip={prep?.recruit_tip ?? null}
+          isOn={!!prepFor('')?.is_recruiting}
+          currentTip={prepFor('')?.recruit_tip ?? null}
           defaultTip={DEFAULT_RECRUIT_TIP}
           onSave={(nextOn, recruit_tip) => api.setPrepStatus(station.station_id, { is_recruiting: nextOn, recruit_tip })}
           onChanged={onPrepChanged}
@@ -313,25 +329,7 @@ function MapTab({ activeSessions, prepStatuses }: { activeSessions: ApiSession[]
   const FloorMap = FLOOR_MAPS[activeFloor];
 
   const { activeCounts, activeTeamIds, activePercents } = useMapAggregates(activeSessions);
-  const isPreparing = useMemo(
-    () => Object.fromEntries(prepStatuses.map((p) => [p.station_id, !!p.is_preparing])),
-    [prepStatuses],
-  );
-  const prepTips = useMemo(
-    () => Object.fromEntries(prepStatuses.filter((p) => p.tip).map((p) => [p.station_id, p.tip as string])),
-    [prepStatuses],
-  );
-  const isRecruiting = useMemo(
-    () => Object.fromEntries(prepStatuses.map((p) => [p.station_id, !!p.is_recruiting])),
-    [prepStatuses],
-  );
-  const recruitTips = useMemo(
-    () =>
-      Object.fromEntries(
-        prepStatuses.filter((p) => p.recruit_tip).map((p) => [p.station_id, p.recruit_tip as string]),
-      ),
-    [prepStatuses],
-  );
+  const { isPreparing, prepTips, isRecruiting, recruitTips } = useMapPrepAggregates(prepStatuses);
 
   const selectedSessions = selectedStation ? activeSessions.filter((s) => s.station_id === selectedStation.id) : [];
 
@@ -577,10 +575,6 @@ export default function AdminScreen() {
   const [stations, setStations] = useState<ApiStation[]>([]);
   const { sessions, refresh: refreshSessions } = useActiveSessions();
   const { statuses: prepStatuses, refresh: refreshPrep } = usePrepStatuses();
-  const prepByStation = useMemo(
-    () => new Map(prepStatuses.map((p) => [p.station_id, p])),
-    [prepStatuses],
-  );
 
   const refreshStations = useCallback(async () => {
     // 숨은글자찾기는 물리적 방/세션 개념이 없는 QR 전용 스테이션이라 관리 목록에서 제외.
@@ -654,7 +648,7 @@ export default function AdminScreen() {
               station={station}
               sessions={sessions.filter((s) => s.station_id === station.station_id)}
               activeTeamIdsGlobal={activeTeamIdsGlobal}
-              prep={prepByStation.get(station.station_id)}
+              stationPreps={prepStatuses.filter((p) => p.station_id === station.station_id)}
               onPrepChanged={refreshPrep}
               onStart={(teamIds, hallLabel) => handleStart(station.station_id, teamIds, hallLabel)}
               onEnd={handleEnd}

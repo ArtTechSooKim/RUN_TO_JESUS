@@ -7,7 +7,7 @@ import { RunnerProgressBar } from '@/components/runner-progress-bar';
 import { SoundPressable } from '@/components/sound-pressable';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { stations } from '@/constants/stations';
+import { HALL_SPLITS, stations } from '@/constants/stations';
 import { Colors, Spacing } from '@/constants/theme';
 import { formatRemaining, sessionProgressPercent, useActiveSessions } from '@/hooks/use-active-sessions';
 import { useOverallStats } from '@/hooks/use-overall-stats';
@@ -15,6 +15,36 @@ import { usePrepStatuses } from '@/hooks/use-prep-status';
 import { useStationProgress } from '@/hooks/use-station-progress';
 import { useTheme } from '@/hooks/use-theme';
 import type { ApiSession, PrepStatus } from '@/lib/api';
+
+type PrepSummary = { isPreparing: boolean; tip: string | null; isRecruiting: boolean; recruitTip: string | null };
+
+/**
+ * Collapses a station's prep-status row(s) into one card-level summary. 라합방
+ * has one row per hall — since either hall being open is enough to play (see
+ * its description), the flat list only calls the whole card 준비중 when EVERY
+ * hall is; a single hall prepping shouldn't make the other look unavailable
+ * too (the floor map already shows each hall's real state independently).
+ */
+function summarizePrep(stationId: string, prepStatuses: PrepStatus[]): PrepSummary {
+  const rows = prepStatuses.filter((p) => p.station_id === stationId);
+  const halls = HALL_SPLITS[stationId];
+  if (halls) {
+    const hallRows = halls.map((h) => rows.find((r) => r.hall_label === h));
+    return {
+      isPreparing: hallRows.every((r) => r?.is_preparing),
+      tip: hallRows.find((r) => r?.is_preparing)?.tip ?? null,
+      isRecruiting: false,
+      recruitTip: null,
+    };
+  }
+  const row = rows.find((r) => r.hall_label === '');
+  return {
+    isPreparing: !!row?.is_preparing,
+    tip: row?.tip ?? null,
+    isRecruiting: !!row?.is_recruiting,
+    recruitTip: row?.recruit_tip ?? null,
+  };
+}
 
 function StationCard({
   station,
@@ -28,7 +58,7 @@ function StationCard({
   done: boolean;
   collectedLetters: Set<number>;
   activeSessions: ApiSession[];
-  prep?: PrepStatus;
+  prep: PrepSummary;
   index: number;
 }) {
   return (
@@ -71,7 +101,7 @@ function StationCard({
                   </ThemedText>
                 </View>
               </View>
-              {prep?.is_preparing ? (
+              {prep.isPreparing ? (
                 <View>
                   <ThemedText type="small" numberOfLines={1} style={{ color: '#FBBF24' }}>
                     🧹 준비중
@@ -82,9 +112,9 @@ function StationCard({
                     </ThemedText>
                   )}
                 </View>
-              ) : prep?.is_recruiting ? (
+              ) : prep.isRecruiting ? (
                 <ThemedText type="small" numberOfLines={1} style={{ color: '#38BDF8' }}>
-                  🙋 {prep.recruit_tip}
+                  🙋 {prep.recruitTip}
                 </ThemedText>
               ) : activeSessions.length > 0 ? (
                 <ThemedText type="small" numberOfLines={1} style={{ color: '#FB923C' }}>
@@ -201,7 +231,7 @@ export default function MapScreen() {
               done={clearedIds.has(station.id)}
               collectedLetters={collectedLetters}
               activeSessions={activeSessions.filter((s) => s.station_id === station.id)}
-              prep={prepStatuses.find((p) => p.station_id === station.id)}
+              prep={summarizePrep(station.id, prepStatuses)}
               index={index}
             />
           ))}

@@ -28,6 +28,8 @@ export type GameState = 'progress' | 'ended' | 'ending';
 /** A station's two manual staff-toggled flags: "준비중🧹" between games, and "도전자 모집중" for versus-format stations waiting on an opponent team. */
 export type PrepStatus = {
   station_id: string;
+  /** '' for every station except 라합방, whose 사무엘홀/다니엘홀 halls run — and prep — independently. */
+  hall_label: string;
   is_preparing: 0 | 1;
   tip: string | null;
   is_recruiting: 0 | 1;
@@ -123,7 +125,13 @@ export const api = {
 
   setPrepStatus: (
     stationId: string,
-    body: { is_preparing?: boolean; tip?: string; is_recruiting?: boolean; recruit_tip?: string },
+    body: {
+      is_preparing?: boolean;
+      tip?: string;
+      is_recruiting?: boolean;
+      recruit_tip?: string;
+      hall_label?: string;
+    },
   ) =>
     request<PrepStatus>(`/prep-status/${stationId}`, { method: 'PUT', body: JSON.stringify(body) }),
 

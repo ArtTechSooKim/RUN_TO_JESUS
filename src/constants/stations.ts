@@ -40,6 +40,15 @@ export const STATION_ALIASES: Record<string, string> = {
   ABEL: 'RAHAB',
 };
 
+// 라합방은 사무엘홀/다니엘홀 두 곳에서 동일한 게임(같은 조각)을 동시에 운영해
+// 처리량을 늘리는 스테이션 — 세션·준비중 상태 모두 이 두 홀 단위로 독립
+// 관리된다 (admin.tsx, floor-map-svg.tsx, use-prep-status.ts에서 참조).
+// 조각 획득 로직은 station_id 하나로 그대로 공유되고, hall_label은 순전히
+// 운영 화면들의 표시/구분용.
+export const HALL_SPLITS: Record<string, string[]> = {
+  RAHAB: ['사무엘홀', '다니엘홀'],
+};
+
 export type Station = {
   id: string;
   /** 게임명 (예: "라합방") */

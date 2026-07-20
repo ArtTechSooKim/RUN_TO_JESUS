@@ -420,8 +420,8 @@ export function Floor10Young({
         activeCount={activeCounts[`${rahab.id}:사무엘홀`]}
         activeTeamIds={activeTeamIds[`${rahab.id}:사무엘홀`]}
         activePercent={activePercents[`${rahab.id}:사무엘홀`]}
-        isPreparing={isPreparing[rahab.id]}
-        prepTip={prepTips[rahab.id]}
+        isPreparing={isPreparing[`${rahab.id}:사무엘홀`]}
+        prepTip={prepTips[`${rahab.id}:사무엘홀`]}
       />
       <GameRoom
         station={rahab}
@@ -437,8 +437,8 @@ export function Floor10Young({
         activeCount={activeCounts[`${rahab.id}:다니엘홀`]}
         activeTeamIds={activeTeamIds[`${rahab.id}:다니엘홀`]}
         activePercent={activePercents[`${rahab.id}:다니엘홀`]}
-        isPreparing={isPreparing[rahab.id]}
-        prepTip={prepTips[rahab.id]}
+        isPreparing={isPreparing[`${rahab.id}:다니엘홀`]}
+        prepTip={prepTips[`${rahab.id}:다니엘홀`]}
       />
       <DimRoom x={260} y={376} w={38} h={66} label="다니엘" sublabel="교사실" />
       <DimRoom x={302} y={376} w={42} h={66} label="디모데" sublabel="교사실" />

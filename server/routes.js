@@ -307,21 +307,27 @@ router.patch('/sessions/:id', async (req, res) => {
 
 router.get('/prep-status', async (req, res) => {
   const [rows] = await pool.query(
-    `SELECT station_id, is_preparing, tip, is_recruiting, recruit_tip
+    `SELECT station_id, hall_label, is_preparing, tip, is_recruiting, recruit_tip
      FROM station_prep_status WHERE is_preparing = TRUE OR is_recruiting = TRUE`,
   );
   res.json(rows);
 });
 
 router.put('/prep-status/:station_id', async (req, res) => {
-  const { is_preparing, tip, is_recruiting, recruit_tip } = req.body;
+  const { is_preparing, tip, is_recruiting, recruit_tip, hall_label } = req.body;
   if (is_preparing === undefined && is_recruiting === undefined) {
     return res.status(400).json({ error: 'is_preparing or is_recruiting is required' });
   }
+  // '' (not NULL — can't sit in a PRIMARY KEY) means "the whole station, no
+  // hall split" — every station except 라합방 only ever uses this.
+  const hall = hall_label ?? '';
 
   // Each toggle only ever sends its own fields — merge onto the existing row
   // so updating one flag never clobbers the other's current value.
-  const [existingRows] = await pool.query('SELECT * FROM station_prep_status WHERE station_id = ?', [req.params.station_id]);
+  const [existingRows] = await pool.query(
+    'SELECT * FROM station_prep_status WHERE station_id = ? AND hall_label = ?',
+    [req.params.station_id, hall],
+  );
   const existing = existingRows[0];
   const next = {
     is_preparing: is_preparing !== undefined ? is_preparing : (existing?.is_preparing ?? false),
@@ -331,15 +337,15 @@ router.put('/prep-status/:station_id', async (req, res) => {
   };
 
   await pool.query(
-    `INSERT INTO station_prep_status (station_id, is_preparing, tip, is_recruiting, recruit_tip) VALUES (?, ?, ?, ?, ?)
+    `INSERT INTO station_prep_status (station_id, hall_label, is_preparing, tip, is_recruiting, recruit_tip) VALUES (?, ?, ?, ?, ?, ?)
      ON DUPLICATE KEY UPDATE
        is_preparing = VALUES(is_preparing), tip = VALUES(tip),
        is_recruiting = VALUES(is_recruiting), recruit_tip = VALUES(recruit_tip)`,
-    [req.params.station_id, next.is_preparing, next.tip, next.is_recruiting, next.recruit_tip],
+    [req.params.station_id, hall, next.is_preparing, next.tip, next.is_recruiting, next.recruit_tip],
   );
   const [rows] = await pool.query(
-    'SELECT station_id, is_preparing, tip, is_recruiting, recruit_tip FROM station_prep_status WHERE station_id = ?',
-    [req.params.station_id],
+    'SELECT station_id, hall_label, is_preparing, tip, is_recruiting, recruit_tip FROM station_prep_status WHERE station_id = ? AND hall_label = ?',
+    [req.params.station_id, hall],
   );
   res.json(rows[0]);
 });

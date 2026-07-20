@@ -91,12 +91,14 @@ async function initSchema() {
 
     await conn.query(`
       CREATE TABLE IF NOT EXISTS station_prep_status (
-        station_id    VARCHAR(20) PRIMARY KEY,
+        station_id    VARCHAR(20) NOT NULL,
+        hall_label    VARCHAR(20) NOT NULL DEFAULT '',
         is_preparing  BOOLEAN NOT NULL DEFAULT FALSE,
         tip           VARCHAR(100) NULL,
         is_recruiting BOOLEAN NOT NULL DEFAULT FALSE,
         recruit_tip   VARCHAR(100) NULL,
-        updated_at    DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        updated_at    DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        PRIMARY KEY (station_id, hall_label)
       )
     `);
 
@@ -140,6 +142,10 @@ async function initSchema() {
       // 수동 플래그 — station_prep_status에 준비중과 나란히 저장.
       'ALTER TABLE station_prep_status ADD COLUMN is_recruiting BOOLEAN NOT NULL DEFAULT FALSE',
       'ALTER TABLE station_prep_status ADD COLUMN recruit_tip VARCHAR(100) NULL',
+      // 라합방의 사무엘홀/다니엘홀처럼 한 스테이션을 여러 홀에서 독립적으로
+      // 운영하는 경우 준비중 상태도 홀별로 따로 켤 수 있도록 — 그 외 스테이션은
+      // 항상 빈 문자열 하나만 씀 (PRIMARY KEY에 NULL을 못 넣어 빈 문자열로 대체).
+      "ALTER TABLE station_prep_status ADD COLUMN hall_label VARCHAR(20) NOT NULL DEFAULT ''",
     ]) {
       try {
         await conn.query(ddl);
@@ -147,6 +153,13 @@ async function initSchema() {
         if (err.code !== 'ER_DUP_FIELDNAME') throw err;
       }
     }
+
+    // Re-run-safe: dropping and re-adding the same composite key is a no-op
+    // once it's already in place, since every existing row already satisfies
+    // uniqueness on (station_id, hall_label).
+    await conn.query(
+      'ALTER TABLE station_prep_status DROP PRIMARY KEY, ADD PRIMARY KEY (station_id, hall_label)',
+    );
 
     for (const s of STATION_SEED) {
       await conn.query(
