@@ -154,6 +154,10 @@ export default function StationDetailScreen() {
   }
 
   const cleared = clearedIds.has(station.id);
+  // 새로운시네마는 영화가 3편이라 U를 한 번 받은 뒤에도 나머지 영화들을 더
+  // 볼 수 있어야 함(추가 방문은 보너스 조각) — 이 대표 카드만은 "완료" 화면
+  // 으로 안 잠그고 계속 QR 스캔 버튼을 보여준다.
+  const isCinemaHub = station.id === 'MYSTERYGAME';
 
   return (
     <ThemedView style={styles.container}>
@@ -227,7 +231,7 @@ export default function StationDetailScreen() {
           </View>
         )}
 
-        {cleared ? (
+        {cleared && !isCinemaHub ? (
           <View style={styles.doneBlock}>
             <View
               style={[
@@ -249,6 +253,11 @@ export default function StationDetailScreen() {
           </View>
         ) : (
           <View style={styles.ctaBlock}>
+            {isCinemaHub && cleared && (
+              <ThemedText type="small" themeColor="textSecondary" style={styles.scanHint}>
+                이미 조각을 획득했어요 — 다른 영화도 보면 보너스 조각을 더 받을 수 있어요!
+              </ThemedText>
+            )}
             {!station.isQrOnly && <NfcCta color={station.color} />}
             <ScanCta color={station.color} />
             <ThemedText type="small" themeColor="textSecondary" style={styles.scanHint}>

@@ -238,7 +238,11 @@ function GameRoom({
         </SvgText>
       )}
       <SvgText x={x + w / 2} y={labelY} textAnchor="middle" fill={station.color} fontSize={8} opacity={0.65} fontFamily={FONT}>
-        {label}
+        {/* 모집중일 때는 방 이름(sessionLabel) 없이는 어느 방인지 알 수 없음 —
+            홀 이름칸을 방 이름으로 바꿔서 보여준다. 준비중은 그대로 홀 이름 유지:
+            라합방처럼 홀 단위로 나뉜 곳은 이 칸이 곧 "어느 홀인지" 구분자라서
+            건드리면 안 됨(모집중은 홀 분리 스테이션에 아예 안 씀 — RAHAB 제외). */}
+        {isRecruiting ? sessionLabel : label}
       </SvgText>
       {sublabel && (
         <SvgText x={x + w / 2} y={sublabelY} textAnchor="middle" fill={station.color} fontSize={7} opacity={0.5} fontFamily={FONT}>
@@ -338,6 +342,8 @@ export function Floor10Young({
         activePercent={activePercents[joseph.id]}
         isPreparing={isPreparing[joseph.id]}
         prepTip={prepTips[joseph.id]}
+        isRecruiting={isRecruiting[joseph.id]}
+        recruitTip={recruitTips[joseph.id]}
       />
       <DimRoom x={122} y={182} w={84} h={36} label="이삭교사실" />
       <DimRoom x={438} y={180} w={146} h={266} label="프라미스 라운지" />
@@ -467,7 +473,19 @@ export function Floor10Young({
   );
 }
 
-export function Floor11Young({ stations, clearedIds, selectedId, onSelect, activeCounts = {}, activeTeamIds = {}, activePercents = {}, isPreparing = {}, prepTips = {} }: FloorProps) {
+export function Floor11Young({
+  stations,
+  clearedIds,
+  selectedId,
+  onSelect,
+  activeCounts = {},
+  activeTeamIds = {},
+  activePercents = {},
+  isPreparing = {},
+  prepTips = {},
+  isRecruiting = {},
+  recruitTips = {},
+}: FloorProps) {
   const abraham = byId(stations, 'ABRAHAM');
   const abel = stations.find((s) => s.id === 'ABELROOM');
 
@@ -542,6 +560,8 @@ export function Floor11Young({ stations, clearedIds, selectedId, onSelect, activ
         activePercent={activePercents[abraham.id]}
         isPreparing={isPreparing[abraham.id]}
         prepTip={prepTips[abraham.id]}
+        isRecruiting={isRecruiting[abraham.id]}
+        recruitTip={recruitTips[abraham.id]}
       />
       <DimRoom x={162} y={362} w={66} h={84} label="아가페" sublabel="교사실" />
       <DimRoom x={232} y={362} w={168} h={32} label="프레이즈교사실" />
