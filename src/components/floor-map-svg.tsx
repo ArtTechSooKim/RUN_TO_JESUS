@@ -355,7 +355,7 @@ export function Floor10Young({
           onPress={() => onSelect(mystery.id)}
           label="여호수아홀"
           sublabel="새로운극장·고등부"
-          sessionLabel="영화관"
+          sessionLabel="새로운 시네마"
           activeCount={activeCounts[mystery.id]}
           activeTeamIds={activeTeamIds[mystery.id]}
           activePercent={activePercents[mystery.id]}

@@ -20,7 +20,7 @@ const STATION_SEED = [
   { station_id: 'ABRAHAM', name: '아브라함·사라방', hall_name: '아가페홀', duration_minutes: 20, concurrent_capacity: 1, letters: [5], is_hidden: false, is_minigame: false },
   { station_id: 'SAMSON', name: '삼손방', hall_name: '디모데홀', duration_minutes: 20, concurrent_capacity: 1, letters: [6], is_hidden: false, is_minigame: false },
   { station_id: 'DAVID', name: '에녹방', hall_name: '새로운홀', duration_minutes: 15, concurrent_capacity: 1, letters: [7], is_hidden: false, is_minigame: false },
-  { station_id: 'MYSTERYGAME', name: '영화관', hall_name: '여호수아홀', duration_minutes: 15, concurrent_capacity: 1, letters: [8], is_hidden: false, is_minigame: true },
+  { station_id: 'MYSTERYGAME', name: '새로운 시네마', hall_name: '여호수아홀', duration_minutes: 15, concurrent_capacity: 1, letters: [8], is_hidden: false, is_minigame: true },
   // 장소 당일 결정, QR 전용(NFC 없음) — venue를 하드코딩하지 않음. 물리적 방/부스가
   // 없어 세션(진행중 타이머) 개념 자체가 없음 — is_minigame도 false로 둠.
   { station_id: 'HIDDENLETTER', name: '숨은글자찾기', hall_name: null, duration_minutes: 10, concurrent_capacity: 1, letters: [9], is_hidden: true, is_minigame: false },
